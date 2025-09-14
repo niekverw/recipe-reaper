@@ -12,7 +12,7 @@ A minimal recipe app for storing, viewing, and sharing recipes. Focus on ease of
 - **Responsive UI:** Works on desktop and particularly mobile browsers
 
 ## Technical Stack
-- **Frontend:**  React, Vite, Tailwind CSS, three.js, React three fiber and Next UI.
+- **Frontend:**  React, Vite, HeroUI (previously NextU). 
 - **Backend:** Node.js + Express + SQLite, use this schema where relevant: https://schema.org/Recipe.
 - **Auth (Future-Ready):** eg Firebase Auth (Google OAuth)
 
