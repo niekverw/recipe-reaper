@@ -21,17 +21,17 @@ interface RecipeActionsProps {
 
 function RecipeActions({ recipeId, onEdit, onDelete }: RecipeActionsProps) {
   return (
-    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+    <div className="flex items-center gap-2">
       <button
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
           onEdit(recipeId, e)
         }}
-        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        className="p-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         aria-label="Edit recipe"
       >
-        <PencilIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+        <PencilIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
       </button>
       <button
         onClick={(e) => {
@@ -39,10 +39,10 @@ function RecipeActions({ recipeId, onEdit, onDelete }: RecipeActionsProps) {
           e.stopPropagation()
           onDelete(recipeId, e)
         }}
-        className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+        className="p-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         aria-label="Delete recipe"
       >
-        <TrashIcon className="w-4 h-4 text-red-600 dark:text-red-400" />
+        <TrashIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
       </button>
     </div>
   )
@@ -58,33 +58,33 @@ function RecipeGridCard({ recipe, onEdit, onDelete }: RecipeGridCardProps) {
   return (
     <Link to={`/recipe/${recipe.id}`} className="block group">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 overflow-hidden">
-        <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 relative">
+        <div className="h-24 sm:h-36 md:h-48 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 relative">
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-          <div className="absolute top-3 right-3 z-10">
+          <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
             <RecipeActions
               recipeId={recipe.id}
               onEdit={onEdit}
               onDelete={onDelete}
             />
           </div>
-          <div className="absolute bottom-3 left-3 right-3">
+          <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-black/30 text-white backdrop-blur-sm text-xs rounded-full">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 bg-black/30 text-white backdrop-blur-sm text-xs rounded-full">
                 <ClockIcon className="w-3 h-3" />
                 {recipe.prepTimeMinutes}m
               </span>
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-black/30 text-white backdrop-blur-sm text-xs rounded-full">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 bg-black/30 text-white backdrop-blur-sm text-xs rounded-full">
                 <UsersIcon className="w-3 h-3" />
                 {recipe.servings}
               </span>
             </div>
           </div>
         </div>
-        <div className="p-4">
-          <h3 className="font-semibold text-lg mb-2 line-clamp-2 text-gray-900 dark:text-white">
+        <div className="p-2 sm:p-3 md:p-4">
+          <h3 className="font-semibold text-sm sm:text-base md:text-lg mb-1 sm:mb-2 line-clamp-1 sm:line-clamp-2 text-gray-900 dark:text-white">
             {recipe.name}
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 leading-relaxed">
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-2 sm:line-clamp-3 leading-relaxed">
             {recipe.description}
           </p>
         </div>
@@ -102,24 +102,24 @@ interface RecipeListCardProps {
 function RecipeListCard({ recipe, onEdit, onDelete }: RecipeListCardProps) {
   return (
     <Link to={`/recipe/${recipe.id}`} className="block group">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 p-4">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-lg flex-shrink-0" />
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 p-2 sm:p-3 md:p-4">
+        <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-lg flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-base mb-1 truncate text-gray-900 dark:text-white">
+            <h3 className="font-semibold text-xs sm:text-sm md:text-base mb-0.5 sm:mb-1 truncate text-gray-900 dark:text-white">
               {recipe.name}
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1 mb-2">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-1 mb-1 sm:mb-2">
               {recipe.description}
             </p>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                 <ClockIcon className="w-3 h-3" />
                 <span>{recipe.prepTimeMinutes}m</span>
               </div>
               <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                 <UsersIcon className="w-3 h-3" />
-                <span>{recipe.servings} servings</span>
+                <span>{recipe.servings}</span>
               </div>
             </div>
           </div>
@@ -271,7 +271,7 @@ function RecipesPage() {
         ) : (
           <>
             {viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
                 {filteredAndSortedRecipes.map((recipe) => (
                   <RecipeGridCard
                     key={recipe.id}
@@ -282,7 +282,7 @@ function RecipesPage() {
                 ))}
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {filteredAndSortedRecipes.map((recipe) => (
                   <RecipeListCard
                     key={recipe.id}
