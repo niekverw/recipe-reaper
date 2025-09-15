@@ -65,61 +65,6 @@ function AddRecipePage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label
-                  htmlFor="prepTime"
-                  className="block text-sm font-medium mb-1"
-                  style={{ color: 'var(--color-text-primary)' }}
-                >
-                  Prep Time (minutes) <span className="text-xs opacity-70" style={{ color: 'var(--color-text-secondary)' }}>(optional)</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    id="prepTime"
-                    placeholder="30"
-                    className="w-full px-2 py-1.5 text-sm border transition-colors"
-                    style={{
-                      backgroundColor: 'var(--color-input-background)',
-                      borderColor: 'var(--color-input-border)',
-                      borderRadius: 'var(--border-radius-medium)',
-                      color: 'var(--color-input-text)'
-                    }}
-                  />
-                  <div className="text-xs mt-0.5 opacity-70" style={{ color: 'var(--color-text-secondary)' }}>
-                    Leave empty to auto-infer
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label
-                  htmlFor="servings"
-                  className="block text-sm font-medium mb-1"
-                  style={{ color: 'var(--color-text-primary)' }}
-                >
-                  Servings <span className="text-xs opacity-70" style={{ color: 'var(--color-text-secondary)' }}>(optional)</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    id="servings"
-                    placeholder="4"
-                    className="w-full px-2 py-1.5 text-sm border transition-colors"
-                    style={{
-                      backgroundColor: 'var(--color-input-background)',
-                      borderColor: 'var(--color-input-border)',
-                      borderRadius: 'var(--border-radius-medium)',
-                      color: 'var(--color-input-text)'
-                    }}
-                  />
-                  <div className="text-xs mt-0.5 opacity-70" style={{ color: 'var(--color-text-secondary)' }}>
-                    Leave empty to auto-infer
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div>
               <label
                 htmlFor="description"
@@ -222,6 +167,90 @@ function AddRecipePage() {
               />
               <div className="absolute bottom-2 right-2 text-xs opacity-70" style={{ color: 'var(--color-text-secondary)' }}>
                 Each step on a new line
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label
+                htmlFor="prepTime"
+                className="block text-sm font-medium mb-1"
+                style={{ color: 'var(--color-text-primary)' }}
+              >
+                Prep Time (minutes) <span className="text-xs opacity-70" style={{ color: 'var(--color-text-secondary)' }}>(optional)</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  id="prepTime"
+                  placeholder="30"
+                  className="w-full px-2 py-1.5 text-sm border transition-colors"
+                  style={{
+                    backgroundColor: 'var(--color-input-background)',
+                    borderColor: 'var(--color-input-border)',
+                    borderRadius: 'var(--border-radius-medium)',
+                    color: 'var(--color-input-text)'
+                  }}
+                />
+                <div className="text-xs mt-0.5 opacity-70" style={{ color: 'var(--color-text-secondary)' }}>
+                  Leave empty to auto-infer
+                </div>
+              </div>
+            </div>
+            <div>
+              <label
+                htmlFor="servings"
+                className="block text-sm font-medium mb-1"
+                style={{ color: 'var(--color-text-primary)' }}
+              >
+                Servings <span className="text-xs opacity-70" style={{ color: 'var(--color-text-secondary)' }}>(optional)</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  id="servings"
+                  placeholder="4"
+                  className="w-full px-2 py-1.5 text-sm border transition-colors"
+                  style={{
+                    backgroundColor: 'var(--color-input-background)',
+                    borderColor: 'var(--color-input-border)',
+                    borderRadius: 'var(--border-radius-medium)',
+                    color: 'var(--color-input-text)'
+                  }}
+                />
+                <div className="text-xs mt-0.5 opacity-70" style={{ color: 'var(--color-text-secondary)' }}>
+                  Leave empty to auto-infer
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="imageUrl"
+              className="block text-sm font-medium mb-1"
+              style={{ color: 'var(--color-text-primary)' }}
+            >
+              Image URL <span className="text-xs opacity-70" style={{ color: 'var(--color-text-secondary)' }}>(optional)</span>
+            </label>
+            <div className="relative">
+              <input
+                type="url"
+                id="imageUrl"
+                placeholder="https://example.com/my-recipe-image.jpg"
+                className="w-full px-2 py-1.5 text-sm border transition-colors"
+                style={{
+                  backgroundColor: 'var(--color-input-background)',
+                  borderColor: 'var(--color-input-border)',
+                  borderRadius: 'var(--border-radius-medium)',
+                  color: 'var(--color-input-text)'
+                }}
+              />
+              <div className="text-xs mt-0.5 opacity-70" style={{ color: 'var(--color-text-secondary)' }}>
+                Add a URL to an image of your completed recipe
               </div>
             </div>
           </div>

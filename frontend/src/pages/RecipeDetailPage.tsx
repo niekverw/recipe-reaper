@@ -326,8 +326,9 @@ function RecipeDetailPage() {
                       {scaleOptions.map(option => (
                         <button
                           key={option.key}
-                          onClick={() => {
-                            setScale(option.value)
+                          onClick={(e) => {
+                            e.stopPropagation() // Prevent event bubbling
+                            setScale(Number(option.value))
                             setShowScaleMenu(false)
                           }}
                           className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between ${
@@ -370,7 +371,8 @@ function RecipeDetailPage() {
       {showScaleMenu && (
         <div
           className="fixed inset-0 z-0"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault()
             setShowScaleMenu(false)
           }}
         />
