@@ -1,19 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Card,
-  CardBody,
-  Input,
-  Button,
-  Chip,
-  Select,
-  SelectItem,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem
-} from '@heroui/react'
-import {
   MagnifyingGlassIcon,
   ClockIcon,
   UsersIcon,
@@ -22,7 +9,6 @@ import {
   FunnelIcon,
   Bars3BottomLeftIcon,
   Squares2X2Icon,
-  ViewColumnsIcon,
   PlusIcon
 } from '@heroicons/react/24/outline'
 import { sampleRecipes } from '../data/sampleRecipes'
@@ -36,35 +22,28 @@ interface RecipeActionsProps {
 function RecipeActions({ recipeId, onEdit, onDelete }: RecipeActionsProps) {
   return (
     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-      <Button
-        isIconOnly
-        size="sm"
-        variant="light"
-        onPress={(e) => {
+      <button
+        onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          onEdit(recipeId, e as unknown as React.MouseEvent)
+          onEdit(recipeId, e)
         }}
+        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         aria-label="Edit recipe"
-        className="hover:bg-default-100"
       >
-        <PencilIcon className="w-4 h-4" />
-      </Button>
-      <Button
-        isIconOnly
-        size="sm"
-        color="danger"
-        variant="light"
-        onPress={(e) => {
+        <PencilIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+      </button>
+      <button
+        onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          onDelete(recipeId, e as unknown as React.MouseEvent)
+          onDelete(recipeId, e)
         }}
+        className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
         aria-label="Delete recipe"
-        className="hover:bg-danger-50"
       >
-        <TrashIcon className="w-4 h-4" />
-      </Button>
+        <TrashIcon className="w-4 h-4 text-red-600 dark:text-red-400" />
+      </button>
     </div>
   )
 }
@@ -78,50 +57,38 @@ interface RecipeGridCardProps {
 function RecipeGridCard({ recipe, onEdit, onDelete }: RecipeGridCardProps) {
   return (
     <Link to={`/recipe/${recipe.id}`} className="block group">
-      <Card className="group-hover:shadow-lg transition-all duration-300 w-64 h-80 border border-default-200/50 hover:border-default-300 flex-shrink-0">
-        <CardBody className="p-0 h-full flex flex-col">
-          <div className="h-40 bg-gradient-to-br from-default-100 to-default-200 relative overflow-hidden flex-shrink-0">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-            <div className="absolute top-3 right-3 z-10">
-              <RecipeActions
-                recipeId={recipe.id}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            </div>
-            <div className="absolute bottom-3 left-3 right-3">
-              <div className="flex items-center gap-2">
-                <Chip
-                  size="sm"
-                  variant="solid"
-                  color="default"
-                  className="bg-black/30 text-white backdrop-blur-sm text-xs"
-                  startContent={<ClockIcon className="w-3 h-3" />}
-                >
-                  {recipe.prepTimeMinutes}m
-                </Chip>
-                <Chip
-                  size="sm"
-                  variant="solid"
-                  color="default"
-                  className="bg-black/30 text-white backdrop-blur-sm text-xs"
-                  startContent={<UsersIcon className="w-3 h-3" />}
-                >
-                  {recipe.servings}
-                </Chip>
-              </div>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 overflow-hidden">
+        <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 relative">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+          <div className="absolute top-3 right-3 z-10">
+            <RecipeActions
+              recipeId={recipe.id}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          </div>
+          <div className="absolute bottom-3 left-3 right-3">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-black/30 text-white backdrop-blur-sm text-xs rounded-full">
+                <ClockIcon className="w-3 h-3" />
+                {recipe.prepTimeMinutes}m
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-black/30 text-white backdrop-blur-sm text-xs rounded-full">
+                <UsersIcon className="w-3 h-3" />
+                {recipe.servings}
+              </span>
             </div>
           </div>
-          <div className="p-4 flex-1 flex flex-col">
-            <h3 className="font-semibold text-base mb-2 line-clamp-1">
-              {recipe.name}
-            </h3>
-            <p className="text-sm text-default-500 line-clamp-3 leading-relaxed flex-1">
-              {recipe.description}
-            </p>
-          </div>
-        </CardBody>
-      </Card>
+        </div>
+        <div className="p-4">
+          <h3 className="font-semibold text-lg mb-2 line-clamp-2 text-gray-900 dark:text-white">
+            {recipe.name}
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 leading-relaxed">
+            {recipe.description}
+          </p>
+        </div>
+      </div>
     </Link>
   )
 }
@@ -135,36 +102,34 @@ interface RecipeListCardProps {
 function RecipeListCard({ recipe, onEdit, onDelete }: RecipeListCardProps) {
   return (
     <Link to={`/recipe/${recipe.id}`} className="block group">
-      <Card className="group-hover:shadow-md transition-all duration-200 border border-default-200/50 hover:border-default-300">
-        <CardBody className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-default-100 to-default-200 rounded-lg flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-base mb-1 truncate">
-                {recipe.name}
-              </h3>
-              <p className="text-sm text-default-500 line-clamp-1 mb-2">
-                {recipe.description}
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 text-xs text-default-400">
-                  <ClockIcon className="w-3 h-3" />
-                  <span>{recipe.prepTimeMinutes}m</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs text-default-400">
-                  <UsersIcon className="w-3 h-3" />
-                  <span>{recipe.servings} servings</span>
-                </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 p-4">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-lg flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-base mb-1 truncate text-gray-900 dark:text-white">
+              {recipe.name}
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1 mb-2">
+              {recipe.description}
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                <ClockIcon className="w-3 h-3" />
+                <span>{recipe.prepTimeMinutes}m</span>
+              </div>
+              <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                <UsersIcon className="w-3 h-3" />
+                <span>{recipe.servings} servings</span>
               </div>
             </div>
-            <RecipeActions
-              recipeId={recipe.id}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
           </div>
-        </CardBody>
-      </Card>
+          <RecipeActions
+            recipeId={recipe.id}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        </div>
+      </div>
     </Link>
   )
 }
@@ -209,127 +174,128 @@ function RecipesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">
-              {CONTENT.pageTitle}
-            </h1>
-            <Chip
-              size="sm"
-              variant="flat"
-              color="primary"
-              className="text-xs font-medium"
+    <div className="px-4 py-6 max-w-7xl mx-auto">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                {CONTENT.pageTitle}
+              </h1>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                {filteredAndSortedRecipes.length} {CONTENT.recipesLabel}
+              </span>
+            </div>
+            <Link
+              to="/add-recipe"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
             >
-              {filteredAndSortedRecipes.length} {CONTENT.recipesLabel}
-            </Chip>
+              <PlusIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">Add Recipe</span>
+            </Link>
           </div>
-          <Link to="/add-recipe">
-            <Button
-              color="primary"
-              startContent={<PlusIcon className="w-4 h-4" />}
-              size="sm"
-              className="font-medium"
-            >
-              Add Recipe
-            </Button>
-          </Link>
-        </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-          <Input
-            type="search"
-            placeholder={CONTENT.searchPlaceholder}
-            value={searchQuery}
-            onValueChange={setSearchQuery}
-            startContent={<MagnifyingGlassIcon className="w-4 h-4 text-default-400" />}
-            className="flex-1 max-w-md"
-            size="sm"
-            variant="bordered"
-          />
+          {/* Search and Controls */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Search */}
+            <div className="relative flex-1 max-w-md">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />
+              </div>
+              <input
+                type="search"
+                placeholder={CONTENT.searchPlaceholder}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              />
+            </div>
 
-          <div className="flex items-center gap-2">
-            <Select
-              size="sm"
-              variant="bordered"
-              selectedKeys={[sortBy]}
-              onSelectionChange={(keys) => setSortBy(Array.from(keys)[0] as string)}
-              className="w-32"
-              startContent={<FunnelIcon className="w-4 h-4" />}
-              aria-label="Sort recipes"
-            >
-              <SelectItem key="name">Name</SelectItem>
-              <SelectItem key="time">Time</SelectItem>
-              <SelectItem key="servings">Servings</SelectItem>
-              <SelectItem key="recent">Recent</SelectItem>
-            </Select>
+            <div className="flex items-center gap-2">
+              {/* Sort Dropdown */}
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 pr-8 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                >
+                  <option value="name">Name</option>
+                  <option value="time">Time</option>
+                  <option value="servings">Servings</option>
+                  <option value="recent">Recent</option>
+                </select>
+                <FunnelIcon className="w-4 h-4 text-gray-400 absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+              </div>
 
-            <div className="flex border border-default-200 rounded-lg">
-              <Button
-                size="sm"
-                variant={viewMode === 'grid' ? 'solid' : 'light'}
-                color={viewMode === 'grid' ? 'primary' : 'default'}
-                onPress={() => setViewMode('grid')}
-                isIconOnly
-                className="rounded-r-none"
-                aria-label="Grid view"
-              >
-                <Squares2X2Icon className="w-4 h-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant={viewMode === 'list' ? 'solid' : 'light'}
-                color={viewMode === 'list' ? 'primary' : 'default'}
-                onPress={() => setViewMode('list')}
-                isIconOnly
-                className="rounded-l-none"
-                aria-label="List view"
-              >
-                <Bars3BottomLeftIcon className="w-4 h-4" />
-              </Button>
+              {/* View Toggle */}
+              <div className="flex border border-gray-300 dark:border-gray-600 rounded-lg">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-l-lg transition-colors ${
+                    viewMode === 'grid'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  }`}
+                  aria-label="Grid view"
+                >
+                  <Squares2X2Icon className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-r-lg border-l border-gray-300 dark:border-gray-600 transition-colors ${
+                    viewMode === 'list'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  }`}
+                  aria-label="List view"
+                >
+                  <Bars3BottomLeftIcon className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Content */}
+        {filteredAndSortedRecipes.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="max-w-sm mx-auto">
+              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MagnifyingGlassIcon className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">{CONTENT.noResultsTitle}</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">{CONTENT.noResultsMessage}</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filteredAndSortedRecipes.map((recipe) => (
+                  <RecipeGridCard
+                    key={recipe.id}
+                    recipe={recipe}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredAndSortedRecipes.map((recipe) => (
+                  <RecipeListCard
+                    key={recipe.id}
+                    recipe={recipe}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </div>
-
-      {filteredAndSortedRecipes.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="max-w-sm mx-auto">
-            <div className="w-16 h-16 bg-default-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MagnifyingGlassIcon className="w-8 h-8 text-default-400" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">{CONTENT.noResultsTitle}</h3>
-            <p className="text-default-500 text-sm">{CONTENT.noResultsMessage}</p>
-          </div>
-        </div>
-      ) : (
-        <>
-          {viewMode === 'grid' ? (
-            <div className="flex flex-wrap gap-4">
-              {filteredAndSortedRecipes.map((recipe) => (
-                <RecipeGridCard
-                  key={recipe.id}
-                  recipe={recipe}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredAndSortedRecipes.map((recipe) => (
-                <RecipeListCard
-                  key={recipe.id}
-                  recipe={recipe}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
-          )}
-        </>
-      )}
     </div>
   )
 }

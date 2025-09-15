@@ -1,16 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  Button,
-  Card,
-  CardBody,
-  Chip,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem
-} from '@heroui/react'
-import {
   ArrowLeftIcon,
   ClockIcon,
   UsersIcon,
@@ -21,7 +11,8 @@ import {
   EllipsisVerticalIcon,
   CheckIcon,
   StarIcon,
-  ScaleIcon
+  ScaleIcon,
+  ChevronDownIcon
 } from '@heroicons/react/24/outline'
 import { sampleRecipes } from '../data/sampleRecipes'
 
@@ -47,22 +38,18 @@ function CustomCheckbox({ size = 'sm', isSelected, onValueChange }: CustomCheckb
       role="checkbox"
       aria-checked={isSelected}
       onClick={onValueChange}
-      className={`flex items-center justify-center ${sizeClass} rounded transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-primary`}
+      className={`flex items-center justify-center ${sizeClass} rounded transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500`}
     >
       <div
         className={`w-full h-full rounded border flex items-center justify-center transition-colors ${
           isSelected
             ? 'bg-green-500 border-green-500 text-white'
-            : 'bg-default-0 border-default-300 text-default-600'
+            : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400'
         }`}
       >
         {isSelected ? (
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
-            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 00-1.414-1.414L7 12.172 4.707 9.879a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l9-9z" clipRule="evenodd" />
-          </svg>
-        ) : (
-          <span className="sr-only">not selected</span>
-        )}
+          <CheckIcon className="w-3 h-3" />
+        ) : null}
       </div>
     </button>
   )
@@ -82,13 +69,13 @@ function IngredientItem({ ingredient, isChecked, onToggle, scale }: IngredientIt
   }
 
   return (
-    <div className="flex items-center gap-2 py-1 px-2 rounded hover:bg-default-50 transition-colors">
+    <div className="flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
       <CustomCheckbox
         size="sm"
         isSelected={isChecked}
         onValueChange={onToggle}
       />
-      <span className={`text-sm leading-snug flex-1 ${isChecked ? 'text-default-400' : ''}`}>
+      <span className={`text-sm leading-relaxed flex-1 ${isChecked ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-900 dark:text-white'}`}>
         {scaleIngredient(ingredient, scale)}
       </span>
     </div>
@@ -106,18 +93,18 @@ function InstructionStep({ instruction, stepNumber, isCompleted, onToggle }: Ins
   return (
     <button
       onClick={onToggle}
-      className="flex gap-2 py-2 w-full text-left rounded hover:bg-default-50 transition-colors"
+      className="flex items-start gap-3 py-2 w-full text-left rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
     >
       <div
-        className={`w-6 h-6 flex items-center justify-center text-xs font-semibold rounded-full border transition-all flex-shrink-0 ${
+        className={`w-7 h-7 flex items-center justify-center text-sm font-semibold rounded-full border-2 transition-all flex-shrink-0 ${
           isCompleted
             ? 'bg-green-500 text-white border-green-500'
-            : 'bg-default-100 text-default-600 border-default-300 group-hover:border-primary'
+            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-blue-500'
         }`}
       >
-        {isCompleted ? '✓' : stepNumber}
+        {isCompleted ? <CheckIcon className="w-4 h-4" /> : stepNumber}
       </div>
-      <p className={`text-sm leading-snug pt-0.5 ${isCompleted ? 'line-through text-default-400' : ''}`}>
+      <p className={`text-sm leading-relaxed ${isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white'}`}>
         {instruction}
       </p>
     </button>
@@ -131,24 +118,27 @@ function RecipeDetailPage() {
   const [scale, setScale] = useState(1)
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set())
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
-  
+  const [showActionsMenu, setShowActionsMenu] = useState(false)
+  const [showScaleMenu, setShowScaleMenu] = useState(false)
 
   if (!recipe) {
     return (
-      <div className="text-center py-20">
-        <div className="max-w-md mx-auto">
-          <div className="w-16 h-16 bg-default-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ClockIcon className="w-8 h-8 text-default-400" />
-          </div>
-          <h1 className="text-2xl font-semibold mb-2">Recipe Not Found</h1>
-          <p className="text-default-500 mb-6">The recipe you're looking for doesn't exist or has been removed.</p>
-            <Button
-              startContent={<ArrowLeftIcon className="w-4 h-4" />}
-              variant="flat"
-              onPress={() => navigate('/')}
+      <div className="px-4 py-8 max-w-4xl mx-auto">
+        <div className="text-center py-20">
+          <div className="max-w-md mx-auto">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ClockIcon className="w-8 h-8 text-gray-400" />
+            </div>
+            <h1 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-white">Recipe Not Found</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">The recipe you're looking for doesn't exist or has been removed.</p>
+            <button
+              onClick={() => navigate('/')}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
+              <ArrowLeftIcon className="w-4 h-4" />
               Back to Recipes
-            </Button>
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -200,123 +190,96 @@ function RecipeDetailPage() {
   ]
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="px-4 py-6 max-w-6xl mx-auto">
       {/* Navigation */}
-      <div className="flex items-center justify-between mb-3">
-          <Button
-            startContent={<ArrowLeftIcon className="w-3 h-3" />}
-            variant="light"
-            size="sm"
-            className="text-default-600 px-2 h-8 text-sm"
-            onPress={() => navigate('/')}
-          >
-            Back to Recipes
-          </Button>
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={() => navigate('/')}
+          className="inline-flex items-center gap-2 px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+        >
+          <ArrowLeftIcon className="w-4 h-4" />
+          <span className="text-sm">Back to Recipes</span>
+        </button>
 
-        <div className="flex items-center gap-1">
-          <Button
-            isIconOnly
-            variant="light"
-            size="sm"
-            onPress={handleShare}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleShare}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             aria-label="Share recipe"
-            className="h-8 w-8"
           >
-            <ShareIcon className="w-3 h-3" />
-          </Button>
-          <Button
-            isIconOnly
-            variant="light"
-            size="sm"
-            onPress={handlePrint}
+            <ShareIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+          </button>
+          <button
+            onClick={handlePrint}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             aria-label="Print recipe"
-            className="h-8 w-8"
           >
-            <PrinterIcon className="w-3 h-3" />
-          </Button>
-          <Dropdown>
-            <DropdownTrigger>
-              <Button
-                isIconOnly
-                variant="light"
-                size="sm"
-                aria-label="More actions"
-                className="h-8 w-8"
-              >
-                <EllipsisVerticalIcon className="w-3 h-3" />
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu>
-              <DropdownItem
-                key="edit"
-                startContent={<PencilIcon className="w-3 h-3" />}
-                className="text-xs"
-              >
-                Edit Recipe
-              </DropdownItem>
-              <DropdownItem
-                key="delete"
-                className="text-danger text-xs"
-                color="danger"
-                startContent={<TrashIcon className="w-3 h-3" />}
-              >
-                Delete Recipe
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
+            <PrinterIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowActionsMenu(!showActionsMenu)}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="More actions"
+            >
+              <EllipsisVerticalIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            </button>
+            {showActionsMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-10">
+                <button className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3">
+                  <PencilIcon className="w-4 h-4" />
+                  Edit Recipe
+                </button>
+                <button className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3">
+                  <TrashIcon className="w-4 h-4" />
+                  Delete Recipe
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Hero Section */}
-      <div className="mb-4">
-        <div className="bg-gradient-to-br from-default-100 to-default-200 rounded-lg p-4 mb-3">
-          <h1 className="text-2xl font-bold tracking-tight mb-1">{recipe.name}</h1>
-          <p className="text-sm text-default-600 mb-3 leading-snug">
+      <div className="mb-8">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-gray-900 dark:text-white">{recipe.name}</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed max-w-3xl">
             {recipe.description}
           </p>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Chip
-              size="sm"
-              variant="flat"
-              startContent={<ClockIcon className="w-3 h-3" />}
-              className="text-xs h-6"
-            >
-              {recipe.prepTimeMinutes} min
-            </Chip>
-            <Chip
-              size="sm"
-              variant="flat"
-              startContent={<UsersIcon className="w-3 h-3" />}
-              className="text-xs h-6"
-            >
-              {Math.round(recipe.servings * scale)} servings
-            </Chip>
-            <div className="flex items-center gap-1">
-              <StarIcon className="w-3 h-3 text-default-400" />
-              <span className="text-xs text-default-500">4.8 (24)</span>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <ClockIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white">{recipe.prepTimeMinutes} min</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <UsersIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white">{Math.round(recipe.servings * scale)} servings</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <StarIcon className="w-4 h-4 text-yellow-500" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white">4.8 (24)</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Instructions */}
         <div className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold">Instructions</h2>
-            <Button
-              size="sm"
-              variant="flat"
-              onPress={() => setCompletedSteps(new Set())}
-              className="text-sm px-2 h-6"
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Instructions</h2>
+            <button
+              onClick={() => setCompletedSteps(new Set())}
+              className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               Reset Steps
-            </Button>
+            </button>
           </div>
 
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             {recipe.instructions.map((instruction, index) => (
               <InstructionStep
                 key={index}
@@ -330,79 +293,93 @@ function RecipeDetailPage() {
         </div>
 
         {/* Ingredients Sidebar */}
-        <div className="lg:sticky lg:top-3 lg:h-fit">
-          <Card className="border border-default-200">
-            <CardBody className="p-3">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-semibold">Ingredients</h3>
-                  <Button 
-                    size="sm" 
-                    variant="light" 
-                    className="text-xs h-6 px-2"
-                    onPress={() => {
-                      const allIndices = new Set(recipe.ingredients.map((_, index) => index));
-                      setCheckedIngredients(
-                        checkedIngredients.size === recipe.ingredients.length ? new Set() : allIndices
-                      );
-                    }}
+        <div className="lg:sticky lg:top-6 lg:h-fit">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Ingredients</h3>
+                <button
+                  onClick={() => {
+                    const allIndices = new Set(recipe.ingredients.map((_, index) => index));
+                    setCheckedIngredients(
+                      checkedIngredients.size === recipe.ingredients.length ? new Set() : allIndices
+                    );
+                  }}
+                  className="px-3 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  {checkedIngredients.size === recipe.ingredients.length ? 'Deselect All' : 'Select All'}
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <ScaleIcon className="w-4 h-4 text-gray-400" />
+                <div className="relative">
+                  <button
+                    onClick={() => setShowScaleMenu(!showScaleMenu)}
+                    className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   >
-                    {checkedIngredients.size === recipe.ingredients.length ? 'Deselect All' : 'Select All'}
-                  </Button>
-                </div>
-                <div className="flex items-center gap-1">
-                  <ScaleIcon className="w-3 h-3 text-default-400" />
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <Button size="sm" variant="light" className="text-xs h-6 px-2">
-                        {scaleOptions.find(o => o.value === scale)?.label ?? `${scale}x`}
-                      </Button>
-                    </DropdownTrigger>
-                    <DropdownMenu>
+                    {scaleOptions.find(o => o.value === scale)?.label ?? `${scale}x`}
+                    <ChevronDownIcon className="w-3 h-3" />
+                  </button>
+                  {showScaleMenu && (
+                    <div className="absolute right-0 mt-2 w-24 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-10">
                       {scaleOptions.map(option => (
-                        <DropdownItem
+                        <button
                           key={option.key}
-                          className={`text-xs flex items-center justify-between ${scale === option.value ? 'font-semibold' : ''}`}
-                          onClick={() => setScale(option.value)}
+                          onClick={() => {
+                            setScale(option.value)
+                            setShowScaleMenu(false)
+                          }}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between ${
+                            scale === option.value ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'
+                          }`}
                         >
                           <span>{option.label}</span>
-                          {scale === option.value && <CheckIcon className="w-3 h-3 text-primary" />}
-                        </DropdownItem>
+                          {scale === option.value && <CheckIcon className="w-3 h-3" />}
+                        </button>
                       ))}
-                    </DropdownMenu>
-                  </Dropdown>
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
 
-              <div className="space-y-0.5">
-                {recipe.ingredients.map((ingredient, index) => (
-                  <IngredientItem
-                    key={index}
-                    ingredient={ingredient}
-                    isChecked={checkedIngredients.has(index)}
-                    onToggle={() => toggleIngredient(index)}
-                    scale={scale}
-                  />
-                ))}
-              </div>
+            <div className="space-y-1">
+              {recipe.ingredients.map((ingredient, index) => (
+                <IngredientItem
+                  key={index}
+                  ingredient={ingredient}
+                  isChecked={checkedIngredients.has(index)}
+                  onToggle={() => toggleIngredient(index)}
+                  scale={scale}
+                />
+              ))}
+            </div>
 
-              <div className="mt-3 pt-2 border-t border-default-200">
-                <div className="flex items-center justify-between text-xs text-default-500">
-                  <span>Created {new Date(recipe.createdAt).toLocaleDateString()}</span>
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    onPress={() => setCheckedIngredients(new Set())}
-                    className="text-xs px-1.5 h-5"
-                  >
-                    Reset
-                  </Button>
-                </div>
+            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                <span>Created {new Date(recipe.createdAt).toLocaleDateString()}</span>
+                <button
+                  onClick={() => setCheckedIngredients(new Set())}
+                  className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  Reset
+                </button>
               </div>
-            </CardBody>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Click outside to close menus */}
+      {(showActionsMenu || showScaleMenu) && (
+        <div
+          className="fixed inset-0 z-0"
+          onClick={() => {
+            setShowActionsMenu(false)
+            setShowScaleMenu(false)
+          }}
+        />
+      )}
     </div>
   )
 }

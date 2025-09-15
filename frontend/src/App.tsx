@@ -9,9 +9,9 @@ function App() {
   return (
     <ThemeProvider>
       <Router>
-        <div className="min-h-screen transition-colors duration-200" style={{ backgroundColor: 'var(--color-background)', color: 'var(--color-text-primary)' }}>
+        <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200">
           <Navigation />
-          <main className="max-w-7xl mx-auto px-3 py-4">
+          <main>
             <Routes>
               <Route path="/" element={<RecipesPage />} />
               <Route path="/recipe/:id" element={<RecipeDetailPage />} />

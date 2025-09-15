@@ -14,12 +14,10 @@ function AddRecipePage() {
 
       <form className="space-y-4">
         <div
-          className="border p-4"
+          className="p-6"
           style={{
             backgroundColor: 'var(--color-surface)',
-            borderColor: 'var(--color-border-primary)',
-            borderRadius: 'var(--border-radius-medium)',
-            boxShadow: 'var(--shadow-small)'
+            borderRadius: 'var(--border-radius-medium)'
           }}
         >
           <h2
@@ -125,12 +123,10 @@ function AddRecipePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div
-            className="border p-4"
+            className="p-5"
             style={{
               backgroundColor: 'var(--color-surface)',
-              borderColor: 'var(--color-border-primary)',
-              borderRadius: 'var(--border-radius-medium)',
-              boxShadow: 'var(--shadow-small)'
+              borderRadius: 'var(--border-radius-medium)'
             }}
           >
             <h3
@@ -161,12 +157,10 @@ function AddRecipePage() {
           </div>
 
           <div
-            className="border p-4"
+            className="p-5"
             style={{
               backgroundColor: 'var(--color-surface)',
-              borderColor: 'var(--color-border-primary)',
-              borderRadius: 'var(--border-radius-medium)',
-              boxShadow: 'var(--shadow-small)'
+              borderRadius: 'var(--border-radius-medium)'
             }}
           >
             <h3
