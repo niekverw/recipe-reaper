@@ -1,1 +1,65 @@
-frontend/node_modules/.bin/browserslist
+# --- Project: recipeapp - top-level ignores ---
+
+# Node / frontend
+node_modules/
+frontend/node_modules/
+
+# Vite / build outputs
+dist/
+.build/
+/.cache/
+frontend/dist/
+
+# Vite environment helper
+vite-env.d.ts
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# TypeScript
+*.tsbuildinfo
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Local backend data (sqlite)
+backend/data/*.db
+
+# Mac/iCloud drive temp files
+.AppleDouble
+.LSOverride
+
+# Coverage
+coverage/
+coverage-final.json
+
+# Optional npm cache
+.npm
+
+# JetBrains
+*.iml
+
+# Storybook
+out/
+
+# Misc generated files
+icons/*-generated.png
+
+# Keep lockfiles in source control
