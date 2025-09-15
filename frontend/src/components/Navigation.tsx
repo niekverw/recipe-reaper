@@ -19,7 +19,7 @@ function Navigation() {
             to="/"
             className="font-bold text-xl tracking-tight text-gray-900 dark:text-white transition-colors duration-200"
           >
-            RecipeBox
+            Recipes
           </RouterLink>
 
           <div className="flex items-center space-x-8">

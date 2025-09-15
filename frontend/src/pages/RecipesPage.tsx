@@ -60,6 +60,7 @@ function RecipeGridCard({ recipe, onEdit, onDelete }: RecipeGridCardProps) {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 overflow-hidden">
         <div className="h-24 sm:h-36 md:h-48 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 relative">
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+          {/* date moved into metadata area to avoid changing card size */}
           <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
             <RecipeActions
               recipeId={recipe.id}
@@ -69,6 +70,9 @@ function RecipeGridCard({ recipe, onEdit, onDelete }: RecipeGridCardProps) {
           </div>
           <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3">
             <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 bg-black/30 text-white backdrop-blur-sm text-xs rounded-full">
+                {formatDateShort(recipe.createdAt)}
+              </span>
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 bg-black/30 text-white backdrop-blur-sm text-xs rounded-full">
                 <ClockIcon className="w-3 h-3" />
                 {recipe.prepTimeMinutes}m
@@ -105,6 +109,7 @@ function RecipeListCard({ recipe, onEdit, onDelete }: RecipeListCardProps) {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 p-2 sm:p-3 md:p-4">
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
           <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-lg flex-shrink-0" />
+          {/* date shown inline with other meta so it doesn't affect card sizing */}
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-xs sm:text-sm md:text-base mb-0.5 sm:mb-1 truncate text-gray-900 dark:text-white">
               {recipe.name}
@@ -113,6 +118,7 @@ function RecipeListCard({ recipe, onEdit, onDelete }: RecipeListCardProps) {
               {recipe.description}
             </p>
             <div className="flex items-center gap-2 sm:gap-3">
+              <div className="text-xs text-gray-500 dark:text-gray-400">{formatDateShort(recipe.createdAt)}</div>
               <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                 <ClockIcon className="w-3 h-3" />
                 <span>{recipe.prepTimeMinutes}m</span>
@@ -314,4 +320,16 @@ const CONTENT = {
 // Interfaces
 export interface RecipeListProps {
   recipes: typeof sampleRecipes
+}
+
+// Helpers
+function formatDateShort(dateStr: string) {
+  try {
+    const d = new Date(dateStr)
+    const monthDay = d.toLocaleString(undefined, { month: 'short', day: 'numeric' })
+    const twoDigitYear = String(d.getFullYear()).slice(-2)
+    return `${monthDay} \u2019${twoDigitYear}`
+  } catch (e) {
+    return ''
+  }
 }
