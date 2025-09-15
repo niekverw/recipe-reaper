@@ -15,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { apiService, Recipe, IngredientCategory } from '../services/api'
 import { IngredientHelper } from '../utils/ingredientHelper'
+import { useCallback } from 'react'
 
 interface IngredientItemProps {
   ingredient: string
@@ -211,6 +212,27 @@ function RecipeDetailPage() {
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set())
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
   const [showScaleMenu, setShowScaleMenu] = useState(false)
+  const [showImageModal, setShowImageModal] = useState(false)
+
+  const openImageModal = useCallback(() => {
+    setShowImageModal(true)
+    // lock body scroll
+    document.body.style.overflow = 'hidden'
+  }, [])
+
+  const closeImageModal = useCallback(() => {
+    setShowImageModal(false)
+    // restore body scroll
+    document.body.style.overflow = ''
+  }, [])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showImageModal) closeImageModal()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [showImageModal, closeImageModal])
 
   useEffect(() => {
     const loadRecipe = async () => {
@@ -380,32 +402,80 @@ function RecipeDetailPage() {
       {/* Hero Section */}
       <div className="mb-8">
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 mb-6">
-          {/* Optional hero image */}
-          {recipe.image && (
-            <div className="w-full mb-4 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
-              <img
-                src={recipe.image}
-                alt={recipe.name + " image"}
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                className="w-full h-44 sm:h-56 md:h-72 object-cover block"
-              />
-            </div>
-          )}
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-gray-900 dark:text-white">{recipe.name}</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed max-w-3xl">
-            {recipe.description}
-          </p>
+          <div className="flex flex-col md:flex-row md:items-center md:gap-6">
+            <div className="flex-1">
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-gray-900 dark:text-white">{recipe.name}</h1>
+              <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed max-w-3xl">
+                {recipe.description}
+              </p>
 
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-              <ClockIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              <span className="text-sm font-medium text-gray-900 dark:text-white">{recipe.prepTimeMinutes} min</span>
+              {/* Show badges inline only when there is no image */}
+              {!recipe.image && (
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <ClockIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{recipe.prepTimeMinutes} min</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <UsersIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{Math.round(recipe.servings * scale)} servings</span>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-              <UsersIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              <span className="text-sm font-medium text-gray-900 dark:text-white">{Math.round(recipe.servings * scale)} servings</span>
-            </div>
+
+            {/* Optional compact hero image to the side on md+ screens */}
+            {recipe.image && (
+              <>
+                <div className="mt-4 md:mt-0 md:shrink-0 md:w-56 lg:w-72 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 relative">
+                  <img
+                    src={recipe.image}
+                    alt={`${recipe.name} image`}
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                    className="w-full h-36 md:h-44 lg:h-56 object-cover block cursor-pointer"
+                    onClick={openImageModal}
+                  />
+
+                  {/* Overlay badges */}
+                  <div className="absolute left-3 bottom-3 flex flex-col gap-2">
+                    <div className="flex items-center gap-2 px-2 py-1 bg-black/60 text-white rounded-lg backdrop-blur-sm text-sm">
+                      <ClockIcon className="w-4 h-4 text-white opacity-90" />
+                      <span className="font-medium">{recipe.prepTimeMinutes} min</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-2 py-1 bg-black/60 text-white rounded-lg backdrop-blur-sm text-sm">
+                      <UsersIcon className="w-4 h-4 text-white opacity-90" />
+                      <span className="font-medium">{Math.round(recipe.servings * scale)} servings</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Image Modal */}
+                {showImageModal && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={closeImageModal} />
+                    <div className="relative max-w-5xl w-full max-h-[90vh] overflow-hidden rounded-lg z-50">
+                      <button
+                        type="button"
+                        onClick={closeImageModal}
+                        className="absolute right-2 top-2 z-50 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
+                        aria-label="Close image"
+                      >
+                        ×
+                      </button>
+                      <img
+                        src={recipe.image}
+                        alt={`${recipe.name} full size`}
+                        className="w-full h-auto max-h-[90vh] object-contain block bg-black"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
+
+          
         </div>
       </div>
 
@@ -506,7 +576,7 @@ function RecipeDetailPage() {
                         {category.category}
                       </h4>
                     )}
-                    <div className="space-y-1 ml-4">
+                    <div className={`space-y-1 ${category.category ? '' : 'ml-4'}`}>
                       {category.items.map((ingredient, itemIndex) => {
                         const flatIndex = IngredientHelper.getAllIngredients(recipe.ingredients.slice(0, categoryIndex))
                           .length + itemIndex;
