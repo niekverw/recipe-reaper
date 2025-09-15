@@ -1,5 +1,5 @@
 # --- Project: recipeapp - top-level ignores ---
-
+test-llm-parsing
 # Node / frontend
 node_modules/
 frontend/node_modules/
