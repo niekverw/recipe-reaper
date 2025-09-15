@@ -8,11 +8,11 @@ import {
   TrashIcon,
   ShareIcon,
   PrinterIcon,
-  EllipsisVerticalIcon,
   CheckIcon,
   StarIcon,
   ScaleIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline'
 import { sampleRecipes } from '../data/sampleRecipes'
 
@@ -118,7 +118,6 @@ function RecipeDetailPage() {
   const [scale, setScale] = useState(1)
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set())
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
-  const [showActionsMenu, setShowActionsMenu] = useState(false)
   const [showScaleMenu, setShowScaleMenu] = useState(false)
 
   if (!recipe) {
@@ -195,47 +194,47 @@ function RecipeDetailPage() {
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={() => navigate('/')}
-          className="inline-flex items-center gap-2 px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+          className="p-3 rounded-full bg-white/0 dark:bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          aria-label="Back to recipes"
         >
-          <ArrowLeftIcon className="w-4 h-4" />
-          <span className="text-sm">Back to Recipes</span>
+          <ArrowLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
         </button>
 
         <div className="flex items-center gap-2">
           <button
             onClick={handleShare}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-3 rounded-full bg-white/0 dark:bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             aria-label="Share recipe"
           >
-            <ShareIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            <ShareIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
           </button>
           <button
             onClick={handlePrint}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-3 rounded-full bg-white/0 dark:bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             aria-label="Print recipe"
           >
-            <PrinterIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            <PrinterIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
           </button>
-          <div className="relative">
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowActionsMenu(!showActionsMenu)}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="More actions"
+              onClick={() => navigate(`/recipe/${recipe.id}/edit`)}
+              className="p-3 rounded-full bg-white/0 dark:bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Edit recipe"
             >
-              <EllipsisVerticalIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              <PencilIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             </button>
-            {showActionsMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-10">
-                <button className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3">
-                  <PencilIcon className="w-4 h-4" />
-                  Edit Recipe
-                </button>
-                <button className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3">
-                  <TrashIcon className="w-4 h-4" />
-                  Delete Recipe
-                </button>
-              </div>
-            )}
+            <button
+              onClick={() => {
+                if (window.confirm('Delete this recipe?')) {
+                  console.log('Delete recipe', recipe.id)
+                  navigate('/')
+                }
+              }}
+              className="p-3 rounded-full bg-white/0 dark:bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              aria-label="Delete recipe"
+            >
+              <TrashIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
+            </button>
           </div>
         </div>
       </div>
@@ -273,9 +272,11 @@ function RecipeDetailPage() {
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Instructions</h2>
             <button
               onClick={() => setCompletedSteps(new Set())}
-              className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+              className="p-2 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Reset steps"
+              title="Reset steps"
             >
-              Reset Steps
+              <ArrowPathIcon className="w-5 h-5" />
             </button>
           </div>
 
@@ -358,12 +359,7 @@ function RecipeDetailPage() {
             <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                 <span>Created {new Date(recipe.createdAt).toLocaleDateString()}</span>
-                <button
-                  onClick={() => setCheckedIngredients(new Set())}
-                  className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                  Reset
-                </button>
+                {/* Deselect All already provides reset functionality */}
               </div>
             </div>
           </div>
@@ -371,11 +367,10 @@ function RecipeDetailPage() {
       </div>
 
       {/* Click outside to close menus */}
-      {(showActionsMenu || showScaleMenu) && (
+      {showScaleMenu && (
         <div
           className="fixed inset-0 z-0"
           onClick={() => {
-            setShowActionsMenu(false)
             setShowScaleMenu(false)
           }}
         />
