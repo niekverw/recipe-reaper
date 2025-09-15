@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeftIcon,
@@ -13,7 +13,8 @@ import {
   ChevronDownIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline'
-import { sampleRecipes } from '../data/sampleRecipes'
+import { apiService, Recipe, IngredientCategory } from '../services/api'
+import { IngredientHelper } from '../utils/ingredientHelper'
 
 interface IngredientItemProps {
   ingredient: string
@@ -58,10 +59,100 @@ function IngredientItem({ ingredient, isChecked, onToggle, scale }: IngredientIt
   const scaleIngredient = (ingredient: string, scale: number) => {
     if (scale === 1) return ingredient
 
-    const scaled = ingredient.replace(/(\d+(?:\.\d+)?)/g, (match) => {
+    // Map of Unicode fractions to their decimal values
+    const fractionMap: Record<string, number> = {
+      '¼': 0.25,
+      '½': 0.5,
+      '¾': 0.75,
+      '⅓': 1/3,
+      '⅔': 2/3,
+      '⅛': 1/8,
+      '⅜': 3/8,
+      '⅝': 5/8,
+      '⅞': 7/8,
+    }
+
+    // Common fraction values and their Unicode representations
+    const commonFractions = [
+      { value: 1/8, unicode: '⅛' },
+      { value: 1/6, unicode: '⅙' }, // Approximation
+      { value: 1/4, unicode: '¼' },
+      { value: 1/3, unicode: '⅓' },
+      { value: 3/8, unicode: '⅜' },
+      { value: 1/2, unicode: '½' },
+      { value: 2/3, unicode: '⅔' },
+      { value: 5/8, unicode: '⅝' },
+      { value: 3/4, unicode: '¾' },
+      { value: 5/6, unicode: '⅚' }, // Approximation
+      { value: 7/8, unicode: '⅞' },
+    ].sort((a, b) => a.value - b.value)
+
+    // Function to find the closest Unicode fraction
+    const findClosestFraction = (value: number): string | null => {
+      // For very small values, return decimal
+      if (value < 0.05) return null
+      
+      // Try to find an exact match first (with small tolerance)
+      for (const fraction of commonFractions) {
+        if (Math.abs(value - fraction.value) < 0.01) {
+          return fraction.unicode
+        }
+      }
+      
+      // If no exact match, find the closest match if within reasonable range
+      let closest = commonFractions[0]
+      let minDiff = Math.abs(value - closest.value)
+      
+      for (let i = 1; i < commonFractions.length; i++) {
+        const diff = Math.abs(value - commonFractions[i].value)
+        if (diff < minDiff) {
+          minDiff = diff
+          closest = commonFractions[i]
+        }
+      }
+      
+      // Only return if it's a reasonable approximation (within 0.03)
+      return minDiff <= 0.03 ? closest.unicode : null
+    }
+
+    // Step 1: Convert fractions like "3/4" to decimal
+    let processedIngredient = ingredient.replace(/(\d+)\/(\d+)/g, (_, numerator, denominator) => {
+      return (parseInt(numerator) / parseInt(denominator)).toString()
+    })
+
+    // Step 2: Handle Unicode fractions like ¼, ½, ¾
+    processedIngredient = processedIngredient.replace(/([¼½¾⅓⅔⅛⅜⅝⅞])/g, (match) => {
+      return fractionMap[match].toString()
+    })
+
+    // Step 3: Handle mixed numbers like "1 ½" or "2½"
+    processedIngredient = processedIngredient.replace(/(\d+)\s*([¼½¾⅓⅔⅛⅜⅝⅞])/g, (_, whole, fraction) => {
+      return (parseInt(whole) + fractionMap[fraction]).toString()
+    })
+
+    // Step 4: Scale all decimal numbers
+    const scaled = processedIngredient.replace(/(\d+(?:\.\d+)?)/g, (match) => {
       const num = parseFloat(match)
       const result = num * scale
-      return result % 1 === 0 ? result.toString() : result.toFixed(1)
+      
+      // If it's a whole number, return as integer
+      if (Math.abs(result % 1) < 0.001) return Math.round(result).toString()
+      
+      // Handle the fractional part
+      const wholePart = Math.floor(result)
+      const fractionPart = result - wholePart
+      
+      // Try to find a matching Unicode fraction
+      const fractionChar = findClosestFraction(fractionPart)
+      
+      if (fractionChar) {
+        return wholePart > 0 
+          ? `${wholePart}${fractionChar}` 
+          : fractionChar
+      }
+      
+      // Otherwise return with 1 or 2 decimal places depending on the value
+      return result < 0.1 ? result.toFixed(2) : result.toFixed(1)
     })
 
     return scaled
@@ -113,13 +204,50 @@ function InstructionStep({ instruction, stepNumber, isCompleted, onToggle }: Ins
 function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const recipe = sampleRecipes.find(r => r.id === id)
+  const [recipe, setRecipe] = useState<Recipe | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [scale, setScale] = useState(1)
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set())
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
   const [showScaleMenu, setShowScaleMenu] = useState(false)
 
-  if (!recipe) {
+  useEffect(() => {
+    const loadRecipe = async () => {
+      if (!id) {
+        setError('No recipe ID provided')
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        setError(null)
+        const fetchedRecipe = await apiService.getRecipe(id)
+        setRecipe(fetchedRecipe)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load recipe')
+        console.error('Failed to load recipe:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadRecipe()
+  }, [id])
+
+  if (loading) {
+    return (
+      <div className="px-4 py-8 max-w-4xl mx-auto">
+        <div className="text-center py-20">
+          <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading recipe...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !recipe) {
     return (
       <div className="px-4 py-8 max-w-4xl mx-auto">
         <div className="text-center py-20">
@@ -128,7 +256,9 @@ function RecipeDetailPage() {
               <ClockIcon className="w-8 h-8 text-gray-400" />
             </div>
             <h1 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-white">Recipe Not Found</h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">The recipe you're looking for doesn't exist or has been removed.</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {error || "The recipe you're looking for doesn't exist or has been removed."}
+            </p>
             <button
               onClick={() => navigate('/')}
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -228,10 +358,14 @@ function RecipeDetailPage() {
               <PencilIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             </button>
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (window.confirm('Delete this recipe?')) {
-                  console.log('Delete recipe', recipe.id)
-                  navigate('/')
+                  try {
+                    await apiService.deleteRecipe(recipe.id)
+                    navigate('/')
+                  } catch (err) {
+                    alert('Failed to delete recipe: ' + (err instanceof Error ? err.message : 'Unknown error'))
+                  }
                 }
               }}
               className="p-3 rounded-full bg-white/0 dark:bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
@@ -246,6 +380,17 @@ function RecipeDetailPage() {
       {/* Hero Section */}
       <div className="mb-8">
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 mb-6">
+          {/* Optional hero image */}
+          {recipe.image && (
+            <div className="w-full mb-4 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
+              <img
+                src={recipe.image}
+                alt={recipe.name + " image"}
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                className="w-full h-44 sm:h-56 md:h-72 object-cover block"
+              />
+            </div>
+          )}
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-gray-900 dark:text-white">{recipe.name}</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed max-w-3xl">
             {recipe.description}
@@ -301,14 +446,15 @@ function RecipeDetailPage() {
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Ingredients</h3>
                 <button
                   onClick={() => {
-                    const allIndices = new Set(recipe.ingredients.map((_, index) => index));
+                    const allIngredients = IngredientHelper.getAllIngredients(recipe.ingredients);
+                    const allIndices = new Set(allIngredients.map((_, index) => index));
                     setCheckedIngredients(
-                      checkedIngredients.size === recipe.ingredients.length ? new Set() : allIndices
+                      checkedIngredients.size === allIngredients.length ? new Set() : allIndices
                     );
                   }}
                   className="px-3 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
-                  {checkedIngredients.size === recipe.ingredients.length ? 'Deselect All' : 'Select All'}
+                  {checkedIngredients.size === IngredientHelper.getAllIngredients(recipe.ingredients).length ? 'Deselect All' : 'Select All'}
                 </button>
               </div>
               <div className="flex items-center gap-2">
@@ -351,15 +497,44 @@ function RecipeDetailPage() {
             </div>
 
             <div className="space-y-1">
-              {recipe.ingredients.map((ingredient, index) => (
-                <IngredientItem
-                  key={index}
-                  ingredient={ingredient}
-                  isChecked={checkedIngredients.has(index)}
-                  onToggle={() => toggleIngredient(index)}
-                  scale={scale}
-                />
-              ))}
+              {IngredientHelper.isCategorized(recipe.ingredients) ? (
+                // Render categorized ingredients
+                (recipe.ingredients as IngredientCategory[]).map((category, categoryIndex) => (
+                  <div key={categoryIndex}>
+                    {category.category && (
+                      <h4 className="font-semibold text-gray-900 dark:text-white mt-4 first:mt-0 mb-2">
+                        {category.category}
+                      </h4>
+                    )}
+                    <div className="space-y-1 ml-4">
+                      {category.items.map((ingredient, itemIndex) => {
+                        const flatIndex = IngredientHelper.getAllIngredients(recipe.ingredients.slice(0, categoryIndex))
+                          .length + itemIndex;
+                        return (
+                          <IngredientItem
+                            key={`${categoryIndex}-${itemIndex}`}
+                            ingredient={ingredient}
+                            isChecked={checkedIngredients.has(flatIndex)}
+                            onToggle={() => toggleIngredient(flatIndex)}
+                            scale={scale}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                // Render flat ingredients (backward compatibility)
+                (recipe.ingredients as string[]).map((ingredient, index) => (
+                  <IngredientItem
+                    key={index}
+                    ingredient={ingredient}
+                    isChecked={checkedIngredients.has(index)}
+                    onToggle={() => toggleIngredient(index)}
+                    scale={scale}
+                  />
+                ))
+              )}
             </div>
 
             <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">

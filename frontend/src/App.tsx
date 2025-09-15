@@ -3,7 +3,7 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import Navigation from './components/Navigation'
 import RecipesPage from './pages/RecipesPage'
 import RecipeDetailPage from './pages/RecipeDetailPage'
-import AddRecipePage from './pages/AddRecipePage'
+import RecipeFormPage from './pages/RecipeFormPage'
 
 function App() {
   return (
@@ -15,7 +15,8 @@ function App() {
             <Routes>
               <Route path="/" element={<RecipesPage />} />
               <Route path="/recipe/:id" element={<RecipeDetailPage />} />
-              <Route path="/add-recipe" element={<AddRecipePage />} />
+              <Route path="/add-recipe" element={<RecipeFormPage />} />
+              <Route path="/recipe/:id/edit" element={<RecipeFormPage />} />
             </Routes>
           </main>
         </div>

@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useMemo, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   MagnifyingGlassIcon,
   ClockIcon,
@@ -11,7 +11,7 @@ import {
   Squares2X2Icon,
   PlusIcon
 } from '@heroicons/react/24/outline'
-import { sampleRecipes } from '../data/sampleRecipes'
+import { apiService, Recipe } from '../services/api'
 
 interface RecipeActionsProps {
   recipeId: string
@@ -49,7 +49,7 @@ function RecipeActions({ recipeId, onEdit, onDelete }: RecipeActionsProps) {
 }
 
 interface RecipeGridCardProps {
-  recipe: typeof sampleRecipes[0]
+  recipe: Recipe
   onEdit: (id: string, e: React.MouseEvent) => void
   onDelete: (id: string, e: React.MouseEvent) => void
 }
@@ -60,7 +60,6 @@ function RecipeGridCard({ recipe, onEdit, onDelete }: RecipeGridCardProps) {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 overflow-hidden">
         <div className="h-24 sm:h-36 md:h-48 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 relative">
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-          {/* date moved into metadata area to avoid changing card size */}
           <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
             <RecipeActions
               recipeId={recipe.id}
@@ -98,7 +97,7 @@ function RecipeGridCard({ recipe, onEdit, onDelete }: RecipeGridCardProps) {
 }
 
 interface RecipeListCardProps {
-  recipe: typeof sampleRecipes[0]
+  recipe: Recipe
   onEdit: (id: string, e: React.MouseEvent) => void
   onDelete: (id: string, e: React.MouseEvent) => void
 }
@@ -109,7 +108,6 @@ function RecipeListCard({ recipe, onEdit, onDelete }: RecipeListCardProps) {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 p-2 sm:p-3 md:p-4">
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
           <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-lg flex-shrink-0" />
-          {/* date shown inline with other meta so it doesn't affect card sizing */}
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-xs sm:text-sm md:text-base mb-0.5 sm:mb-1 truncate text-gray-900 dark:text-white">
               {recipe.name}
@@ -141,12 +139,16 @@ function RecipeListCard({ recipe, onEdit, onDelete }: RecipeListCardProps) {
 }
 
 function RecipesPage() {
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('name')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [recipes, setRecipes] = useState<Recipe[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const filteredAndSortedRecipes = useMemo(() => {
-    let filtered = sampleRecipes.filter(recipe =>
+    let filtered = recipes.filter(recipe =>
       recipe.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       recipe.description.toLowerCase().includes(searchQuery.toLowerCase())
     )
@@ -165,18 +167,45 @@ function RecipesPage() {
           return 0
       }
     })
-  }, [searchQuery, sortBy])
+  }, [recipes, searchQuery, sortBy])
+
+  useEffect(() => {
+    loadRecipes()
+  }, [])
+
+  const loadRecipes = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const fetchedRecipes = await apiService.getRecipes()
+      setRecipes(fetchedRecipes)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load recipes')
+      console.error('Failed to load recipes:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleEdit = (id: string, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    console.log('Edit recipe:', id)
+    navigate(`/recipe/${id}/edit`)
   }
 
-  const handleDelete = (id: string, e: React.MouseEvent) => {
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    console.log('Delete recipe:', id)
+
+    if (window.confirm('Are you sure you want to delete this recipe?')) {
+      try {
+        await apiService.deleteRecipe(id)
+        await loadRecipes()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to delete recipe')
+        console.error('Failed to delete recipe:', err)
+      }
+    }
   }
 
   return (
@@ -263,8 +292,34 @@ function RecipesPage() {
           </div>
         </div>
 
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-red-700 dark:text-red-400">{error}</p>
+              <button
+                onClick={() => setError(null)}
+                className="text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+              >
+                ✕
+              </button>
+            </div>
+            <button
+              onClick={loadRecipes}
+              className="mt-2 text-sm text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 underline"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
         {/* Content */}
-        {filteredAndSortedRecipes.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading recipes...</p>
+          </div>
+        ) : filteredAndSortedRecipes.length === 0 ? (
           <div className="text-center py-12">
             <div className="max-w-sm mx-auto">
               <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -319,7 +374,7 @@ const CONTENT = {
 
 // Interfaces
 export interface RecipeListProps {
-  recipes: typeof sampleRecipes
+  recipes: Recipe[]
 }
 
 // Helpers
@@ -328,7 +383,7 @@ function formatDateShort(dateStr: string) {
     const d = new Date(dateStr)
     const monthDay = d.toLocaleString(undefined, { month: 'short', day: 'numeric' })
     const twoDigitYear = String(d.getFullYear()).slice(-2)
-    return `${monthDay} \u2019${twoDigitYear}`
+    return `${monthDay} '${twoDigitYear}`
   } catch (e) {
     return ''
   }
