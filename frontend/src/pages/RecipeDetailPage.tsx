@@ -19,6 +19,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { apiService, Recipe, IngredientCategory } from '../services/api'
 import { IngredientHelper } from '../utils/ingredientHelper'
+import { TagHelper } from '../utils/tagHelper'
 import { useCallback } from 'react'
 
 interface IngredientItemProps {
@@ -409,8 +410,12 @@ function RecipeDetailPage() {
   const handleAddTag = async (tagToAdd?: string) => {
     if (!recipe || isUpdatingTags) return
 
-    const tag = tagToAdd || newTag.trim()
-    if (!tag) return
+    const rawTag = tagToAdd || newTag.trim()
+    if (!rawTag) return
+
+    // Normalize the tag to ensure consistent capitalization
+    const tag = TagHelper.normalizeTag(rawTag)
+    if (!tag || !TagHelper.isValidTag(tag)) return
 
     if (recipe.tags?.includes(tag)) {
       setNewTag('')

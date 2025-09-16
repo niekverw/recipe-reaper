@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import { TagHelper } from '../utils/tagHelper'
 
 interface TagInputProps {
   tags: string[]
@@ -32,9 +33,9 @@ function TagInput({ tags, onTagsChange, availableTags = [], placeholder = "Add t
   }, [inputValue, showSuggestions, availableTags, tags])
 
   const addTag = (tag: string) => {
-    const trimmedTag = tag.trim()
-    if (trimmedTag && !tags.includes(trimmedTag)) {
-      onTagsChange([...tags, trimmedTag])
+    const normalizedTag = TagHelper.normalizeTag(tag)
+    if (normalizedTag && !tags.includes(normalizedTag) && TagHelper.isValidTag(normalizedTag)) {
+      onTagsChange([...tags, normalizedTag])
     }
     setInputValue('')
     setShowSuggestions(false)

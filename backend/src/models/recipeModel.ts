@@ -3,6 +3,7 @@ import { Database } from './database'
 import { Recipe, CreateRecipeRequest, UpdateRecipeRequest, RecipeFilters, IngredientCategory } from '../types/recipe'
 import { ingredientParser } from '../utils/ingredientParser'
 import { IngredientCategoryParser } from '../utils/ingredientCategoryParser'
+import { TagHelper } from '../utils/tagHelper'
 
 // Database row interface (snake_case)
 interface RecipeRow {
@@ -137,6 +138,9 @@ export const recipeModel = {
       console.warn('Some ingredients could not be parsed:', invalidIngredients)
     }
 
+    // Normalize tags before storing
+    const normalizedTags = data.tags ? TagHelper.normalizeTags(data.tags) : []
+
     // Auto-infer values if not provided
     const prepTimeMinutes = data.prepTimeMinutes || this.inferPrepTime(data.instructions, flatIngredients)
     const servings = data.servings || this.inferServings(flatIngredients)
@@ -161,7 +165,7 @@ export const recipeModel = {
       data.image || null,
       data.sourceUrl || null,
       data.isPublic !== false ? 1 : 0,
-      JSON.stringify(data.tags || []),
+      JSON.stringify(normalizedTags),
       now,
       now
     ]
@@ -226,7 +230,8 @@ export const recipeModel = {
     }
     if (data.tags !== undefined) {
       updates.push('tags = ?')
-      params.push(JSON.stringify(data.tags || []))
+      const normalizedTags = TagHelper.normalizeTags(data.tags || [])
+      params.push(JSON.stringify(normalizedTags))
     }
 
     updates.push('updated_at = ?')
@@ -269,7 +274,11 @@ export const recipeModel = {
           if (Array.isArray(parsedTags)) {
             parsedTags.forEach(tag => {
               if (typeof tag === 'string' && tag.trim()) {
-                allTags.add(tag.trim())
+                // Normalize the tag to ensure consistent capitalization
+                const normalizedTag = TagHelper.normalizeTag(tag)
+                if (normalizedTag) {
+                  allTags.add(normalizedTag)
+                }
               }
             })
           }
