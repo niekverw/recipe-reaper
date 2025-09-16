@@ -4,6 +4,7 @@ import { CreateRecipeRequest, UpdateRecipeRequest, RecipeFilters, IngredientCate
 import { createError } from '../middleware/errorHandler'
 import { openaiService } from '../services/openaiService'
 import { geminiService } from '../services/geminiService'
+import { visionService } from '../services/visionService'
 import { recipeEnhancementService } from '../services/recipeEnhancementService'
 import { spawn } from 'child_process'
 import { join } from 'path'
@@ -405,6 +406,44 @@ export const recipeController = {
     try {
       const tags = await recipeModel.getAllTags()
       res.json({ tags })
+    } catch (error) {
+      next(error)
+    }
+  },
+
+  async parseImageRecipe(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.file) {
+        throw createError('Image file is required', 400)
+      }
+
+      // Extract text from the uploaded image using Google Cloud Vision API
+      const extractedText = await visionService.extractTextFromImage(req.file.buffer)
+
+      if (!extractedText?.trim()) {
+        throw createError('No readable text found in the image', 400)
+      }
+
+      // Parse the extracted text using Gemini to create a recipe
+      const parsedData = await geminiService.parseRecipeText(extractedText)
+
+      // Transform to match expected response format
+      const transformedData = {
+        name: parsedData.name,
+        description: parsedData.description,
+        ingredients: parsedData.ingredients,
+        instructions: parsedData.instructions,
+        prepTimeMinutes: parsedData.prepTimeMinutes,
+        cookTimeMinutes: parsedData.cookTimeMinutes,
+        totalTimeMinutes: parsedData.totalTimeMinutes,
+        servings: parseServings(parsedData.servings?.toString()),
+        image: parsedData.image
+      }
+
+      res.json({
+        recipeData: transformedData,
+        extractedText: extractedText  // Include the extracted text for debugging
+      })
     } catch (error) {
       next(error)
     }

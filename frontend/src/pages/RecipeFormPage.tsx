@@ -50,11 +50,13 @@ function RecipeFormPage() {
   const [availableTags, setAvailableTags] = useState<string[]>([])
 
   // Import state
-  const [importType, setImportType] = useState<'url' | 'text'>('url')
+  const [importType, setImportType] = useState<'url' | 'text' | 'image'>('url')
   const [importUrl, setImportUrl] = useState('')
   const [importText, setImportText] = useState('')
+  const [importImage, setImportImage] = useState<File | null>(null)
   const [isImporting, setIsImporting] = useState(false)
   const [isImportingGemini, setIsImportingGemini] = useState(false)
+  const [isImportingImage, setIsImportingImage] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -274,8 +276,64 @@ function RecipeFormPage() {
   const handleImport = () => {
     if (importType === 'url') {
       handleImportFromUrl()
-    } else {
+    } else if (importType === 'text') {
       handleImportFromText()
+    } else if (importType === 'image') {
+      handleImportFromImage()
+    }
+  }
+
+  const handleImportFromImage = async () => {
+    if (!importImage) {
+      setImportError('Please select an image file')
+      return
+    }
+
+    try {
+      setIsImportingImage(true)
+      setImportError(null)
+
+      const response = await apiService.parseRecipeFromImage(importImage)
+      const recipeData = response.recipeData
+
+      // Check if form has existing data and confirm overwrite
+      const hasExistingData = formData.name.trim() || formData.description.trim() ||
+        formData.ingredients.trim() || formData.instructions.trim()
+
+      if (hasExistingData) {
+        const shouldOverwrite = window.confirm(
+          'This will overwrite your current form data. Do you want to continue?'
+        )
+        if (!shouldOverwrite) return
+      }
+
+      // Update form with imported data
+      setFormData({
+        name: recipeData.name,
+        description: recipeData.description,
+        ingredients: recipeData.ingredients.join('\n'),
+        instructions: recipeData.instructions.join('\n'),
+        prepTimeMinutes: recipeData.prepTimeMinutes,
+        cookTimeMinutes: recipeData.cookTimeMinutes,
+        totalTimeMinutes: recipeData.totalTimeMinutes,
+        servings: recipeData.servings,
+        image: recipeData.image || '',
+        sourceUrl: recipeData.sourceUrl,
+        tags: []
+      })
+
+      // Clear import image
+      setImportImage(null)
+      // Reset the file input if it exists
+      const fileInput = document.getElementById('import-image-file') as HTMLInputElement
+      if (fileInput) {
+        fileInput.value = ''
+      }
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : 'Failed to parse recipe from image')
+      console.error('Failed to parse recipe from image:', err)
+    } finally {
+      setIsImportingImage(false)
     }
   }
 
@@ -423,6 +481,17 @@ function RecipeFormPage() {
             >
               Import Text
             </button>
+            <button
+              type="button"
+              onClick={() => setImportType('image')}
+              className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                importType === 'image'
+                  ? 'bg-white dark:bg-blue-900 text-blue-900 dark:text-blue-100 shadow-sm'
+                  : 'text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100'
+              }`}
+            >
+              Import from Image
+            </button>
           </div>
 
           {/* Import Content */}
@@ -464,7 +533,7 @@ function RecipeFormPage() {
                 </button>
               </div>
             </>
-          ) : (
+          ) : importType === 'text' ? (
             <>
               <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
                 Paste recipe text from cookbooks, websites, or handwritten notes to automatically parse and fill in the form. Or describe your ingredients and cooking ideas to let AI generate a complete recipe with instructions and variations.
@@ -548,6 +617,93 @@ Serves: 24 cookies`}
                     )}
                   </button>
                 </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
+                Upload a photo of a recipe from a book, handwritten notes, or screenshot. The AI will extract the text and convert it to a structured recipe.
+              </p>
+              <div className="space-y-3">
+                <div className="flex flex-col items-center justify-center w-full">
+                  <label
+                    htmlFor="import-image-file"
+                    className="flex flex-col items-center justify-center w-full h-64 border-2 border-blue-300 border-dashed rounded-lg cursor-pointer bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                  >
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg className="w-10 h-10 mb-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p className="mb-2 text-sm text-blue-700 dark:text-blue-300">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-blue-600 dark:text-blue-400">
+                        PNG, JPG, JPEG (Max 10MB)
+                      </p>
+                    </div>
+                    <input
+                      id="import-image-file"
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          setImportImage(file)
+                        }
+                      }}
+                      disabled={isImportingImage}
+                    />
+                  </label>
+                </div>
+
+                {importImage && (
+                  <div className="flex items-center justify-between p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-blue-800 dark:text-blue-200">{importImage.name}</p>
+                        <p className="text-xs text-blue-600 dark:text-blue-400">{(importImage.size / 1024 / 1024).toFixed(1)} MB</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImportImage(null)
+                        const fileInput = document.getElementById('import-image-file') as HTMLInputElement
+                        if (fileInput) fileInput.value = ''
+                      }}
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleImportFromImage}
+                  disabled={isImportingImage || !importImage}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                >
+                  {isImportingImage ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Processing Image...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Extract Recipe from Image
+                    </>
+                  )}
+                </button>
               </div>
             </>
           )}

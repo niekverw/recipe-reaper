@@ -1,5 +1,22 @@
 import { Router } from 'express'
+import multer from 'multer'
 import { recipeController } from '../controllers/recipeController'
+
+// Configure multer for handling file uploads in memory
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max file size
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept only image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true)
+    } else {
+      cb(null, false)
+    }
+  }
+})
 
 export const recipeRoutes = Router()
 
@@ -20,6 +37,9 @@ recipeRoutes.post('/parse-text', recipeController.parseTextRecipe)
 
 // POST /api/recipes/parse-text-gemini - Parse recipe data from text using Gemini
 recipeRoutes.post('/parse-text-gemini', recipeController.parseTextRecipeGemini)
+
+// POST /api/recipes/parse-image - Parse recipe data from image using Vision API + Gemini
+recipeRoutes.post('/parse-image', upload.single('image'), recipeController.parseImageRecipe)
 
 // GET /api/recipes/:id - Get a specific recipe
 recipeRoutes.get('/:id', recipeController.getRecipeById)

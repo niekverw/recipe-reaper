@@ -67,11 +67,17 @@ class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`
 
+    // Don't set Content-Type for FormData, let the browser set it
+    const isFormData = options?.body instanceof FormData
+    const headers = isFormData 
+      ? { ...options?.headers }
+      : {
+          'Content-Type': 'application/json',
+          ...options?.headers,
+        }
+
     const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
+      headers,
       ...options,
     })
 
@@ -194,6 +200,31 @@ class ApiService {
     }>('/recipes/parse-text-gemini', {
       method: 'POST',
       body: JSON.stringify({ text }),
+    })
+  }
+
+  // Recipe image parsing operation using Vision API + Gemini
+  async parseRecipeFromImage(imageFile: File) {
+    const formData = new FormData()
+    formData.append('image', imageFile)
+
+    return this.request<{
+      recipeData: {
+        name: string
+        description: string
+        ingredients: string[]
+        instructions: string[]
+        image?: string
+        sourceUrl?: string
+        prepTimeMinutes?: number
+        cookTimeMinutes?: number
+        totalTimeMinutes?: number
+        servings?: number
+      }
+      extractedText: string
+    }>('/recipes/parse-image', {
+      method: 'POST',
+      body: formData,
     })
   }
 
