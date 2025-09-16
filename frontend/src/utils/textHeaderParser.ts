@@ -10,22 +10,31 @@ export class TextHeaderParser {
   static parseText(text: string): TextSegment[] {
     if (!text) return []
 
-  // Support lines that begin with a single '*' but don't have a closing one
-  // by normalizing them to the inline form `*header*` so the existing
-  // inline parsing logic can pick them up. Only wrap lines that do not
-  // contain any other asterisk characters on that line to avoid double-wrapping
-  // already-closed inline headers.
-  const normalized = text.replace(/^[ \t]*\* ?([^\n*]+)$/gm, '*$1*')
+    // Normalize various starred header formats so they become uniform inline
+    // headers of the form `*Header*` which the parser understands and will
+    // strip the surrounding asterisks from when creating header segments.
+    //
+    // Handles:
+    // - Lines starting with a single asterisk but missing a closing one: `*Header`
+    // - Lines wrapped with multiple asterisks: `**Header**` or `* Header *`
+    // - Lines with surrounding spaces: `* Header` or `*Header *`
+    let normalized = text
+      // Collapse lines that are wrapped in one-or-more asterisks into *Header*
+      .replace(/^[ \t]*\*+\s*([^*\n]+?)\s*\*+[ \t]*$/gm, '*$1*')
+      // Also convert lines that start with a single '*' and have no other asterisks
+      .replace(/^[ \t]*\*\s*([^\n*]+)$/gm, '*$1*')
 
-  const segments: TextSegment[] = []
-  const regex = /\*([^*]+)\*/g
-  let lastIndex = 0
-  let match
+    const segments: TextSegment[] = []
+    const regex = /\*([^*]+)\*/g
+    let lastIndex = 0
+    let match
 
-    while ((match = regex.exec(text)) !== null) {
+    // Run the regex over the normalized text so that lines like
+    // `*Header` (no closing star) get converted and captured.
+    while ((match = regex.exec(normalized)) !== null) {
       // Add text before the header
       if (match.index > lastIndex) {
-        const beforeText = text.substring(lastIndex, match.index)
+        const beforeText = normalized.substring(lastIndex, match.index)
         if (beforeText.trim()) {
           segments.push({
             type: 'text',
