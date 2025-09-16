@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { apiService, Recipe, CreateRecipeData } from '../services/api'
 import { IngredientHelper } from '../utils/ingredientHelper'
+import TagInput from '../components/TagInput'
 import {
   ArrowLeftIcon,
   CheckIcon
@@ -18,6 +19,7 @@ interface RecipeFormData {
   servings?: number
   image?: string
   sourceUrl?: string
+  tags: string[]
 }
 
 
@@ -38,12 +40,14 @@ function RecipeFormPage() {
     totalTimeMinutes: undefined,
     servings: undefined,
     image: '',
-    sourceUrl: undefined
+    sourceUrl: undefined,
+    tags: []
   })
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoadingRecipe, setIsLoadingRecipe] = useState(isEdit)
+  const [availableTags, setAvailableTags] = useState<string[]>([])
 
   // Import state
   const [importType, setImportType] = useState<'url' | 'text'>('url')
@@ -54,6 +58,9 @@ function RecipeFormPage() {
   const [importError, setImportError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Load available tags
+    loadAvailableTags()
+
     if (isEdit && id) {
       loadRecipe(id)
     } else if (copiedRecipe) {
@@ -68,10 +75,20 @@ function RecipeFormPage() {
         totalTimeMinutes: copiedRecipe.totalTimeMinutes,
         servings: copiedRecipe.servings,
         image: copiedRecipe.image || '',
-        sourceUrl: copiedRecipe.sourceUrl
+        sourceUrl: copiedRecipe.sourceUrl,
+        tags: copiedRecipe.tags || []
       })
     }
   }, [isEdit, id, copiedRecipe])
+
+  const loadAvailableTags = async () => {
+    try {
+      const tags = await apiService.getAllTags()
+      setAvailableTags(tags)
+    } catch (err) {
+      console.error('Failed to load available tags:', err)
+    }
+  }
 
   const loadRecipe = async (recipeId: string) => {
     try {
@@ -86,7 +103,8 @@ function RecipeFormPage() {
         prepTimeMinutes: recipe.prepTimeMinutes,
         servings: recipe.servings,
         image: recipe.image || '',
-        sourceUrl: recipe.sourceUrl
+        sourceUrl: recipe.sourceUrl,
+        tags: recipe.tags || []
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load recipe')
@@ -141,7 +159,8 @@ function RecipeFormPage() {
         totalTimeMinutes: recipeData.totalTimeMinutes,
         servings: recipeData.servings,
         image: recipeData.image || '',
-        sourceUrl: recipeData.sourceUrl
+        sourceUrl: recipeData.sourceUrl,
+        tags: []
       })
 
       // Clear import URL
@@ -189,7 +208,8 @@ function RecipeFormPage() {
         totalTimeMinutes: recipeData.totalTimeMinutes,
         servings: recipeData.servings,
         image: recipeData.image || '',
-        sourceUrl: recipeData.sourceUrl
+        sourceUrl: recipeData.sourceUrl,
+        tags: []
       })
 
       // Clear import text
@@ -237,7 +257,8 @@ function RecipeFormPage() {
         totalTimeMinutes: recipeData.totalTimeMinutes,
         servings: recipeData.servings,
         image: recipeData.image || '',
-        sourceUrl: recipeData.sourceUrl
+        sourceUrl: recipeData.sourceUrl,
+        tags: []
       })
 
       // Clear import text
@@ -299,7 +320,8 @@ function RecipeFormPage() {
         totalTimeMinutes: formData.totalTimeMinutes,
         servings: formData.servings,
         image: formData.image?.trim() || undefined,
-        sourceUrl: formData.sourceUrl?.trim() || undefined
+        sourceUrl: formData.sourceUrl?.trim() || undefined,
+        tags: formData.tags
       }
 
       let savedRecipe: Recipe
@@ -726,6 +748,19 @@ Bake for 25-30 minutes`}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Add a URL to an image of your completed recipe</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+              Tags
+            </label>
+            <TagInput
+              tags={formData.tags}
+              onTagsChange={(tags) => setFormData(prev => ({ ...prev, tags }))}
+              availableTags={availableTags}
+              placeholder="Add tags like 'vegetarian', 'quick', 'dessert'..."
+              disabled={loading}
+            />
           </div>
         </div>
 

@@ -13,7 +13,9 @@ import {
   ChevronDownIcon,
   ArrowPathIcon,
   DocumentDuplicateIcon,
-  SparklesIcon
+  SparklesIcon,
+  PlusIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 import { apiService, Recipe, IngredientCategory } from '../services/api'
 import { IngredientHelper } from '../utils/ingredientHelper'
@@ -217,6 +219,13 @@ function RecipeDetailPage() {
   const [showImageModal, setShowImageModal] = useState(false)
   const [isEnhancing, setIsEnhancing] = useState(false)
   const [enhancementError, setEnhancementError] = useState<string | null>(null)
+  const [showTagInput, setShowTagInput] = useState(false)
+  const [newTag, setNewTag] = useState('')
+  const [availableTags, setAvailableTags] = useState<string[]>([])
+  const [isUpdatingTags, setIsUpdatingTags] = useState(false)
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false)
+  const [filteredTagSuggestions, setFilteredTagSuggestions] = useState<string[]>([])
+  const [highlightedTagIndex, setHighlightedTagIndex] = useState(0)
 
   const openImageModal = useCallback(() => {
     setShowImageModal(true)
@@ -237,6 +246,15 @@ function RecipeDetailPage() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [showImageModal, closeImageModal])
+
+  const loadAvailableTags = async () => {
+    try {
+      const tags = await apiService.getAllTags()
+      setAvailableTags(tags)
+    } catch (err) {
+      console.error('Failed to load available tags:', err)
+    }
+  }
 
   useEffect(() => {
     const loadRecipe = async () => {
@@ -260,7 +278,31 @@ function RecipeDetailPage() {
     }
 
     loadRecipe()
+    loadAvailableTags()
   }, [id])
+
+  useEffect(() => {
+    if (showTagInput && newTag) {
+      const filtered = availableTags.filter(tag =>
+        tag.toLowerCase().includes(newTag.toLowerCase()) &&
+        !recipe?.tags?.includes(tag)
+      ).slice(0, 10)
+      setFilteredTagSuggestions(filtered)
+      setHighlightedTagIndex(0)
+      setShowTagSuggestions(filtered.length > 0)
+    } else if (showTagInput && newTag === '') {
+      // Show all available tags when input is empty but focused
+      const filtered = availableTags.filter(tag =>
+        !recipe?.tags?.includes(tag)
+      ).slice(0, 10)
+      setFilteredTagSuggestions(filtered)
+      setHighlightedTagIndex(0)
+      setShowTagSuggestions(filtered.length > 0)
+    } else {
+      setFilteredTagSuggestions([])
+      setShowTagSuggestions(false)
+    }
+  }, [newTag, showTagInput, availableTags, recipe?.tags])
 
   if (loading) {
     return (
@@ -361,6 +403,76 @@ function RecipeDetailPage() {
       console.error('Failed to enhance recipe:', err)
     } finally {
       setIsEnhancing(false)
+    }
+  }
+
+  const handleAddTag = async (tagToAdd?: string) => {
+    if (!recipe || isUpdatingTags) return
+
+    const tag = tagToAdd || newTag.trim()
+    if (!tag) return
+
+    if (recipe.tags?.includes(tag)) {
+      setNewTag('')
+      setShowTagInput(false)
+      setShowTagSuggestions(false)
+      return
+    }
+
+    try {
+      setIsUpdatingTags(true)
+      const updatedTags = [...(recipe.tags || []), tag]
+      const updatedRecipe = await apiService.updateRecipe(recipe.id, { tags: updatedTags })
+      setRecipe(updatedRecipe)
+      setNewTag('')
+      setShowTagInput(false)
+      setShowTagSuggestions(false)
+      loadAvailableTags() // Refresh available tags
+    } catch (err) {
+      console.error('Failed to add tag:', err)
+    } finally {
+      setIsUpdatingTags(false)
+    }
+  }
+
+  const handleRemoveTag = async (tagToRemove: string) => {
+    if (!recipe || isUpdatingTags) return
+
+    try {
+      setIsUpdatingTags(true)
+      const updatedTags = recipe.tags?.filter(tag => tag !== tagToRemove) || []
+      const updatedRecipe = await apiService.updateRecipe(recipe.id, { tags: updatedTags })
+      setRecipe(updatedRecipe)
+      loadAvailableTags() // Refresh available tags
+    } catch (err) {
+      console.error('Failed to remove tag:', err)
+    } finally {
+      setIsUpdatingTags(false)
+    }
+  }
+
+  const handleTagKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      if (filteredTagSuggestions.length > 0 && highlightedTagIndex >= 0) {
+        handleAddTag(filteredTagSuggestions[highlightedTagIndex])
+      } else {
+        handleAddTag()
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      if (filteredTagSuggestions.length > 0) {
+        setHighlightedTagIndex(prev => (prev + 1) % filteredTagSuggestions.length)
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      if (filteredTagSuggestions.length > 0) {
+        setHighlightedTagIndex(prev => (prev - 1 + filteredTagSuggestions.length) % filteredTagSuggestions.length)
+      }
+    } else if (e.key === 'Escape') {
+      setNewTag('')
+      setShowTagInput(false)
+      setShowTagSuggestions(false)
     }
   }
 
@@ -469,6 +581,106 @@ function RecipeDetailPage() {
                   </p>
                 </div>
               )}
+
+              {/* Tags */}
+              <div className="mb-4">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Categories:{' '}
+                    {recipe.tags && recipe.tags.length > 0 ? (
+                      recipe.tags.map((tag, index) => (
+                        <span key={tag}>
+                          <button
+                            onClick={() => handleRemoveTag(tag)}
+                            disabled={isUpdatingTags}
+                            className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300 transition-colors disabled:opacity-50"
+                            title="Click to remove tag"
+                          >
+                            {tag}
+                          </button>
+                          {index < (recipe.tags?.length || 0) - 1 && ', '}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-500 italic">None</span>
+                    )}
+                  </p>
+
+                  {showTagInput ? (
+                    <div className="relative flex items-center gap-1">
+                      <input
+                        type="text"
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        onKeyDown={handleTagKeyDown}
+                        onBlur={() => {
+                          // Delay hiding suggestions to allow clicking on them
+                          setTimeout(() => {
+                            setShowTagSuggestions(false)
+                            if (!newTag.trim()) {
+                              setShowTagInput(false)
+                            }
+                          }, 200)
+                        }}
+                        onFocus={() => {
+                          // Show suggestions when input gains focus if there are filtered suggestions
+                          if (filteredTagSuggestions.length > 0) {
+                            setShowTagSuggestions(true)
+                          }
+                        }}
+                        placeholder="Add tag..."
+                        disabled={isUpdatingTags}
+                        className="w-20 px-2 py-0.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => {
+                          setNewTag('')
+                          setShowTagInput(false)
+                          setShowTagSuggestions(false)
+                        }}
+                        disabled={isUpdatingTags}
+                        className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
+                      >
+                        <XMarkIcon className="w-3 h-3" />
+                      </button>
+
+                      {/* Suggestions Dropdown */}
+                      {showTagSuggestions && filteredTagSuggestions.length > 0 && !isUpdatingTags && (
+                        <div className="absolute z-50 top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-32 overflow-y-auto min-w-24">
+                          {filteredTagSuggestions.map((suggestion, index) => (
+                            <button
+                              key={suggestion}
+                              type="button"
+                              onMouseDown={(e) => {
+                                // Prevent blur event when clicking on suggestion
+                                e.preventDefault()
+                              }}
+                              onClick={() => handleAddTag(suggestion)}
+                              className={`w-full text-left px-2 py-1 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                                index === highlightedTagIndex
+                                  ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                                  : 'text-gray-700 dark:text-gray-300'
+                              }`}
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowTagInput(true)}
+                      disabled={isUpdatingTags}
+                      className="p-0.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors disabled:opacity-50"
+                      title="Add tag"
+                    >
+                      <PlusIcon className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              </div>
 
               {/* Show badges inline only when there is no image */}
               {!recipe.image && (

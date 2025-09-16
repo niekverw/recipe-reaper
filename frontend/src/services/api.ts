@@ -18,6 +18,7 @@ export interface Recipe {
   image?: string
   sourceUrl?: string
   aiEnhancedNotes?: string
+  tags?: string[]
   createdAt: string
   updatedAt: string
 }
@@ -33,6 +34,7 @@ export interface CreateRecipeData {
   instructions: string[]
   image?: string
   sourceUrl?: string
+  tags?: string[]
 }
 
 export interface UpdateRecipeData extends Partial<CreateRecipeData> {}
@@ -42,6 +44,7 @@ export interface RecipeFilters {
   isPublic?: boolean
   sortBy?: 'name' | 'createdAt' | 'prepTimeMinutes' | 'servings'
   sortOrder?: 'asc' | 'desc'
+  tags?: string[]
   limit?: number
   offset?: number
 }
@@ -93,6 +96,7 @@ class ApiService {
     if (filters?.isPublic !== undefined) params.append('isPublic', filters.isPublic.toString())
     if (filters?.sortBy) params.append('sortBy', filters.sortBy)
     if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder)
+    if (filters?.tags && filters.tags.length > 0) params.append('tags', filters.tags.join(','))
     if (filters?.limit) params.append('limit', filters.limit.toString())
     if (filters?.offset) params.append('offset', filters.offset.toString())
 
@@ -201,6 +205,12 @@ class ApiService {
     }>(`/recipes/${id}/enhance`, {
       method: 'POST',
     })
+  }
+
+  // Get all unique tags
+  async getAllTags(): Promise<string[]> {
+    const response = await this.request<{ tags: string[] }>('/recipes/tags')
+    return response.tags
   }
 }
 

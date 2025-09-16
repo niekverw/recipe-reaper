@@ -19,6 +19,7 @@ interface RecipeRow {
   source_url: string | null
   is_public: number
   ai_enhanced_notes: string | null
+  tags: string | null
   user_id: string | null
   household_id: string | null
   created_at: string
@@ -27,6 +28,7 @@ interface RecipeRow {
 
 function rowToRecipe(row: RecipeRow): Recipe {
   const parsedIngredients = JSON.parse(row.ingredients)
+  const parsedTags = row.tags ? JSON.parse(row.tags) : []
 
   return {
     id: row.id,
@@ -42,6 +44,7 @@ function rowToRecipe(row: RecipeRow): Recipe {
     sourceUrl: row.source_url || undefined,
     isPublic: row.is_public === 1,
     aiEnhancedNotes: row.ai_enhanced_notes || undefined,
+    tags: parsedTags,
     userId: row.user_id || undefined,
     householdId: row.household_id || undefined,
     createdAt: row.created_at,
@@ -66,6 +69,16 @@ export const recipeModel = {
     if (filters.isPublic !== undefined) {
       sql += ' AND is_public = ?'
       params.push(filters.isPublic ? 1 : 0)
+    }
+
+    // Add tag filter
+    if (filters.tags && filters.tags.length > 0) {
+      // Use JSON_EXTRACT to check if any of the provided tags exist in the recipe's tags array
+      const tagConditions = filters.tags.map(() => 'JSON_EXTRACT(tags, "$") LIKE ?').join(' OR ')
+      sql += ` AND (${tagConditions})`
+      filters.tags.forEach(tag => {
+        params.push(`%"${tag}"%`)
+      })
     }
 
     // Add sorting
@@ -131,8 +144,8 @@ export const recipeModel = {
     const sql = `
       INSERT INTO recipes (
         id, name, description, prep_time_minutes, cook_time_minutes, total_time_minutes, servings,
-        ingredients, instructions, image, source_url, is_public, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ingredients, instructions, image, source_url, is_public, tags, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
 
     const params = [
@@ -148,6 +161,7 @@ export const recipeModel = {
       data.image || null,
       data.sourceUrl || null,
       data.isPublic !== false ? 1 : 0,
+      JSON.stringify(data.tags || []),
       now,
       now
     ]
@@ -210,6 +224,10 @@ export const recipeModel = {
       updates.push('is_public = ?')
       params.push(data.isPublic ? 1 : 0)
     }
+    if (data.tags !== undefined) {
+      updates.push('tags = ?')
+      params.push(JSON.stringify(data.tags || []))
+    }
 
     updates.push('updated_at = ?')
     params.push(now)
@@ -236,6 +254,32 @@ export const recipeModel = {
     )
 
     return this.findById(id) as Promise<Recipe>
+  },
+
+  async getAllTags(): Promise<string[]> {
+    const db = Database.getInstance()
+    const rows = await db.all<{ tags: string }>('SELECT DISTINCT tags FROM recipes WHERE tags IS NOT NULL AND tags != "[]"')
+
+    const allTags = new Set<string>()
+
+    rows.forEach(row => {
+      if (row.tags) {
+        try {
+          const parsedTags = JSON.parse(row.tags)
+          if (Array.isArray(parsedTags)) {
+            parsedTags.forEach(tag => {
+              if (typeof tag === 'string' && tag.trim()) {
+                allTags.add(tag.trim())
+              }
+            })
+          }
+        } catch (e) {
+          console.warn('Failed to parse tags from row:', row.tags)
+        }
+      }
+    })
+
+    return Array.from(allTags).sort()
   },
 
   // Helper methods for auto-inference using ingredient parser

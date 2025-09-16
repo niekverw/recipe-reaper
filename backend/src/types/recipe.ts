@@ -17,6 +17,7 @@ export interface Recipe {
   sourceUrl?: string
   isPublic: boolean
   aiEnhancedNotes?: string | null
+  tags?: string[]
   // Future-ready fields for user/household support
   userId?: string
   householdId?: string
@@ -36,6 +37,7 @@ export interface CreateRecipeRequest {
   image?: string
   sourceUrl?: string
   isPublic?: boolean
+  tags?: string[]
 }
 
 export interface UpdateRecipeRequest {
@@ -50,12 +52,14 @@ export interface UpdateRecipeRequest {
   image?: string
   sourceUrl?: string
   isPublic?: boolean
+  tags?: string[]
 }
 
 export interface RecipeFilters {
   search?: string
   sortBy?: 'name' | 'time' | 'servings' | 'recent'
   isPublic?: boolean
+  tags?: string[]
   limit?: number
   offset?: number
 }

@@ -10,6 +10,7 @@ export interface Recipe {
   instructions: string[]
   image?: string
   sourceUrl?: string
+  tags?: string[]
   createdAt: string
   updatedAt: string
 }

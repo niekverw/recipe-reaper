@@ -101,6 +101,7 @@ export const recipeController = {
         search: req.query.search as string,
         sortBy: req.query.sortBy as 'name' | 'time' | 'servings' | 'recent',
         isPublic: req.query.isPublic === 'true' ? true : req.query.isPublic === 'false' ? false : undefined,
+        tags: req.query.tags ? (req.query.tags as string).split(',') : undefined,
         limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
         offset: req.query.offset ? parseInt(req.query.offset as string) : undefined
       }
@@ -364,11 +365,11 @@ export const recipeController = {
       const recipeData = {
         name: recipe.name,
         description: recipe.description,
-        ingredients: Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0 && typeof recipe.ingredients[0] === 'string'
-          ? recipe.ingredients as string[]
-          : Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0
-            ? (recipe.ingredients as IngredientCategory[]).flatMap((cat: IngredientCategory) => cat.items || [])
-            : [],
+        ingredients: Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0
+          ? typeof recipe.ingredients[0] === 'string'
+            ? recipe.ingredients as string[]
+            : (recipe.ingredients as IngredientCategory[]).flatMap((cat) => cat.items || [])
+          : [],
         instructions: recipe.instructions,
         prepTimeMinutes: recipe.prepTimeMinutes,
         cookTimeMinutes: recipe.cookTimeMinutes,
@@ -396,6 +397,15 @@ export const recipeController = {
           throw createError('AI enhancement service temporarily unavailable. Please try again later.', 429)
         }
       }
+      next(error)
+    }
+  },
+
+  async getAllTags(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tags = await recipeModel.getAllTags()
+      res.json({ tags })
+    } catch (error) {
       next(error)
     }
   }

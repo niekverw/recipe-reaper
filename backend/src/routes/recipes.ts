@@ -6,6 +6,9 @@ export const recipeRoutes = Router()
 // GET /api/recipes - List recipes with optional filters
 recipeRoutes.get('/', recipeController.getRecipes)
 
+// GET /api/recipes/tags - Get all unique tags
+recipeRoutes.get('/tags', recipeController.getAllTags)
+
 // POST /api/recipes - Create a new recipe
 recipeRoutes.post('/', recipeController.createRecipe)
 

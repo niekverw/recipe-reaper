@@ -10,7 +10,9 @@ import {
   Bars3BottomLeftIcon,
   Squares2X2Icon,
   PlusIcon,
-  DocumentDuplicateIcon
+  DocumentDuplicateIcon,
+  XMarkIcon,
+  TagIcon
 } from '@heroicons/react/24/outline'
 import { apiService, Recipe } from '../services/api'
 
@@ -66,9 +68,10 @@ interface RecipeGridCardProps {
   onEdit: (id: string, e: React.MouseEvent) => void
   onDelete: (id: string, e: React.MouseEvent) => void
   onCopy: (id: string, e: React.MouseEvent) => void
+  onTagClick: (tag: string) => void
 }
 
-function RecipeGridCard({ recipe, onEdit, onDelete, onCopy }: RecipeGridCardProps) {
+function RecipeGridCard({ recipe, onEdit, onDelete, onCopy, onTagClick }: RecipeGridCardProps) {
   return (
     <Link to={`/recipe/${recipe.id}`} className="block group">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 overflow-hidden">
@@ -114,9 +117,33 @@ function RecipeGridCard({ recipe, onEdit, onDelete, onCopy }: RecipeGridCardProp
           <h3 className="font-semibold text-sm sm:text-base md:text-lg mb-1 sm:mb-2 line-clamp-1 sm:line-clamp-2 text-gray-900 dark:text-white">
             {recipe.name}
           </h3>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-2 sm:line-clamp-3 leading-relaxed">
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-2 sm:line-clamp-3 leading-relaxed mb-2">
             {recipe.description}
           </p>
+          {/* Tags */}
+          {recipe.tags && recipe.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {recipe.tags.slice(0, 3).map(tag => (
+                <button
+                  key={tag}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onTagClick(tag)
+                  }}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs rounded hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+                >
+                  <TagIcon className="w-2.5 h-2.5" />
+                  {tag}
+                </button>
+              ))}
+              {recipe.tags.length > 3 && (
+                <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs rounded">
+                  +{recipe.tags.length - 3}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </Link>
@@ -128,9 +155,10 @@ interface RecipeListCardProps {
   onEdit: (id: string, e: React.MouseEvent) => void
   onDelete: (id: string, e: React.MouseEvent) => void
   onCopy: (id: string, e: React.MouseEvent) => void
+  onTagClick: (tag: string) => void
 }
 
-function RecipeListCard({ recipe, onEdit, onDelete, onCopy }: RecipeListCardProps) {
+function RecipeListCard({ recipe, onEdit, onDelete, onCopy, onTagClick }: RecipeListCardProps) {
   return (
     <Link to={`/recipe/${recipe.id}`} className="block group">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 p-2 sm:p-3 md:p-4">
@@ -153,7 +181,7 @@ function RecipeListCard({ recipe, onEdit, onDelete, onCopy }: RecipeListCardProp
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-1 mb-1 sm:mb-2">
               {recipe.description}
             </p>
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 mb-1">
               <div className="text-xs text-gray-500 dark:text-gray-400">{formatDateShort(recipe.createdAt)}</div>
               <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                 <ClockIcon className="w-3 h-3" />
@@ -164,6 +192,30 @@ function RecipeListCard({ recipe, onEdit, onDelete, onCopy }: RecipeListCardProp
                 <span>{recipe.servings}</span>
               </div>
             </div>
+            {/* Tags */}
+            {recipe.tags && recipe.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {recipe.tags.slice(0, 4).map(tag => (
+                  <button
+                    key={tag}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      onTagClick(tag)
+                    }}
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs rounded hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+                  >
+                    <TagIcon className="w-2.5 h-2.5" />
+                    {tag}
+                  </button>
+                ))}
+                {recipe.tags.length > 4 && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs rounded">
+                    +{recipe.tags.length - 4}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           <RecipeActions
             recipeId={recipe.id}
@@ -185,12 +237,23 @@ function RecipesPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [availableTags, setAvailableTags] = useState<string[]>([])
+  const [showTagFilter, setShowTagFilter] = useState(false)
 
   const filteredAndSortedRecipes = useMemo(() => {
-    let filtered = recipes.filter(recipe =>
-      recipe.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      recipe.description.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    let filtered = recipes.filter(recipe => {
+      // Text search filter
+      const matchesSearch = !searchQuery ||
+        recipe.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        recipe.description.toLowerCase().includes(searchQuery.toLowerCase())
+
+      // Tag filter
+      const matchesTags = selectedTags.length === 0 ||
+        selectedTags.every(tag => recipe.tags?.includes(tag))
+
+      return matchesSearch && matchesTags
+    })
 
     return filtered.sort((a, b) => {
       switch (sortBy) {
@@ -206,10 +269,11 @@ function RecipesPage() {
           return 0
       }
     })
-  }, [recipes, searchQuery, sortBy])
+  }, [recipes, searchQuery, sortBy, selectedTags])
 
   useEffect(() => {
     loadRecipes()
+    loadAvailableTags()
   }, [])
 
   const loadRecipes = async () => {
@@ -224,6 +288,29 @@ function RecipesPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const loadAvailableTags = async () => {
+    try {
+      const tags = await apiService.getAllTags()
+      setAvailableTags(tags)
+    } catch (err) {
+      console.error('Failed to load available tags:', err)
+    }
+  }
+
+  const addTagFilter = (tag: string) => {
+    if (!selectedTags.includes(tag)) {
+      setSelectedTags([...selectedTags, tag])
+    }
+  }
+
+  const removeTagFilter = (tag: string) => {
+    setSelectedTags(selectedTags.filter(t => t !== tag))
+  }
+
+  const clearTagFilters = () => {
+    setSelectedTags([])
   }
 
   const handleEdit = (id: string, e: React.MouseEvent) => {
@@ -360,6 +447,74 @@ function RecipesPage() {
               </div>
             </div>
           </div>
+
+          {/* Tag Filter */}
+          <div className="space-y-3">
+            {/* Tag Filter Toggle */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowTagFilter(!showTagFilter)}
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <TagIcon className="w-4 h-4" />
+                Filter by Tags
+                {selectedTags.length > 0 && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                    {selectedTags.length}
+                  </span>
+                )}
+              </button>
+              {selectedTags.length > 0 && (
+                <button
+                  onClick={clearTagFilters}
+                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
+
+            {/* Selected Tags */}
+            {selectedTags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                <span className="text-sm text-gray-500 dark:text-gray-400">Active filters:</span>
+                {selectedTags.map(tag => (
+                  <button
+                    key={tag}
+                    onClick={() => removeTagFilter(tag)}
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-sm rounded-md border border-blue-200 dark:border-blue-800 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+                  >
+                    {tag}
+                    <XMarkIcon className="w-3 h-3" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Tag Filter Dropdown */}
+            {showTagFilter && availableTags.length > 0 && (
+              <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                  {availableTags
+                    .filter(tag => !selectedTags.includes(tag))
+                    .map(tag => (
+                      <button
+                        key={tag}
+                        onClick={() => addTagFilter(tag)}
+                        className="px-2 py-1 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                </div>
+                {availableTags.filter(tag => !selectedTags.includes(tag)).length === 0 && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
+                    All tags are already selected
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Error State */}
@@ -410,6 +565,7 @@ function RecipesPage() {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onCopy={handleCopy}
+                    onTagClick={addTagFilter}
                   />
                 ))}
               </div>
@@ -422,6 +578,7 @@ function RecipesPage() {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onCopy={handleCopy}
+                    onTagClick={addTagFilter}
                   />
                 ))}
               </div>
