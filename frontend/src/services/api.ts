@@ -149,6 +149,48 @@ class ApiService {
       body: JSON.stringify({ url }),
     })
   }
+
+  // Recipe text parsing operation using OpenAI
+  async parseRecipeFromText(text: string) {
+    return this.request<{
+      recipeData: {
+        name: string
+        description: string
+        ingredients: string[]
+        instructions: string[]
+        image?: string
+        sourceUrl?: string
+        prepTimeMinutes?: number
+        cookTimeMinutes?: number
+        totalTimeMinutes?: number
+        servings?: number
+      }
+    }>('/recipes/parse-text', {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    })
+  }
+
+  // Recipe text parsing operation using Google Gemini
+  async parseRecipeFromTextGemini(text: string) {
+    return this.request<{
+      recipeData: {
+        name: string
+        description: string
+        ingredients: string[]
+        instructions: string[]
+        image?: string
+        sourceUrl?: string
+        prepTimeMinutes?: number
+        cookTimeMinutes?: number
+        totalTimeMinutes?: number
+        servings?: number
+      }
+    }>('/recipes/parse-text-gemini', {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    })
+  }
 }
 
 export const apiService = new ApiService()

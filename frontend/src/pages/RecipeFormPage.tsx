@@ -4,8 +4,7 @@ import { apiService, Recipe, CreateRecipeData } from '../services/api'
 import { IngredientHelper } from '../utils/ingredientHelper'
 import {
   ArrowLeftIcon,
-  CheckIcon,
-  EyeIcon
+  CheckIcon
 } from '@heroicons/react/24/outline'
 
 interface RecipeFormData {
@@ -21,18 +20,6 @@ interface RecipeFormData {
   sourceUrl?: string
 }
 
-interface ImportUrlData {
-  name: string
-  description: string
-  ingredients: string[]
-  instructions: string[]
-  prepTimeMinutes?: number
-  cookTimeMinutes?: number
-  totalTimeMinutes?: number
-  servings?: number
-  image?: string
-  sourceUrl: string
-}
 
 function RecipeFormPage() {
   const navigate = useNavigate()
@@ -58,9 +45,12 @@ function RecipeFormPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoadingRecipe, setIsLoadingRecipe] = useState(isEdit)
 
-  // URL import state
+  // Import state
+  const [importType, setImportType] = useState<'url' | 'text'>('url')
   const [importUrl, setImportUrl] = useState('')
+  const [importText, setImportText] = useState('')
   const [isImporting, setIsImporting] = useState(false)
+  const [isImportingGemini, setIsImportingGemini] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -161,6 +151,110 @@ function RecipeFormPage() {
       console.error('Failed to import recipe:', err)
     } finally {
       setIsImporting(false)
+    }
+  }
+
+  const handleImportFromText = async () => {
+    if (!importText.trim()) {
+      setImportError('Please enter recipe text')
+      return
+    }
+
+    try {
+      setIsImporting(true)
+      setImportError(null)
+
+      const response = await apiService.parseRecipeFromText(importText.trim())
+      const recipeData = response.recipeData
+
+      // Check if form has existing data and confirm overwrite
+      const hasExistingData = formData.name.trim() || formData.description.trim() ||
+        formData.ingredients.trim() || formData.instructions.trim()
+
+      if (hasExistingData) {
+        const shouldOverwrite = window.confirm(
+          'This will overwrite your current form data. Do you want to continue?'
+        )
+        if (!shouldOverwrite) return
+      }
+
+      // Update form with imported data
+      setFormData({
+        name: recipeData.name,
+        description: recipeData.description,
+        ingredients: recipeData.ingredients.join('\n'),
+        instructions: recipeData.instructions.join('\n'),
+        prepTimeMinutes: recipeData.prepTimeMinutes,
+        cookTimeMinutes: recipeData.cookTimeMinutes,
+        totalTimeMinutes: recipeData.totalTimeMinutes,
+        servings: recipeData.servings,
+        image: recipeData.image || '',
+        sourceUrl: recipeData.sourceUrl
+      })
+
+      // Clear import text
+      setImportText('')
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : 'Failed to parse recipe from text')
+      console.error('Failed to parse recipe:', err)
+    } finally {
+      setIsImporting(false)
+    }
+  }
+
+  const handleImportFromTextGemini = async () => {
+    if (!importText.trim()) {
+      setImportError('Please enter recipe text')
+      return
+    }
+
+    try {
+      setIsImportingGemini(true)
+      setImportError(null)
+
+      const response = await apiService.parseRecipeFromTextGemini(importText.trim())
+      const recipeData = response.recipeData
+
+      // Check if form has existing data and confirm overwrite
+      const hasExistingData = formData.name.trim() || formData.description.trim() ||
+        formData.ingredients.trim() || formData.instructions.trim()
+
+      if (hasExistingData) {
+        const shouldOverwrite = window.confirm(
+          'This will overwrite your current form data. Do you want to continue?'
+        )
+        if (!shouldOverwrite) return
+      }
+
+      // Update form with imported data
+      setFormData({
+        name: recipeData.name,
+        description: recipeData.description,
+        ingredients: recipeData.ingredients.join('\n'),
+        instructions: recipeData.instructions.join('\n'),
+        prepTimeMinutes: recipeData.prepTimeMinutes,
+        cookTimeMinutes: recipeData.cookTimeMinutes,
+        totalTimeMinutes: recipeData.totalTimeMinutes,
+        servings: recipeData.servings,
+        image: recipeData.image || '',
+        sourceUrl: recipeData.sourceUrl
+      })
+
+      // Clear import text
+      setImportText('')
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : 'Failed to parse recipe from text')
+      console.error('Failed to parse recipe:', err)
+    } finally {
+      setIsImportingGemini(false)
+    }
+  }
+
+  const handleImport = () => {
+    if (importType === 'url') {
+      handleImportFromUrl()
+    } else {
+      handleImportFromText()
     }
   }
 
@@ -276,48 +370,165 @@ function RecipeFormPage() {
         </div>
       )}
 
-      {/* URL Import Section */}
+      {/* Import Section */}
       {!isEdit && !copiedRecipe && (
         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
           <h2 className="text-lg font-semibold mb-4 text-blue-900 dark:text-blue-100">
-            Import from URL
+            Import Recipe
           </h2>
-          <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
-            Paste a recipe URL to automatically fill in the form with recipe data from supported websites.
-          </p>
 
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={importUrl}
-              onChange={(e) => setImportUrl(e.target.value)}
-              placeholder="https://example.com/recipe"
-              className="flex-1 px-3 py-2 border border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-blue-900/30 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              disabled={isImporting}
-              pattern="https?://.*"
-              title="Please enter a valid URL starting with http:// or https://"
-            />
+          {/* Import Type Tabs */}
+          <div className="flex mb-4 bg-blue-100 dark:bg-blue-800/30 rounded-lg p-1">
             <button
               type="button"
-              onClick={handleImportFromUrl}
-              disabled={isImporting || !importUrl.trim()}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors duration-200"
+              onClick={() => setImportType('url')}
+              className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                importType === 'url'
+                  ? 'bg-white dark:bg-blue-900 text-blue-900 dark:text-blue-100 shadow-sm'
+                  : 'text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100'
+              }`}
             >
-              {isImporting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Importing...
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                  </svg>
-                  Import Recipe
-                </>
-              )}
+              Import from URL
+            </button>
+            <button
+              type="button"
+              onClick={() => setImportType('text')}
+              className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                importType === 'text'
+                  ? 'bg-white dark:bg-blue-900 text-blue-900 dark:text-blue-100 shadow-sm'
+                  : 'text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100'
+              }`}
+            >
+              Import Text
             </button>
           </div>
+
+          {/* Import Content */}
+          {importType === 'url' ? (
+            <>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
+                Paste a recipe URL to automatically fill in the form with recipe data from supported websites.
+              </p>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={importUrl}
+                  onChange={(e) => setImportUrl(e.target.value)}
+                  placeholder="https://example.com/recipe"
+                  className="flex-1 px-3 py-2 border border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-blue-900/30 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  disabled={isImporting}
+                  pattern="https?://.*"
+                  title="Please enter a valid URL starting with http:// or https://"
+                />
+                <button
+                  type="button"
+                  onClick={handleImport}
+                  disabled={isImporting || !importUrl.trim()}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                >
+                  {isImporting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                      </svg>
+                      Import Recipe
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
+                Paste recipe text from cookbooks, websites, or handwritten notes to automatically parse and fill in the form. Or describe your ingredients and cooking ideas to let AI generate a complete recipe with instructions and variations.
+              </p>
+              <div className="space-y-3">
+                <textarea
+                  value={importText}
+                  onChange={(e) => setImportText(e.target.value)}
+                  placeholder={`Paste your recipe text here, for example:
+
+Chocolate Chip Cookies
+
+This recipe makes the perfect chewy chocolate chip cookies.
+
+Ingredients:
+- 2 cups all-purpose flour
+- 1 tsp baking soda
+- 1 tsp salt
+- 1 cup butter, softened
+- 3/4 cup brown sugar
+- 1/2 cup white sugar
+- 2 large eggs
+- 2 tsp vanilla extract
+- 2 cups chocolate chips
+
+Instructions:
+1. Preheat oven to 375°F
+2. Mix flour, baking soda, and salt in a bowl
+3. Cream butter and sugars together
+4. Add eggs and vanilla to butter mixture
+5. Gradually mix in flour mixture
+6. Stir in chocolate chips
+7. Bake for 9-11 minutes
+
+Prep time: 15 minutes
+Cook time: 10 minutes
+Serves: 24 cookies`}
+                  rows={8}
+                  className="w-full px-3 py-2 border border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-blue-900/30 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none text-sm"
+                  disabled={isImporting || isImportingGemini}
+                />
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleImportFromTextGemini}
+                    disabled={isImporting || isImportingGemini || !importText.trim()}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                  >
+                    {isImportingGemini ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Parsing...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Parse with Gemini
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleImport}
+                    disabled={isImporting || isImportingGemini || !importText.trim()}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                  >
+                    {isImporting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Parsing...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Parse with GPT-5-mini (not working)
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
 
           {importError && (
             <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">

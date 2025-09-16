@@ -12,6 +12,12 @@ recipeRoutes.post('/', recipeController.createRecipe)
 // POST /api/recipes/scrape - Scrape recipe data from URL
 recipeRoutes.post('/scrape', recipeController.scrapeRecipe)
 
+// POST /api/recipes/parse-text - Parse recipe data from text using OpenAI
+recipeRoutes.post('/parse-text', recipeController.parseTextRecipe)
+
+// POST /api/recipes/parse-text-gemini - Parse recipe data from text using Gemini
+recipeRoutes.post('/parse-text-gemini', recipeController.parseTextRecipeGemini)
+
 // GET /api/recipes/:id - Get a specific recipe
 recipeRoutes.get('/:id', recipeController.getRecipeById)
 

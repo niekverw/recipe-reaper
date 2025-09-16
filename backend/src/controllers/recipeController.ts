@@ -2,11 +2,17 @@ import { Request, Response, NextFunction } from 'express'
 import { recipeModel } from '../models/recipeModel'
 import { CreateRecipeRequest, UpdateRecipeRequest, RecipeFilters } from '../types/recipe'
 import { createError } from '../middleware/errorHandler'
+import { openaiService } from '../services/openaiService'
+import { geminiService } from '../services/geminiService'
 import { spawn } from 'child_process'
 import { join } from 'path'
 
 interface ScrapeRecipeRequest {
   url: string
+}
+
+interface ParseTextRecipeRequest {
+  text: string
 }
 
 function parseServings(servings?: string): number | undefined {
@@ -243,6 +249,92 @@ export const recipeController = {
         }
         if (error.message.includes('timeout') || error.message.includes('network')) {
           throw createError('Unable to reach the website. Please check the URL and try again.', 500)
+        }
+      }
+      next(error)
+    }
+  },
+
+  async parseTextRecipe(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { text }: ParseTextRecipeRequest = req.body
+
+      if (!text?.trim()) {
+        throw createError('Recipe text is required', 400)
+      }
+
+      // Parse the text using OpenAI
+      const parsedData = await openaiService.parseRecipeText(text)
+
+      // Transform to match scraper response format
+      const transformedData = {
+        name: parsedData.name,
+        description: parsedData.description,
+        ingredients: parsedData.ingredients,
+        instructions: parsedData.instructions,
+        prepTimeMinutes: parsedData.prepTimeMinutes,
+        cookTimeMinutes: parsedData.cookTimeMinutes,
+        totalTimeMinutes: parsedData.totalTimeMinutes,
+        servings: parsedData.servings,
+        image: parsedData.image,
+        sourceUrl: undefined // No source URL for text input
+      }
+
+      res.json({ recipeData: transformedData })
+    } catch (error) {
+      // Handle OpenAI specific errors
+      if (error instanceof Error) {
+        if (error.message.includes('API key')) {
+          throw createError('OpenAI API configuration error', 500)
+        }
+        if (error.message.includes('rate limit') || error.message.includes('quota')) {
+          throw createError('OpenAI service temporarily unavailable. Please try again later.', 429)
+        }
+        if (error.message.includes('Missing required recipe fields')) {
+          throw createError('Unable to extract recipe data from the provided text. Please ensure the text contains recipe information.', 400)
+        }
+      }
+      next(error)
+    }
+  },
+
+  async parseTextRecipeGemini(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { text }: ParseTextRecipeRequest = req.body
+
+      if (!text?.trim()) {
+        throw createError('Recipe text is required', 400)
+      }
+
+      // Parse the text using Gemini
+      const parsedData = await geminiService.parseRecipeText(text)
+
+      // Transform to match scraper response format
+      const transformedData = {
+        name: parsedData.name,
+        description: parsedData.description,
+        ingredients: parsedData.ingredients,
+        instructions: parsedData.instructions,
+        prepTimeMinutes: parsedData.prepTimeMinutes,
+        cookTimeMinutes: parsedData.cookTimeMinutes,
+        totalTimeMinutes: parsedData.totalTimeMinutes,
+        servings: parsedData.servings,
+        image: parsedData.image,
+        sourceUrl: undefined // No source URL for text input
+      }
+
+      res.json({ recipeData: transformedData })
+    } catch (error) {
+      // Handle Gemini specific errors
+      if (error instanceof Error) {
+        if (error.message.includes('API key')) {
+          throw createError('Gemini API configuration error', 500)
+        }
+        if (error.message.includes('rate limit') || error.message.includes('quota')) {
+          throw createError('Gemini service temporarily unavailable. Please try again later.', 429)
+        }
+        if (error.message.includes('Missing required recipe fields')) {
+          throw createError('Unable to extract recipe data from the provided text. Please ensure the text contains recipe information.', 400)
         }
       }
       next(error)
