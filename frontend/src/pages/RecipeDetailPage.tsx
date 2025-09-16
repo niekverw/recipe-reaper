@@ -586,10 +586,10 @@ function RecipeDetailPage() {
               <div className="mb-4">
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Categories:{' '}
+                    Folder:{' '}
                     {recipe.tags && recipe.tags.length > 0 ? (
                       recipe.tags.map((tag, index) => (
-                        <span key={tag} className="inline-flex items-center gap-1">
+                        <span key={tag} className="inline-flex items-center">
                           <button
                             onClick={() => navigate(`/?tag=${encodeURIComponent(tag)}`)}
                             className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
@@ -600,7 +600,7 @@ function RecipeDetailPage() {
                           <button
                             onClick={() => handleRemoveTag(tag)}
                             disabled={isUpdatingTags}
-                            className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50 ml-1"
+                            className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
                             title="Remove tag"
                           >
                             <XMarkIcon className="w-3 h-3" />
