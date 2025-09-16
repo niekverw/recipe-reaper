@@ -417,8 +417,30 @@ export const recipeController = {
         throw createError('Image file is required', 400)
       }
 
-      // Extract text from the uploaded image using Google Cloud Vision API
-      const extractedText = await visionService.extractTextFromImage(req.file.buffer)
+      let extractedText: string
+
+      try {
+        // Extract text from the uploaded image using Google Cloud Vision API
+        extractedText = await visionService.extractTextFromImage(req.file.buffer)
+      } catch (visionError) {
+        // Handle vision service errors gracefully
+        if (visionError instanceof Error) {
+          if (visionError.message.includes('Google Cloud Vision API credentials are not configured') ||
+              visionError.message.includes('Google Cloud Vision API is not available')) {
+            throw createError(
+              'Image text extraction is currently unavailable. Please manually enter your recipe or configure Google Cloud Vision API credentials.',
+              503
+            )
+          }
+
+          if (visionError.message.includes('No text found') || visionError.message.includes('No readable text')) {
+            throw createError('No readable text found in the image. Please ensure the image contains clear, readable text.', 400)
+          }
+        }
+
+        // Re-throw other vision errors with more context
+        throw createError(`Image processing failed: ${visionError instanceof Error ? visionError.message : 'Unknown error'}`, 500)
+      }
 
       if (!extractedText?.trim()) {
         throw createError('No readable text found in the image', 400)
