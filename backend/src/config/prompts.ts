@@ -21,7 +21,7 @@ PARSING RULES:
 - Extract servings as a number (e.g., "4 servings" = 4, "Serves 6" = 6)
 - If a field cannot be determined from the text, use your best guess based on context and knowledge as a chef
 - Generate a brief, useful description if none is provided in the text
-- When (parts of) description, ingredients, or instructions  weren't explicitly stated in the original text, clearly mark them as AI-generated like "[AI-generated]" or similar clear indicators
+- When (parts of the) description, ingredients, or instructions  weren't explicitly stated in the original text, clearly mark them as [AI-generated] e.g. "[For carbonara however, using guanciale is most authentic - AI-generated]" or similar clear indicators
 - Handle various recipe formats: websites, cookbooks, handwritten notes, emails
 - Return ONLY the JSON object, no additional text or explanations !!
 - Ensure the JSON is valid and properly formatted !!`
