@@ -9,7 +9,8 @@ import {
   FunnelIcon,
   Bars3BottomLeftIcon,
   Squares2X2Icon,
-  PlusIcon
+  PlusIcon,
+  DocumentDuplicateIcon
 } from '@heroicons/react/24/outline'
 import { apiService, Recipe } from '../services/api'
 
@@ -17,11 +18,23 @@ interface RecipeActionsProps {
   recipeId: string
   onEdit: (id: string, e: React.MouseEvent) => void
   onDelete: (id: string, e: React.MouseEvent) => void
+  onCopy: (id: string, e: React.MouseEvent) => void
 }
 
-function RecipeActions({ recipeId, onEdit, onDelete }: RecipeActionsProps) {
+function RecipeActions({ recipeId, onEdit, onDelete, onCopy }: RecipeActionsProps) {
   return (
     <div className="flex items-center gap-2">
+      <button
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          onCopy(recipeId, e)
+        }}
+        className="p-2 rounded-full bg-black/30 hover:bg-black/40 dark:bg-black/30 dark:hover:bg-black/40 text-white backdrop-blur-sm transition-colors"
+        aria-label="Copy recipe"
+      >
+        <DocumentDuplicateIcon className="w-5 h-5 text-white" />
+      </button>
       <button
         onClick={(e) => {
           e.preventDefault()
@@ -52,9 +65,10 @@ interface RecipeGridCardProps {
   recipe: Recipe
   onEdit: (id: string, e: React.MouseEvent) => void
   onDelete: (id: string, e: React.MouseEvent) => void
+  onCopy: (id: string, e: React.MouseEvent) => void
 }
 
-function RecipeGridCard({ recipe, onEdit, onDelete }: RecipeGridCardProps) {
+function RecipeGridCard({ recipe, onEdit, onDelete, onCopy }: RecipeGridCardProps) {
   return (
     <Link to={`/recipe/${recipe.id}`} className="block group">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 overflow-hidden">
@@ -77,6 +91,7 @@ function RecipeGridCard({ recipe, onEdit, onDelete }: RecipeGridCardProps) {
               recipeId={recipe.id}
               onEdit={onEdit}
               onDelete={onDelete}
+              onCopy={onCopy}
             />
           </div>
           <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3">
@@ -112,9 +127,10 @@ interface RecipeListCardProps {
   recipe: Recipe
   onEdit: (id: string, e: React.MouseEvent) => void
   onDelete: (id: string, e: React.MouseEvent) => void
+  onCopy: (id: string, e: React.MouseEvent) => void
 }
 
-function RecipeListCard({ recipe, onEdit, onDelete }: RecipeListCardProps) {
+function RecipeListCard({ recipe, onEdit, onDelete, onCopy }: RecipeListCardProps) {
   return (
     <Link to={`/recipe/${recipe.id}`} className="block group">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 p-2 sm:p-3 md:p-4">
@@ -153,6 +169,7 @@ function RecipeListCard({ recipe, onEdit, onDelete }: RecipeListCardProps) {
             recipeId={recipe.id}
             onEdit={onEdit}
             onDelete={onDelete}
+            onCopy={onCopy}
           />
         </div>
       </div>
@@ -227,6 +244,37 @@ function RecipesPage() {
         setError(err instanceof Error ? err.message : 'Failed to delete recipe')
         console.error('Failed to delete recipe:', err)
       }
+    }
+  }
+
+  const handleCopy = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    try {
+      // Fetch the original recipe
+      const originalRecipe = await apiService.getRecipe(id)
+      
+      // Navigate to add recipe page with the copied data as state
+      navigate('/add-recipe', {
+        state: {
+          copiedRecipe: {
+            name: `Copy of ${originalRecipe.name}`,
+            description: originalRecipe.description,
+            prepTimeMinutes: originalRecipe.prepTimeMinutes,
+            cookTimeMinutes: originalRecipe.cookTimeMinutes,
+            totalTimeMinutes: originalRecipe.totalTimeMinutes,
+            servings: originalRecipe.servings,
+            ingredients: originalRecipe.ingredients,
+            instructions: originalRecipe.instructions,
+            image: originalRecipe.image,
+            sourceUrl: originalRecipe.sourceUrl
+          }
+        }
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to copy recipe')
+      console.error('Failed to copy recipe:', err)
     }
   }
 
@@ -361,6 +409,7 @@ function RecipesPage() {
                     recipe={recipe}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    onCopy={handleCopy}
                   />
                 ))}
               </div>
@@ -372,6 +421,7 @@ function RecipesPage() {
                     recipe={recipe}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    onCopy={handleCopy}
                   />
                 ))}
               </div>

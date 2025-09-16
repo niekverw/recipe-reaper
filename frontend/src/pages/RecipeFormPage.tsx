@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { apiService, Recipe, CreateRecipeData } from '../services/api'
 import { IngredientHelper } from '../utils/ingredientHelper'
 import {
@@ -37,7 +37,9 @@ interface ImportUrlData {
 function RecipeFormPage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
+  const location = useLocation()
   const isEdit = Boolean(id)
+  const copiedRecipe = location.state?.copiedRecipe
 
   const [formData, setFormData] = useState<RecipeFormData>({
     name: '',
@@ -64,8 +66,22 @@ function RecipeFormPage() {
   useEffect(() => {
     if (isEdit && id) {
       loadRecipe(id)
+    } else if (copiedRecipe) {
+      // Pre-populate form with copied recipe data
+      setFormData({
+        name: copiedRecipe.name,
+        description: copiedRecipe.description,
+        ingredients: IngredientHelper.toTextareaFormat(copiedRecipe.ingredients),
+        instructions: copiedRecipe.instructions.join('\n'),
+        prepTimeMinutes: copiedRecipe.prepTimeMinutes,
+        cookTimeMinutes: copiedRecipe.cookTimeMinutes,
+        totalTimeMinutes: copiedRecipe.totalTimeMinutes,
+        servings: copiedRecipe.servings,
+        image: copiedRecipe.image || '',
+        sourceUrl: copiedRecipe.sourceUrl
+      })
     }
-  }, [isEdit, id])
+  }, [isEdit, id, copiedRecipe])
 
   const loadRecipe = async (recipeId: string) => {
     try {
@@ -261,7 +277,7 @@ function RecipeFormPage() {
       )}
 
       {/* URL Import Section */}
-      {!isEdit && (
+      {!isEdit && !copiedRecipe && (
         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
           <h2 className="text-lg font-semibold mb-4 text-blue-900 dark:text-blue-100">
             Import from URL

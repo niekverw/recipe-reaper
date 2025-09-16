@@ -11,7 +11,8 @@ import {
   CheckIcon,
   ScaleIcon,
   ChevronDownIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  DocumentDuplicateIcon
 } from '@heroicons/react/24/outline'
 import { apiService, Recipe, IngredientCategory } from '../services/api'
 import { IngredientHelper } from '../utils/ingredientHelper'
@@ -372,6 +373,30 @@ function RecipeDetailPage() {
             <PrinterIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
           </button>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                navigate('/add-recipe', {
+                  state: {
+                    copiedRecipe: {
+                      name: `Copy of ${recipe.name}`,
+                      description: recipe.description,
+                      prepTimeMinutes: recipe.prepTimeMinutes,
+                      cookTimeMinutes: recipe.cookTimeMinutes,
+                      totalTimeMinutes: recipe.totalTimeMinutes,
+                      servings: recipe.servings,
+                      ingredients: recipe.ingredients,
+                      instructions: recipe.instructions,
+                      image: recipe.image,
+                      sourceUrl: recipe.sourceUrl
+                    }
+                  }
+                })
+              }}
+              className="p-3 rounded-full bg-white/0 dark:bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Copy recipe"
+            >
+              <DocumentDuplicateIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            </button>
             <button
               onClick={() => navigate(`/recipe/${recipe.id}/edit`)}
               className="p-3 rounded-full bg-white/0 dark:bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
