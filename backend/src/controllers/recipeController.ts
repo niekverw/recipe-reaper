@@ -2,36 +2,11 @@ import { Request, Response, NextFunction } from 'express'
 import { recipeModel } from '../models/recipeModel'
 import { CreateRecipeRequest, UpdateRecipeRequest, RecipeFilters } from '../types/recipe'
 import { createError } from '../middleware/errorHandler'
-import scraper from '@jitl/recipe-data-scraper'
+import { spawn } from 'child_process'
+import { join } from 'path'
 
 interface ScrapeRecipeRequest {
   url: string
-}
-
-function parseDurationToMinutes(duration?: string): number | undefined {
-  if (!duration) return undefined
-
-  // Handle ISO 8601 duration format (PT15M, PT1H30M, etc.)
-  const iso8601Match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/)
-  if (iso8601Match) {
-    const hours = parseInt(iso8601Match[1] || '0')
-    const minutes = parseInt(iso8601Match[2] || '0')
-    return hours * 60 + minutes
-  }
-
-  // Handle simple minute format
-  const minuteMatch = duration.match(/(\d+)\s*(?:min|minute|minutes)/)
-  if (minuteMatch) {
-    return parseInt(minuteMatch[1])
-  }
-
-  // Handle hour format
-  const hourMatch = duration.match(/(\d+)\s*(?:hr|hour|hours)/)
-  if (hourMatch) {
-    return parseInt(hourMatch[1]) * 60
-  }
-
-  return undefined
 }
 
 function parseServings(servings?: string): number | undefined {
@@ -40,6 +15,50 @@ function parseServings(servings?: string): number | undefined {
   // Extract number from various formats
   const match = servings.match(/(\d+)/)
   return match ? parseInt(match[1]) : undefined
+}
+
+async function scrapeWithPython(url: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const pythonExecutable = join(__dirname, '../../venv/bin/python')
+    const scraperScript = join(__dirname, '../../scraper.py')
+
+    const pythonProcess = spawn(pythonExecutable, [scraperScript, url], {
+      cwd: join(__dirname, '../..')
+    })
+
+    let stdout = ''
+    let stderr = ''
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString()
+    })
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString()
+    })
+
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error(`Python scraper failed: ${stderr}`))
+        return
+      }
+
+      try {
+        const result = JSON.parse(stdout.trim())
+        if (result.error) {
+          reject(new Error(result.error))
+          return
+        }
+        resolve(result)
+      } catch (error) {
+        reject(new Error(`Failed to parse Python output: ${error}`))
+      }
+    })
+
+    pythonProcess.on('error', (error) => {
+      reject(new Error(`Failed to start Python process: ${error.message}`))
+    })
+  })
 }
 
 function parseImageUrl(image?: any): string | undefined {
@@ -189,25 +208,30 @@ export const recipeController = {
         return res.json({ recipeData: mockData })
       }
 
-      // Scrape recipe data
-      const scrapedData = await scraper(url)
+      // Scrape recipe data using Python scraper
+      const scrapedData = await scrapeWithPython(url)
 
       if (!scrapedData) {
         throw createError('No recipe data found at the provided URL', 404)
       }
 
       // Transform scraped data to our format
+      // Instructions come as a string with \n separators, split into array
+      const instructions = scrapedData.instructions
+        ? scrapedData.instructions.split('\n').filter((step: string) => step.trim())
+        : []
+
       const transformedData = {
         name: scrapedData.name || 'Imported Recipe',
         description: scrapedData.description || 'Recipe imported from web',
-        ingredients: scrapedData.recipeIngredients || [],
-        instructions: scrapedData.recipeInstructions || [],
-        image: parseImageUrl(scrapedData.image),
+        ingredients: scrapedData.ingredients || [],
+        instructions: instructions,
+        image: scrapedData.image,
         sourceUrl: url,
-        prepTimeMinutes: parseDurationToMinutes(scrapedData.prepTime),
-        cookTimeMinutes: parseDurationToMinutes(scrapedData.cookTime),
-        totalTimeMinutes: parseDurationToMinutes(scrapedData.totalTime),
-        servings: parseServings(scrapedData.recipeYield)
+        prepTimeMinutes: scrapedData.prepTimeMinutes,
+        cookTimeMinutes: scrapedData.cookTimeMinutes,
+        totalTimeMinutes: scrapedData.totalTimeMinutes,
+        servings: parseServings(scrapedData.yields)
       }
 
       res.json({ recipeData: transformedData })

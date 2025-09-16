@@ -40,7 +40,9 @@ Thumbs.db
 .env.*.local
 
 # Local backend data (sqlite)
-backend/data/*.db
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
 
 # Mac/iCloud drive temp files
 .AppleDouble
