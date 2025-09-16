@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   MagnifyingGlassIcon,
   ClockIcon,
@@ -231,6 +231,7 @@ function RecipeListCard({ recipe, onEdit, onDelete, onCopy, onTagClick }: Recipe
 
 function RecipesPage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('name')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -276,6 +277,21 @@ function RecipesPage() {
     loadAvailableTags()
   }, [])
 
+  // Handle URL parameters for tag filtering
+  useEffect(() => {
+    const tagParam = searchParams.get('tag')
+    if (tagParam && selectedTags.length === 0) {
+      // Only set from URL parameter if no tags are currently selected
+      // This prevents re-adding tags when they're being removed
+      setSelectedTags([tagParam])
+      setShowTagFilter(true)
+    } else if (!tagParam && selectedTags.length > 0) {
+      // If URL has no tag parameter but we have selected tags, 
+      // this likely means we came from an external link, so sync URL
+      updateURLWithTags(selectedTags)
+    }
+  }, [searchParams])
+
   const loadRecipes = async () => {
     try {
       setLoading(true)
@@ -301,16 +317,34 @@ function RecipesPage() {
 
   const addTagFilter = (tag: string) => {
     if (!selectedTags.includes(tag)) {
-      setSelectedTags([...selectedTags, tag])
+      const newTags = [...selectedTags, tag]
+      setSelectedTags(newTags)
+      updateURLWithTags(newTags)
     }
   }
 
   const removeTagFilter = (tag: string) => {
-    setSelectedTags(selectedTags.filter(t => t !== tag))
+    const newTags = selectedTags.filter(t => t !== tag)
+    setSelectedTags(newTags)
+    updateURLWithTags(newTags)
   }
 
   const clearTagFilters = () => {
     setSelectedTags([])
+    updateURLWithTags([])
+  }
+
+  const updateURLWithTags = (tags: string[]) => {
+    const newSearchParams = new URLSearchParams()
+    if (tags.length === 1) {
+      newSearchParams.set('tag', tags[0])
+    } else if (tags.length > 1) {
+      // For multiple tags, we could use a different approach
+      // For now, we'll just show the first tag in the URL
+      newSearchParams.set('tag', tags[0])
+    }
+    // Update URL without causing a navigation
+    setSearchParams(newSearchParams, { replace: true })
   }
 
   const handleEdit = (id: string, e: React.MouseEvent) => {

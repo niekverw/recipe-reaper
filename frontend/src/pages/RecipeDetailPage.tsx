@@ -589,14 +589,21 @@ function RecipeDetailPage() {
                     Categories:{' '}
                     {recipe.tags && recipe.tags.length > 0 ? (
                       recipe.tags.map((tag, index) => (
-                        <span key={tag}>
+                        <span key={tag} className="inline-flex items-center gap-1">
+                          <button
+                            onClick={() => navigate(`/?tag=${encodeURIComponent(tag)}`)}
+                            className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                            title="View all recipes with this tag"
+                          >
+                            {tag}
+                          </button>
                           <button
                             onClick={() => handleRemoveTag(tag)}
                             disabled={isUpdatingTags}
-                            className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300 transition-colors disabled:opacity-50"
-                            title="Click to remove tag"
+                            className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50 ml-1"
+                            title="Remove tag"
                           >
-                            {tag}
+                            <XMarkIcon className="w-3 h-3" />
                           </button>
                           {index < (recipe.tags?.length || 0) - 1 && ', '}
                         </span>
