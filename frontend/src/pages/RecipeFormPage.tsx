@@ -14,8 +14,24 @@ interface RecipeFormData {
   ingredients: string
   instructions: string
   prepTimeMinutes?: number
+  cookTimeMinutes?: number
+  totalTimeMinutes?: number
   servings?: number
   image?: string
+  sourceUrl?: string
+}
+
+interface ImportUrlData {
+  name: string
+  description: string
+  ingredients: string[]
+  instructions: string[]
+  prepTimeMinutes?: number
+  cookTimeMinutes?: number
+  totalTimeMinutes?: number
+  servings?: number
+  image?: string
+  sourceUrl: string
 }
 
 function RecipeFormPage() {
@@ -29,13 +45,21 @@ function RecipeFormPage() {
     ingredients: '',
     instructions: '',
     prepTimeMinutes: undefined,
+    cookTimeMinutes: undefined,
+    totalTimeMinutes: undefined,
     servings: undefined,
-    image: ''
+    image: '',
+    sourceUrl: undefined
   })
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoadingRecipe, setIsLoadingRecipe] = useState(isEdit)
+
+  // URL import state
+  const [importUrl, setImportUrl] = useState('')
+  const [isImporting, setIsImporting] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
 
   useEffect(() => {
     if (isEdit && id) {
@@ -55,7 +79,8 @@ function RecipeFormPage() {
         instructions: recipe.instructions.join('\n'),
         prepTimeMinutes: recipe.prepTimeMinutes,
         servings: recipe.servings,
-        image: recipe.image || ''
+        image: recipe.image || '',
+        sourceUrl: recipe.sourceUrl
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load recipe')
@@ -73,6 +98,54 @@ function RecipeFormPage() {
         ? (value === '' ? undefined : Number(value))
         : value
     }))
+  }
+
+  const handleImportFromUrl = async () => {
+    if (!importUrl.trim()) {
+      setImportError('Please enter a URL')
+      return
+    }
+
+    try {
+      setIsImporting(true)
+      setImportError(null)
+
+      const response = await apiService.scrapeRecipeFromUrl(importUrl.trim())
+      const recipeData = response.recipeData
+
+      // Check if form has existing data and confirm overwrite
+      const hasExistingData = formData.name.trim() || formData.description.trim() ||
+        formData.ingredients.trim() || formData.instructions.trim()
+
+      if (hasExistingData) {
+        const shouldOverwrite = window.confirm(
+          'This will overwrite your current form data. Do you want to continue?'
+        )
+        if (!shouldOverwrite) return
+      }
+
+      // Update form with imported data
+      setFormData({
+        name: recipeData.name,
+        description: recipeData.description,
+        ingredients: recipeData.ingredients.join('\n'),
+        instructions: recipeData.instructions.join('\n'),
+        prepTimeMinutes: recipeData.prepTimeMinutes,
+        cookTimeMinutes: recipeData.cookTimeMinutes,
+        totalTimeMinutes: recipeData.totalTimeMinutes,
+        servings: recipeData.servings,
+        image: recipeData.image || '',
+        sourceUrl: recipeData.sourceUrl
+      })
+
+      // Clear import URL
+      setImportUrl('')
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : 'Failed to import recipe from URL')
+      console.error('Failed to import recipe:', err)
+    } finally {
+      setIsImporting(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -112,8 +185,11 @@ function RecipeFormPage() {
           .map(line => line.trim())
           .filter(line => line.length > 0),
         prepTimeMinutes: formData.prepTimeMinutes,
+        cookTimeMinutes: formData.cookTimeMinutes,
+        totalTimeMinutes: formData.totalTimeMinutes,
         servings: formData.servings,
-        image: formData.image?.trim() || undefined
+        image: formData.image?.trim() || undefined,
+        sourceUrl: formData.sourceUrl?.trim() || undefined
       }
 
       let savedRecipe: Recipe
@@ -181,6 +257,57 @@ function RecipeFormPage() {
               ✕
             </button>
           </div>
+        </div>
+      )}
+
+      {/* URL Import Section */}
+      {!isEdit && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
+          <h2 className="text-lg font-semibold mb-4 text-blue-900 dark:text-blue-100">
+            Import from URL
+          </h2>
+          <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
+            Paste a recipe URL to automatically fill in the form with recipe data from supported websites.
+          </p>
+
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={importUrl}
+              onChange={(e) => setImportUrl(e.target.value)}
+              placeholder="https://example.com/recipe"
+              className="flex-1 px-3 py-2 border border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-blue-900/30 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              disabled={isImporting}
+              pattern="https?://.*"
+              title="Please enter a valid URL starting with http:// or https://"
+            />
+            <button
+              type="button"
+              onClick={handleImportFromUrl}
+              disabled={isImporting || !importUrl.trim()}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors duration-200"
+            >
+              {isImporting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                  </svg>
+                  Import Recipe
+                </>
+              )}
+            </button>
+          </div>
+
+          {importError && (
+            <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-red-700 dark:text-red-400 text-sm">{importError}</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -290,7 +417,7 @@ Bake for 25-30 minutes`}
             Additional Details
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <div>
               <label htmlFor="prepTimeMinutes" className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
                 Prep Time (minutes)
@@ -305,7 +432,39 @@ Bake for 25-30 minutes`}
                 placeholder="30"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Leave empty to auto-infer</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Active prep time</p>
+            </div>
+            <div>
+              <label htmlFor="cookTimeMinutes" className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                Cook Time (minutes)
+              </label>
+              <input
+                type="number"
+                id="cookTimeMinutes"
+                name="cookTimeMinutes"
+                min="1"
+                value={formData.cookTimeMinutes || ''}
+                onChange={handleInputChange}
+                placeholder="25"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Cooking/baking time</p>
+            </div>
+            <div>
+              <label htmlFor="totalTimeMinutes" className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                Total Time (minutes)
+              </label>
+              <input
+                type="number"
+                id="totalTimeMinutes"
+                name="totalTimeMinutes"
+                min="1"
+                value={formData.totalTimeMinutes || ''}
+                onChange={handleInputChange}
+                placeholder="55"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total recipe time</p>
             </div>
 
             <div>

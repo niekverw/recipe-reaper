@@ -8,13 +8,10 @@ export interface Recipe {
   name: string
   description: string
   prepTimeMinutes: number
-  cookTimeMinutes?: number
-  totalTimeMinutes?: number
   servings: number
   ingredients: string[] | IngredientCategory[]
   instructions: string[]
   image?: string
-  sourceUrl?: string
   isPublic: boolean
   // Future-ready fields for user/household support
   userId?: string
@@ -27,13 +24,10 @@ export interface CreateRecipeRequest {
   name: string
   description: string
   prepTimeMinutes?: number
-  cookTimeMinutes?: number
-  totalTimeMinutes?: number
   servings?: number
   ingredients: string[] | IngredientCategory[]
   instructions: string[]
   image?: string
-  sourceUrl?: string
   isPublic?: boolean
 }
 
@@ -41,13 +35,10 @@ export interface UpdateRecipeRequest {
   name?: string
   description?: string
   prepTimeMinutes?: number
-  cookTimeMinutes?: number
-  totalTimeMinutes?: number
   servings?: number
   ingredients?: string[] | IngredientCategory[]
   instructions?: string[]
   image?: string
-  sourceUrl?: string
   isPublic?: boolean
 }
 

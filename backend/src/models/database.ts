@@ -34,10 +34,13 @@ export class Database {
         name TEXT NOT NULL,
         description TEXT NOT NULL,
         prep_time_minutes INTEGER NOT NULL,
+        cook_time_minutes INTEGER,
+        total_time_minutes INTEGER,
         servings INTEGER NOT NULL,
         ingredients TEXT NOT NULL,
         instructions TEXT NOT NULL,
         image TEXT,
+        source_url TEXT,
         is_public BOOLEAN DEFAULT true,
         user_id TEXT,
         household_id TEXT,
@@ -46,7 +49,32 @@ export class Database {
       )
     `
 
-    return this.run(createRecipesTable)
+    // Add source_url column to existing tables if it doesn't exist
+    const addSourceUrlColumn = `
+      ALTER TABLE recipes ADD COLUMN source_url TEXT
+    `
+
+    // Add new time columns to existing tables if they don't exist
+    const addCookTimeColumn = `
+      ALTER TABLE recipes ADD COLUMN cook_time_minutes INTEGER
+    `
+
+    const addTotalTimeColumn = `
+      ALTER TABLE recipes ADD COLUMN total_time_minutes INTEGER
+    `
+
+    try {
+      await this.run(createRecipesTable)
+      // Try to add the columns, but ignore errors if they already exist
+      await this.run(addSourceUrlColumn).catch(() => {})
+      await this.run(addCookTimeColumn).catch(() => {})
+      await this.run(addTotalTimeColumn).catch(() => {})
+    } catch (error) {
+      // Column might already exist, check if it's a harmless error
+      if (!String(error).includes('duplicate column name')) {
+        throw error
+      }
+    }
   }
 
   async run(sql: string, params: any[] = []): Promise<void> {

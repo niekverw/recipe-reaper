@@ -9,6 +9,9 @@ recipeRoutes.get('/', recipeController.getRecipes)
 // POST /api/recipes - Create a new recipe
 recipeRoutes.post('/', recipeController.createRecipe)
 
+// POST /api/recipes/scrape - Scrape recipe data from URL
+recipeRoutes.post('/scrape', recipeController.scrapeRecipe)
+
 // GET /api/recipes/:id - Get a specific recipe
 recipeRoutes.get('/:id', recipeController.getRecipeById)
 

@@ -409,6 +409,23 @@ function RecipeDetailPage() {
                 {recipe.description}
               </p>
 
+              {/* Source URL Attribution */}
+              {recipe.sourceUrl && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Recipe adapted from{' '}
+                    <a
+                      href={recipe.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline transition-colors"
+                    >
+                      {new URL(recipe.sourceUrl).hostname}
+                    </a>
+                  </p>
+                </div>
+              )}
+
               {/* Show badges inline only when there is no image */}
               {!recipe.image && (
                 <div className="flex flex-wrap items-center gap-4">

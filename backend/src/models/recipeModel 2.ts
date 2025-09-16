@@ -10,8 +10,6 @@ interface RecipeRow {
   name: string
   description: string
   prep_time_minutes: number
-  cook_time_minutes: number | null
-  total_time_minutes: number | null
   servings: number
   ingredients: string
   instructions: string
@@ -32,13 +30,10 @@ function rowToRecipe(row: RecipeRow): Recipe {
     name: row.name,
     description: row.description,
     prepTimeMinutes: row.prep_time_minutes,
-    cookTimeMinutes: row.cook_time_minutes || undefined,
-    totalTimeMinutes: row.total_time_minutes || undefined,
     servings: row.servings,
     ingredients: parsedIngredients,
     instructions: JSON.parse(row.instructions),
     image: row.image || undefined,
-    sourceUrl: row.source_url || undefined,
     isPublic: row.is_public === 1,
     userId: row.user_id || undefined,
     householdId: row.household_id || undefined,
@@ -128,9 +123,9 @@ export const recipeModel = {
 
     const sql = `
       INSERT INTO recipes (
-        id, name, description, prep_time_minutes, cook_time_minutes, total_time_minutes, servings,
-        ingredients, instructions, image, source_url, is_public, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, name, description, prep_time_minutes, servings,
+        ingredients, instructions, image, is_public, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
 
     const params = [
@@ -138,13 +133,10 @@ export const recipeModel = {
       data.name.trim(),
       data.description.trim(),
       prepTimeMinutes,
-      data.cookTimeMinutes || null,
-      data.totalTimeMinutes || null,
       servings,
       JSON.stringify(processedIngredients),
       JSON.stringify(data.instructions),
       data.image || null,
-      data.sourceUrl || null,
       data.isPublic !== false ? 1 : 0,
       now,
       now
@@ -173,14 +165,6 @@ export const recipeModel = {
       updates.push('prep_time_minutes = ?')
       params.push(data.prepTimeMinutes)
     }
-    if (data.cookTimeMinutes !== undefined) {
-      updates.push('cook_time_minutes = ?')
-      params.push(data.cookTimeMinutes)
-    }
-    if (data.totalTimeMinutes !== undefined) {
-      updates.push('total_time_minutes = ?')
-      params.push(data.totalTimeMinutes)
-    }
     if (data.servings !== undefined) {
       updates.push('servings = ?')
       params.push(data.servings)
@@ -199,10 +183,6 @@ export const recipeModel = {
     if (data.image !== undefined) {
       updates.push('image = ?')
       params.push(data.image || null)
-    }
-    if (data.sourceUrl !== undefined) {
-      updates.push('source_url = ?')
-      params.push(data.sourceUrl || null)
     }
     if (data.isPublic !== undefined) {
       updates.push('is_public = ?')

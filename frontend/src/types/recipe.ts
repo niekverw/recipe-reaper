@@ -7,6 +7,7 @@ export interface Recipe {
   ingredients: string[]
   instructions: string[]
   image?: string
+  sourceUrl?: string
   createdAt: string
   updatedAt: string
 }

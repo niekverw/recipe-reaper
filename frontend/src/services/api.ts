@@ -10,10 +10,13 @@ export interface Recipe {
   name: string
   description: string
   prepTimeMinutes: number
+  cookTimeMinutes?: number
+  totalTimeMinutes?: number
   servings: number
   ingredients: string[] | IngredientCategory[]
   instructions: string[]
   image?: string
+  sourceUrl?: string
   createdAt: string
   updatedAt: string
 }
@@ -22,10 +25,13 @@ export interface CreateRecipeData {
   name: string
   description: string
   prepTimeMinutes?: number
+  cookTimeMinutes?: number
+  totalTimeMinutes?: number
   servings?: number
   ingredients: string[] | IngredientCategory[]
   instructions: string[]
   image?: string
+  sourceUrl?: string
 }
 
 export interface UpdateRecipeData extends Partial<CreateRecipeData> {}
@@ -162,6 +168,27 @@ class ApiService {
 
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
     return this.request<{ status: string; timestamp: string }>('/health')
+  }
+
+  // Recipe scraping operation
+  async scrapeRecipeFromUrl(url: string) {
+    return this.request<{
+      recipeData: {
+        name: string
+        description: string
+        ingredients: string[]
+        instructions: string[]
+        image?: string
+        sourceUrl: string
+        prepTimeMinutes?: number
+        cookTimeMinutes?: number
+        totalTimeMinutes?: number
+        servings?: number
+      }
+    }>('/recipes/scrape', {
+      method: 'POST',
+      body: JSON.stringify({ url }),
+    })
   }
 }
 
