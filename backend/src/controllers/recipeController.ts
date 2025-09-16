@@ -42,6 +42,32 @@ function parseServings(servings?: string): number | undefined {
   return match ? parseInt(match[1]) : undefined
 }
 
+function parseImageUrl(image?: any): string | undefined {
+  if (!image) return undefined
+
+  // If it's already a string, return it
+  if (typeof image === 'string') {
+    return image
+  }
+
+  // If it's an object with a url property, return that
+  if (typeof image === 'object' && image.url) {
+    return image.url
+  }
+
+  // If it's an object with a contentUrl property, return that
+  if (typeof image === 'object' && image.contentUrl) {
+    return image.contentUrl
+  }
+
+  // If it's an object with an @id that looks like a URL, return that
+  if (typeof image === 'object' && image['@id'] && image['@id'].startsWith('http')) {
+    return image['@id']
+  }
+
+  return undefined
+}
+
 export const recipeController = {
   async getRecipes(req: Request, res: Response, next: NextFunction) {
     try {
@@ -176,7 +202,7 @@ export const recipeController = {
         description: scrapedData.description || 'Recipe imported from web',
         ingredients: scrapedData.recipeIngredients || [],
         instructions: scrapedData.recipeInstructions || [],
-        image: scrapedData.image,
+        image: parseImageUrl(scrapedData.image),
         sourceUrl: url,
         prepTimeMinutes: parseDurationToMinutes(scrapedData.prepTime),
         cookTimeMinutes: parseDurationToMinutes(scrapedData.cookTime),

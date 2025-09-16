@@ -99,11 +99,11 @@ describe('Recipe Scraper API', () => {
 
     it('should parse various duration formats', async () => {
       const testCases = [
-        { prepTime: 'PT30M', expected: 30 },
-        { prepTime: 'PT1H30M', expected: 90 },
-        { prepTime: '45 minutes', expected: 45 },
-        { prepTime: '2 hours', expected: 120 },
-        { totalTime: 'PT2H', expected: 120 }
+        { prepTime: 'PT30M', expected: 30, field: 'prepTimeMinutes' },
+        { prepTime: 'PT1H30M', expected: 90, field: 'prepTimeMinutes' },
+        { prepTime: '45 minutes', expected: 45, field: 'prepTimeMinutes' },
+        { prepTime: '2 hours', expected: 120, field: 'prepTimeMinutes' },
+        { totalTime: 'PT2H', expected: 120, field: 'totalTimeMinutes' }
       ]
 
       for (const testCase of testCases) {
@@ -119,7 +119,7 @@ describe('Recipe Scraper API', () => {
           .send({ url: validUrl })
           .expect(200)
 
-        expect(response.body.recipeData.prepTimeMinutes).toBe(testCase.expected)
+        expect(response.body.recipeData[testCase.field]).toBe(testCase.expected)
       }
     })
 
@@ -143,6 +143,32 @@ describe('Recipe Scraper API', () => {
           .expect(200)
 
         expect(response.body.recipeData.servings).toBe(testCase.expected)
+      }
+    })
+
+    it('should parse image URLs from various formats', async () => {
+      const testCases = [
+        { image: 'https://example.com/image.jpg', expected: 'https://example.com/image.jpg' },
+        { image: { url: 'https://example.com/image.jpg' }, expected: 'https://example.com/image.jpg' },
+        { image: { contentUrl: 'https://example.com/image.jpg' }, expected: 'https://example.com/image.jpg' },
+        { image: { '@id': 'https://example.com/image.jpg' }, expected: 'https://example.com/image.jpg' },
+        { image: { url: 'https://example.com/image.jpg', contentUrl: 'https://example.com/other.jpg' }, expected: 'https://example.com/image.jpg' },
+        { image: null, expected: undefined },
+        { image: undefined, expected: undefined }
+      ]
+
+      for (const testCase of testCases) {
+        mockScraper.mockResolvedValue({
+          ...mockScrapedData,
+          image: testCase.image
+        })
+
+        const response = await request(app)
+          .post('/api/recipes/scrape')
+          .send({ url: validUrl })
+          .expect(200)
+
+        expect(response.body.recipeData.image).toBe(testCase.expected)
       }
     })
 
