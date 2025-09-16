@@ -431,8 +431,20 @@ function RecipeDetailPage() {
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                     <ClockIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">{recipe.prepTimeMinutes} min</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">Prep: {recipe.prepTimeMinutes} min</span>
                   </div>
+                  {recipe.cookTimeMinutes && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <ClockIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">Cook: {recipe.cookTimeMinutes} min</span>
+                    </div>
+                  )}
+                  {recipe.totalTimeMinutes && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <ClockIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">Total: {recipe.totalTimeMinutes} min</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                     <UsersIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     <span className="text-sm font-medium text-gray-900 dark:text-white">{Math.round(recipe.servings * scale)} servings</span>
@@ -457,8 +469,20 @@ function RecipeDetailPage() {
                   <div className="absolute left-3 bottom-3 flex flex-col gap-2">
                     <div className="flex items-center gap-2 px-2 py-1 bg-black/60 text-white rounded-lg backdrop-blur-sm text-sm">
                       <ClockIcon className="w-4 h-4 text-white opacity-90" />
-                      <span className="font-medium">{recipe.prepTimeMinutes} min</span>
+                      <span className="font-medium">Prep: {recipe.prepTimeMinutes} min</span>
                     </div>
+                    {recipe.cookTimeMinutes && (
+                      <div className="flex items-center gap-2 px-2 py-1 bg-black/60 text-white rounded-lg backdrop-blur-sm text-sm">
+                        <ClockIcon className="w-4 h-4 text-white opacity-90" />
+                        <span className="font-medium">Cook: {recipe.cookTimeMinutes} min</span>
+                      </div>
+                    )}
+                    {recipe.totalTimeMinutes && (
+                      <div className="flex items-center gap-2 px-2 py-1 bg-black/60 text-white rounded-lg backdrop-blur-sm text-sm">
+                        <ClockIcon className="w-4 h-4 text-white opacity-90" />
+                        <span className="font-medium">Total: {recipe.totalTimeMinutes} min</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 px-2 py-1 bg-black/60 text-white rounded-lg backdrop-blur-sm text-sm">
                       <UsersIcon className="w-4 h-4 text-white opacity-90" />
                       <span className="font-medium">{Math.round(recipe.servings * scale)} servings</span>

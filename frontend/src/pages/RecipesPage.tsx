@@ -86,7 +86,7 @@ function RecipeGridCard({ recipe, onEdit, onDelete }: RecipeGridCardProps) {
               </span>
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 bg-black/30 text-white backdrop-blur-sm text-xs rounded-full">
                 <ClockIcon className="w-3 h-3" />
-                {recipe.prepTimeMinutes}m
+                {(recipe.totalTimeMinutes || recipe.prepTimeMinutes)}m
               </span>
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 bg-black/30 text-white backdrop-blur-sm text-xs rounded-full">
                 <UsersIcon className="w-3 h-3" />
@@ -141,7 +141,7 @@ function RecipeListCard({ recipe, onEdit, onDelete }: RecipeListCardProps) {
               <div className="text-xs text-gray-500 dark:text-gray-400">{formatDateShort(recipe.createdAt)}</div>
               <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                 <ClockIcon className="w-3 h-3" />
-                <span>{recipe.prepTimeMinutes}m</span>
+                <span>{(recipe.totalTimeMinutes || recipe.prepTimeMinutes)}m</span>
               </div>
               <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                 <UsersIcon className="w-3 h-3" />
@@ -180,7 +180,7 @@ function RecipesPage() {
         case 'name':
           return a.name.localeCompare(b.name)
         case 'time':
-          return a.prepTimeMinutes - b.prepTimeMinutes
+          return (a.totalTimeMinutes || a.prepTimeMinutes) - (b.totalTimeMinutes || b.prepTimeMinutes)
         case 'servings':
           return a.servings - b.servings
         case 'recent':

@@ -72,7 +72,7 @@ export const recipeModel = {
         sql += ' ORDER BY name ASC'
         break
       case 'time':
-        sql += ' ORDER BY prep_time_minutes ASC'
+        sql += ' ORDER BY COALESCE(total_time_minutes, prep_time_minutes) ASC'
         break
       case 'servings':
         sql += ' ORDER BY servings ASC'

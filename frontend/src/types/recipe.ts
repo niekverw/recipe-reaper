@@ -3,6 +3,8 @@ export interface Recipe {
   name: string
   description: string
   prepTimeMinutes: number
+  cookTimeMinutes?: number
+  totalTimeMinutes?: number
   servings: number
   ingredients: string[]
   instructions: string[]
