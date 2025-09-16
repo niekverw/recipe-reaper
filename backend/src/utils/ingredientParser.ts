@@ -179,7 +179,7 @@ export class IngredientParser {
   }
 
   /**
-   * Scale ingredient quantities by a factor
+   * Scale ingredient quantities by a factor, preserving size measurements
    */
   scaleIngredients(ingredients: string[], scaleFactor: number): string[] {
     return ingredients.map(ingredient => {
@@ -191,27 +191,83 @@ export class IngredientParser {
         }
 
         const ing = parsed[0]
-        const scaledQuantity = ing.quantity! * scaleFactor
-        const scaledQuantity2 = ing.quantity2 ? ing.quantity2 * scaleFactor : null
 
-        // Format the scaled quantities
-        let quantityStr = this.formatQuantity(scaledQuantity)
-        if (scaledQuantity2) {
-          quantityStr += `-${this.formatQuantity(scaledQuantity2)}`
-        }
-
-        // Reconstruct the ingredient string
-        let result = quantityStr
-        if (ing.unitOfMeasure) {
-          result += ` ${ing.unitOfMeasure}`
-        }
-        result += ` ${ing.description}`
-
-        return result
+        // Use a more targeted approach: scale the original ingredient string
+        // while preserving size measurements
+        return this.scaleIngredientString(ingredient, scaleFactor)
       } catch (error) {
         return ingredient // Return original if parsing fails
       }
     })
+  }
+
+  /**
+   * Scale numbers in an ingredient string while preserving size measurements
+   */
+  private scaleIngredientString(ingredient: string, scaleFactor: number): string {
+    // First handle mixed fractions like "2 1/2" -> convert to improper fraction or decimal
+    let processedIngredient = ingredient.replace(/(\d+)\s+(\d+\/\d+)/g, (match, whole, fraction, offset, fullString) => {
+      // Check if this is a size measurement that shouldn't be scaled
+      const afterNumber = fullString.slice(offset + match.length)
+      const sizeUnits = [
+        /^\s*"/, /^\s*'/, /^\s*inch(?:es)?(?:\s|$|,|\.|;)/i, /^\s*cm(?:\s|$|,|\.|;)/i,
+        /^\s*mm(?:\s|$|,|\.|;)/i, /^\s*millimeter(?:s)?(?:\s|$|,|\.|;)/i,
+        /^\s*centimeter(?:s)?(?:\s|$|,|\.|;)/i, /^\s*-inch(?:\s|$|,|\.|;)/i,
+        /^\s*-cm(?:\s|$|,|\.|;)/i, /^\s*-mm(?:\s|$|,|\.|;)/i
+      ]
+
+      if (sizeUnits.some(regex => regex.test(afterNumber))) {
+        return match // Don't convert if it's a size measurement
+      }
+
+      const [num, denom] = fraction.split('/')
+      const decimal = parseInt(whole) + (parseInt(num) / parseInt(denom))
+      return decimal.toString()
+    })
+
+    // Then handle individual fractions and decimals
+    const scaled = processedIngredient.replace(/(\d+(?:\/\d+|\.\d+)?)/g, (match, _, offset, fullString) => {
+      // Check if this number is followed by a size unit that shouldn't be scaled
+      const afterNumber = fullString.slice(offset + match.length)
+      const sizeUnits = [
+        /^\s*"/, // inch symbol
+        /^\s*'/, // foot symbol
+        /^\s*inch(?:es)?(?:\s|$|,|\.|;)/i,
+        /^\s*cm(?:\s|$|,|\.|;)/i,
+        /^\s*mm(?:\s|$|,|\.|;)/i,
+        /^\s*millimeter(?:s)?(?:\s|$|,|\.|;)/i,
+        /^\s*centimeter(?:s)?(?:\s|$|,|\.|;)/i,
+        /^\s*-inch(?:\s|$|,|\.|;)/i, // hyphenated like "1/4-inch"
+        /^\s*-cm(?:\s|$|,|\.|;)/i,
+        /^\s*-mm(?:\s|$|,|\.|;)/i
+      ]
+
+      // If this number is followed by a size unit, don't scale it
+      if (sizeUnits.some(regex => regex.test(afterNumber))) {
+        return match // Return original number unchanged
+      }
+
+      // Parse the number (handle fractions)
+      let num: number
+      if (match.includes('/')) {
+        const [numerator, denominator] = match.split('/')
+        num = parseInt(numerator) / parseInt(denominator)
+      } else {
+        num = parseFloat(match)
+      }
+
+      const result = num * scaleFactor
+
+      // If it's a whole number, return as integer
+      if (Math.abs(result % 1) < 0.001) {
+        return Math.round(result).toString()
+      }
+
+      // Format back to fraction if possible for readability
+      return this.formatQuantity(result)
+    })
+
+    return scaled
   }
 
   private formatQuantity(quantity: number): string {

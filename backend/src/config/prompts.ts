@@ -17,7 +17,7 @@ Your task is to analyze the provided recipe text and return a JSON object with t
 }
 
 PARSING RULES:
-- Add "*" at the beginning of any headings or section titles in the description or instructions (e.g., "*What is *?", "*Why you'll love .." in the descrition, or for granola ingredients seperate "*Dry Ingredients", "*Wet Ingredients" ) to indicate structure
+- Add "*" to indicate headings or section titles in the description, instructions and ingredients (e.g., "*What is *?", "*Why you'll love .." in the descrition, or for granola ingredients seperate "*Dry Ingredients", "*Wet Ingredients" ) to indicate structure
 - Convert all time references to minutes as integers
 - Extract servings as a number (e.g., "4 servings" = 4, "Serves 6" = 6)
 - If a field cannot be determined from the text, use your best guess based on context and knowledge as a chef

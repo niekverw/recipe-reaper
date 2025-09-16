@@ -230,6 +230,101 @@ For icing:
       const sugarResult = parser.parseIngredient(scaled[1])
       expect(sugarResult[0].quantity).toBe(2) // Scaled
     })
+
+    it('should not scale size measurements with inch symbols', () => {
+      const ingredients = [
+        '5 medium zucchini sliced into 1/4" discs',
+        '2 cups flour, rolled 1/8" thick',
+        '3 carrots cut into 1/2 inch pieces'
+      ]
+      const scaled = parser.scaleIngredients(ingredients, 2)
+
+      // Quantities should be scaled, but size measurements should remain unchanged
+      expect(scaled[0]).toContain('1/4"') // Size measurement unchanged
+      expect(scaled[0]).toContain('10') // Quantity scaled from 5 to 10
+
+      expect(scaled[1]).toContain('1/8"') // Size measurement unchanged
+      expect(scaled[1]).toContain('4') // Quantity scaled from 2 to 4
+
+      expect(scaled[2]).toContain('1/2 inch') // Size measurement unchanged
+      expect(scaled[2]).toContain('6') // Quantity scaled from 3 to 6
+    })
+
+    it('should not scale size measurements with various units', () => {
+      const ingredients = [
+        '1 beef tenderloin, cut 2 inches thick',
+        '4 bell peppers, sliced 3mm thin',
+        '2 onions, diced 5cm pieces',
+        '1 cucumber, cut into 1/4-inch rounds'
+      ]
+      const scaled = parser.scaleIngredients(ingredients, 3)
+
+      expect(scaled[0]).toContain('2 inches') // Size unchanged
+      expect(scaled[0]).toContain('3') // Quantity scaled from 1 to 3
+
+      expect(scaled[1]).toContain('3mm') // Size unchanged
+      expect(scaled[1]).toContain('12') // Quantity scaled from 4 to 12
+
+      expect(scaled[2]).toContain('5cm') // Size unchanged
+      expect(scaled[2]).toContain('6') // Quantity scaled from 2 to 6
+
+      expect(scaled[3]).toContain('1/4-inch') // Size unchanged
+      expect(scaled[3]).toContain('3') // Quantity scaled from 1 to 3
+    })
+
+    it('should scale quantities but preserve mixed size and quantity measurements', () => {
+      const ingredients = [
+        '3 medium potatoes, cut into 1/2 inch cubes',
+        '2 1/2 cups flour, rolled 1/8" thick',
+        '1.5 pounds chicken, sliced 3/4 inch thick'
+      ]
+      const scaled = parser.scaleIngredients(ingredients, 2)
+
+      // Check that quantities are scaled but sizes are preserved
+      expect(scaled[0]).toContain('6') // Quantity scaled from 3 to 6
+      expect(scaled[0]).toContain('1/2 inch') // Size preserved
+
+      expect(scaled[1]).toContain('5') // Quantity scaled from 2.5 to 5
+      expect(scaled[1]).toContain('1/8"') // Size preserved
+
+      expect(scaled[2]).toContain('3') // Quantity scaled from 1.5 to 3
+      expect(scaled[2]).toContain('3/4 inch') // Size preserved
+    })
+
+    it('should handle decimal scaling with size measurements', () => {
+      const ingredients = [
+        '4 tomatoes, sliced 1/4 inch thick',
+        '6 carrots, cut into 2" pieces'
+      ]
+      const scaled = parser.scaleIngredients(ingredients, 0.5)
+
+      expect(scaled[0]).toContain('2') // Quantity scaled from 4 to 2
+      expect(scaled[0]).toContain('1/4 inch') // Size preserved
+
+      expect(scaled[1]).toContain('3') // Quantity scaled from 6 to 3
+      expect(scaled[1]).toContain('2"') // Size preserved
+    })
+
+    it('should handle edge cases with size measurements', () => {
+      const ingredients = [
+        '12 cookies, each 3" diameter',
+        '1 pie crust, 9 inch diameter',
+        '2 steaks, 1.5 inches thick',
+        'Salt and pepper to taste'
+      ]
+      const scaled = parser.scaleIngredients(ingredients, 2)
+
+      expect(scaled[0]).toContain('24') // Quantity scaled
+      expect(scaled[0]).toContain('3"') // Size preserved
+
+      expect(scaled[1]).toContain('2') // Quantity scaled
+      expect(scaled[1]).toContain('9 inch') // Size preserved
+
+      expect(scaled[2]).toContain('4') // Quantity scaled
+      expect(scaled[2]).toContain('1.5 inches') // Size preserved
+
+      expect(scaled[3]).toBe('Salt and pepper to taste') // No quantities, unchanged
+    })
   })
 
   describe('Options', () => {

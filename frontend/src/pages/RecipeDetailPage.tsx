@@ -21,6 +21,8 @@ import { apiService, Recipe, IngredientCategory } from '../services/api'
 import { IngredientHelper } from '../utils/ingredientHelper'
 import { TagHelper } from '../utils/tagHelper'
 import { useCallback } from 'react'
+import TextWithHeaders from '../components/TextWithHeaders'
+import { TextHeaderParser } from '../utils/textHeaderParser'
 
 interface IngredientItemProps {
   ingredient: string
@@ -136,27 +138,50 @@ function IngredientItem({ ingredient, isChecked, onToggle, scale }: IngredientIt
       return (parseInt(whole) + fractionMap[fraction]).toString()
     })
 
-    // Step 4: Scale all decimal numbers
-    const scaled = processedIngredient.replace(/(\d+(?:\.\d+)?)/g, (match) => {
+    // Step 4: Scale all decimal numbers, but skip size measurements
+    const scaled = processedIngredient.replace(/(\d+(?:\.\d+)?)/g, (match, ...args) => {
+      // Extract the offset and fullString from the replace callback args
+      const offset = args[args.length - 2]
+      const fullString = args[args.length - 1]
+      // Check if this number is followed by a size unit that shouldn't be scaled
+      const afterNumber = fullString.slice(offset + match.length)
+      const sizeUnits = [
+        /^\s*"/, // inch symbol
+        /^\s*'/, // foot symbol
+        /^\s*inch(?:es)?(?:\s|$|,|\.|;)/i,
+        /^\s*cm(?:\s|$|,|\.|;)/i,
+        /^\s*mm(?:\s|$|,|\.|;)/i,
+        /^\s*millimeter(?:s)?(?:\s|$|,|\.|;)/i,
+        /^\s*centimeter(?:s)?(?:\s|$|,|\.|;)/i,
+        /^\s*-inch(?:\s|$|,|\.|;)/i, // hyphenated like "1/4-inch"
+        /^\s*-cm(?:\s|$|,|\.|;)/i,
+        /^\s*-mm(?:\s|$|,|\.|;)/i
+      ]
+
+      // If this number is followed by a size unit, don't scale it
+      if (sizeUnits.some(regex => regex.test(afterNumber))) {
+        return match // Return original number unchanged
+      }
+
       const num = parseFloat(match)
       const result = num * scale
-      
+
       // If it's a whole number, return as integer
       if (Math.abs(result % 1) < 0.001) return Math.round(result).toString()
-      
+
       // Handle the fractional part
       const wholePart = Math.floor(result)
       const fractionPart = result - wholePart
-      
+
       // Try to find a matching Unicode fraction
       const fractionChar = findClosestFraction(fractionPart)
-      
+
       if (fractionChar) {
-        return wholePart > 0 
-          ? `${wholePart}${fractionChar}` 
+        return wholePart > 0
+          ? `${wholePart}${fractionChar}`
           : fractionChar
       }
-      
+
       // Otherwise return with 1 or 2 decimal places depending on the value
       return result < 0.1 ? result.toFixed(2) : result.toFixed(1)
     })
@@ -200,9 +225,10 @@ function InstructionStep({ instruction, stepNumber, isCompleted, onToggle }: Ins
       >
         {isCompleted ? <CheckIcon className="w-4 h-4" /> : stepNumber}
       </div>
-      <p className={`text-sm leading-relaxed ${isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white'}`}>
-        {instruction}
-      </p>
+      <TextWithHeaders
+        text={instruction}
+        className={`text-sm leading-relaxed ${isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white'}`}
+      />
     </button>
   )
 }
@@ -566,9 +592,10 @@ function RecipeDetailPage() {
           <div className="flex flex-col md:flex-row md:items-center md:gap-6">
             <div className="flex-1">
               <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-gray-900 dark:text-white">{recipe.name}</h1>
-              <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed max-w-3xl">
-                {recipe.description}
-              </p>
+              <TextWithHeaders
+                text={recipe.description}
+                className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed max-w-3xl"
+              />
 
               {/* Source URL Attribution */}
               {recipe.sourceUrl && (
@@ -805,15 +832,35 @@ function RecipeDetailPage() {
           </div>
 
           <div className="space-y-1">
-            {recipe.instructions.map((instruction, index) => (
-              <InstructionStep
-                key={index}
-                instruction={instruction}
-                stepNumber={index + 1}
-                isCompleted={completedSteps.has(index)}
-                onToggle={() => toggleStep(index)}
-              />
-            ))}
+            {recipe.instructions.map((instruction, index) => {
+              // Check if this instruction is purely a header
+              if (TextHeaderParser.isPureHeader(instruction)) {
+                return (
+                  <div key={index} className="py-2">
+                    <TextWithHeaders
+                      text={instruction}
+                      className="text-lg font-semibold text-gray-900 dark:text-white"
+                    />
+                  </div>
+                )
+              }
+
+              // Calculate step number by counting non-header instructions before this one
+              const stepNumber = recipe.instructions
+                .slice(0, index)
+                .filter(inst => !TextHeaderParser.isPureHeader(inst))
+                .length + 1
+
+              return (
+                <InstructionStep
+                  key={index}
+                  instruction={instruction}
+                  stepNumber={stepNumber}
+                  isCompleted={completedSteps.has(index)}
+                  onToggle={() => toggleStep(index)}
+                />
+              )
+            })}
           </div>
         </div>
 

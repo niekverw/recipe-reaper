@@ -254,6 +254,33 @@ function AddRecipePage() {
               </div>
             </div>
           </div>
+
+          <div>
+            <label
+              htmlFor="sourceUrl"
+              className="block text-sm font-medium mb-1"
+              style={{ color: 'var(--color-text-primary)' }}
+            >
+              Source URL <span className="text-xs opacity-70" style={{ color: 'var(--color-text-secondary)' }}>(optional)</span>
+            </label>
+            <div className="relative">
+              <input
+                type="url"
+                id="sourceUrl"
+                placeholder="https://example.com/original-recipe"
+                className="w-full px-2 py-1.5 text-sm border transition-colors"
+                style={{
+                  backgroundColor: 'var(--color-input-background)',
+                  borderColor: 'var(--color-input-border)',
+                  borderRadius: 'var(--border-radius-medium)',
+                  color: 'var(--color-input-text)'
+                }}
+              />
+              <div className="text-xs mt-0.5 opacity-70" style={{ color: 'var(--color-text-secondary)' }}>
+                URL of the original recipe or inspiration source
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="flex justify-center gap-3 pt-4">

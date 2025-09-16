@@ -24,7 +24,7 @@ export class IngredientCategoryParser {
     for (const line of lines) {
       if (this.isCategoryHeader(line)) {
         // Start new category
-        const categoryName = line.substring(1).trim() // Remove * and trim
+        const categoryName = this.extractHeaderName(line)
         currentCategory = {
           category: categoryName,
           items: []
@@ -49,10 +49,24 @@ export class IngredientCategoryParser {
   }
 
   /**
-   * Check if a line is a category header (starts with *)
+   * Check if a line is a category header (starts with * or is *header*)
    */
   private static isCategoryHeader(line: string): boolean {
-    return line.startsWith('*') && line.length > 1
+    return (line.startsWith('*') && line.length > 1) || (line.startsWith('*') && line.endsWith('*') && line.length > 2)
+  }
+
+  /**
+   * Extract header name from different header formats
+   */
+  private static extractHeaderName(line: string): string {
+    if (line.startsWith('*') && line.endsWith('*') && line.length > 2) {
+      // Format: *header name*
+      return line.substring(1, line.length - 1).trim()
+    } else if (line.startsWith('*')) {
+      // Format: *header name
+      return line.substring(1).trim()
+    }
+    return line.trim()
   }
 
   /**
