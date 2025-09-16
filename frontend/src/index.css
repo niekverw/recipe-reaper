@@ -26,3 +26,55 @@ body {
   min-height: 100vh;
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
+
+/* Cursor styles for interactive elements */
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  cursor: pointer;
+}
+
+[role="button"] {
+  cursor: pointer;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="url"],
+input[type="search"],
+textarea {
+  cursor: text;
+}
+
+select {
+  cursor: pointer;
+}
+
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  cursor: not-allowed;
+}
+
+/* Additional interactive elements */
+summary {
+  cursor: pointer;
+}
+
+label[for] {
+  cursor: pointer;
+}
