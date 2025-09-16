@@ -259,7 +259,7 @@ function RecipesPage() {
       navigate('/add-recipe', {
         state: {
           copiedRecipe: {
-            name: `Copy of ${originalRecipe.name}`,
+            name: `${originalRecipe.name} (Copy)`,
             description: originalRecipe.description,
             prepTimeMinutes: originalRecipe.prepTimeMinutes,
             cookTimeMinutes: originalRecipe.cookTimeMinutes,
