@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express'
 import { recipeModel } from '../models/recipeModel'
-import { CreateRecipeRequest, UpdateRecipeRequest, RecipeFilters } from '../types/recipe'
+import { CreateRecipeRequest, UpdateRecipeRequest, RecipeFilters, IngredientCategory } from '../types/recipe'
 import { createError } from '../middleware/errorHandler'
 import { openaiService } from '../services/openaiService'
 import { geminiService } from '../services/geminiService'
+import { recipeEnhancementService } from '../services/recipeEnhancementService'
 import { spawn } from 'child_process'
 import { join } from 'path'
 
@@ -335,6 +336,64 @@ export const recipeController = {
         }
         if (error.message.includes('Missing required recipe fields')) {
           throw createError('Unable to extract recipe data from the provided text. Please ensure the text contains recipe information.', 400)
+        }
+      }
+      next(error)
+    }
+  },
+
+  async enhanceRecipe(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params
+
+      // Get the existing recipe
+      const recipe = await recipeModel.findById(id)
+      if (!recipe) {
+        throw createError('Recipe not found', 404)
+      }
+
+      // Check if recipe already has AI enhanced notes
+      if (recipe.aiEnhancedNotes) {
+        return res.json({
+          message: 'Recipe already has AI enhanced notes',
+          recipe: recipe
+        })
+      }
+
+      // Prepare recipe data for enhancement
+      const recipeData = {
+        name: recipe.name,
+        description: recipe.description,
+        ingredients: Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0 && typeof recipe.ingredients[0] === 'string'
+          ? recipe.ingredients as string[]
+          : Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0
+            ? (recipe.ingredients as IngredientCategory[]).flatMap((cat: IngredientCategory) => cat.items || [])
+            : [],
+        instructions: recipe.instructions,
+        prepTimeMinutes: recipe.prepTimeMinutes,
+        cookTimeMinutes: recipe.cookTimeMinutes,
+        servings: recipe.servings
+      }
+
+      // Generate AI enhancement
+      const enhancementData = await recipeEnhancementService.enhanceRecipe(recipeData)
+
+      // Store the enhancement as JSON string
+      const enhancementJson = JSON.stringify(enhancementData)
+      const updatedRecipe = await recipeModel.updateAiEnhancedNotes(id, enhancementJson)
+
+      res.json({
+        message: 'Recipe enhanced successfully',
+        recipe: updatedRecipe
+      })
+    } catch (error) {
+      // Handle enhancement specific errors
+      if (error instanceof Error) {
+        if (error.message.includes('API key')) {
+          throw createError('AI enhancement service configuration error', 500)
+        }
+        if (error.message.includes('rate limit') || error.message.includes('quota')) {
+          throw createError('AI enhancement service temporarily unavailable. Please try again later.', 429)
         }
       }
       next(error)

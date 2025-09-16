@@ -17,6 +17,7 @@ export interface Recipe {
   instructions: string[]
   image?: string
   sourceUrl?: string
+  aiEnhancedNotes?: string
   createdAt: string
   updatedAt: string
 }
@@ -189,6 +190,16 @@ class ApiService {
     }>('/recipes/parse-text-gemini', {
       method: 'POST',
       body: JSON.stringify({ text }),
+    })
+  }
+
+  // Recipe enhancement operation using AI
+  async enhanceRecipe(id: string) {
+    return this.request<{
+      message: string
+      recipe: Recipe
+    }>(`/recipes/${id}/enhance`, {
+      method: 'POST',
     })
   }
 }

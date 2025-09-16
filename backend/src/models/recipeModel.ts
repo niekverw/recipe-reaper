@@ -18,6 +18,7 @@ interface RecipeRow {
   image: string | null
   source_url: string | null
   is_public: number
+  ai_enhanced_notes: string | null
   user_id: string | null
   household_id: string | null
   created_at: string
@@ -40,6 +41,7 @@ function rowToRecipe(row: RecipeRow): Recipe {
     image: row.image || undefined,
     sourceUrl: row.source_url || undefined,
     isPublic: row.is_public === 1,
+    aiEnhancedNotes: row.ai_enhanced_notes || undefined,
     userId: row.user_id || undefined,
     householdId: row.household_id || undefined,
     createdAt: row.created_at,
@@ -222,6 +224,18 @@ export const recipeModel = {
   async delete(id: string): Promise<void> {
     const db = Database.getInstance()
     await db.run('DELETE FROM recipes WHERE id = ?', [id])
+  },
+
+  async updateAiEnhancedNotes(id: string, enhancedNotes: string): Promise<Recipe> {
+    const db = Database.getInstance()
+    const now = new Date().toISOString()
+
+    await db.run(
+      'UPDATE recipes SET ai_enhanced_notes = ?, updated_at = ? WHERE id = ?',
+      [enhancedNotes, now, id]
+    )
+
+    return this.findById(id) as Promise<Recipe>
   },
 
   // Helper methods for auto-inference using ingredient parser

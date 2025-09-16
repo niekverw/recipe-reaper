@@ -21,6 +21,9 @@ recipeRoutes.post('/parse-text-gemini', recipeController.parseTextRecipeGemini)
 // GET /api/recipes/:id - Get a specific recipe
 recipeRoutes.get('/:id', recipeController.getRecipeById)
 
+// POST /api/recipes/:id/enhance - Enhance a recipe with AI-generated chef's notes
+recipeRoutes.post('/:id/enhance', recipeController.enhanceRecipe)
+
 // PUT /api/recipes/:id - Update a specific recipe
 recipeRoutes.put('/:id', recipeController.updateRecipe)
 

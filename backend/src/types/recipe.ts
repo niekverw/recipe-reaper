@@ -16,6 +16,7 @@ export interface Recipe {
   image?: string
   sourceUrl?: string
   isPublic: boolean
+  aiEnhancedNotes?: string | null
   // Future-ready fields for user/household support
   userId?: string
   householdId?: string

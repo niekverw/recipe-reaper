@@ -63,12 +63,17 @@ export class Database {
       ALTER TABLE recipes ADD COLUMN total_time_minutes INTEGER
     `
 
+    const addAiEnhancedNotesColumn = `
+      ALTER TABLE recipes ADD COLUMN ai_enhanced_notes TEXT
+    `
+
     try {
       await this.run(createRecipesTable)
       // Try to add the columns, but ignore errors if they already exist
       await this.run(addSourceUrlColumn).catch(() => {})
       await this.run(addCookTimeColumn).catch(() => {})
       await this.run(addTotalTimeColumn).catch(() => {})
+      await this.run(addAiEnhancedNotesColumn).catch(() => {})
     } catch (error) {
       // Column might already exist, check if it's a harmless error
       if (!String(error).includes('duplicate column name')) {

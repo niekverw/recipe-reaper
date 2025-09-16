@@ -34,9 +34,9 @@ class OpenAIService {
     const systemPrompt = RECIPE_PARSER_PROMPT
 
     try {
-      console.log('Making OpenAI API call with model: gpt-5-mini')
+      console.log('Making OpenAI API call with model: gpt-3.5-turbo')
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-5-mini',
+        model: 'gpt-3.5-turbo',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: text }

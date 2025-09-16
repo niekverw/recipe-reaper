@@ -12,7 +12,8 @@ import {
   ScaleIcon,
   ChevronDownIcon,
   ArrowPathIcon,
-  DocumentDuplicateIcon
+  DocumentDuplicateIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
 import { apiService, Recipe, IngredientCategory } from '../services/api'
 import { IngredientHelper } from '../utils/ingredientHelper'
@@ -214,6 +215,8 @@ function RecipeDetailPage() {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
   const [showScaleMenu, setShowScaleMenu] = useState(false)
   const [showImageModal, setShowImageModal] = useState(false)
+  const [isEnhancing, setIsEnhancing] = useState(false)
+  const [enhancementError, setEnhancementError] = useState<string | null>(null)
 
   const openImageModal = useCallback(() => {
     setShowImageModal(true)
@@ -343,6 +346,22 @@ function RecipeDetailPage() {
   const handleScaleChange = (newScale: number) => {
     setScale(newScale)
     setShowScaleMenu(false)
+  }
+
+  const handleEnhanceRecipe = async () => {
+    if (!recipe) return
+
+    try {
+      setIsEnhancing(true)
+      setEnhancementError(null)
+      const response = await apiService.enhanceRecipe(recipe.id)
+      setRecipe(response.recipe)
+    } catch (err) {
+      setEnhancementError(err instanceof Error ? err.message : 'Failed to enhance recipe')
+      console.error('Failed to enhance recipe:', err)
+    } finally {
+      setIsEnhancing(false)
+    }
   }
 
   return (
@@ -680,6 +699,125 @@ function RecipeDetailPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Chef's Notes Section */}
+      <div className="mt-12">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <SparklesIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Chef's Notes</h2>
+            </div>
+            {!recipe.aiEnhancedNotes && (
+              <button
+                onClick={handleEnhanceRecipe}
+                disabled={isEnhancing}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
+              >
+                {isEnhancing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Enhancing...
+                  </>
+                ) : (
+                  <>
+                    <SparklesIcon className="w-4 h-4" />
+                    Enhance with AI
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+
+          {enhancementError && (
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-red-600 dark:text-red-400 text-sm">{enhancementError}</p>
+            </div>
+          )}
+
+          {recipe.aiEnhancedNotes ? (
+            <div className="prose prose-blue dark:prose-invert max-w-none">
+              {(() => {
+                try {
+                  const enhancement = JSON.parse(recipe.aiEnhancedNotes)
+                  return (
+                    <div className="space-y-6">
+                      {enhancement.cookingTips && enhancement.cookingTips.length > 0 && (
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">🔥 Cooking Tips</h3>
+                          <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
+                            {enhancement.cookingTips.map((tip: string, index: number) => (
+                              <li key={index}>{tip}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {enhancement.traditionalNotes && (
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">📜 Traditional Notes</h3>
+                          <p className="text-gray-700 dark:text-gray-300">{enhancement.traditionalNotes}</p>
+                        </div>
+                      )}
+
+                      {enhancement.modernVariations && enhancement.modernVariations.length > 0 && (
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">✨ Modern Variations</h3>
+                          <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
+                            {enhancement.modernVariations.map((variation: string, index: number) => (
+                              <li key={index}>{variation}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {enhancement.troubleshooting && enhancement.troubleshooting.length > 0 && (
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">🛠️ Troubleshooting</h3>
+                          <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
+                            {enhancement.troubleshooting.map((tip: string, index: number) => (
+                              <li key={index}>{tip}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {enhancement.servingSuggestions && enhancement.servingSuggestions.length > 0 && (
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">🍽️ Serving Suggestions</h3>
+                          <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
+                            {enhancement.servingSuggestions.map((suggestion: string, index: number) => (
+                              <li key={index}>{suggestion}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {enhancement.storageNotes && (
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">🥫 Storage Notes</h3>
+                          <p className="text-gray-700 dark:text-gray-300">{enhancement.storageNotes}</p>
+                        </div>
+                      )}
+                    </div>
+                  )
+                } catch {
+                  return <p className="text-gray-600 dark:text-gray-400 italic">AI-enhanced notes available but format is invalid.</p>
+                }
+              })()}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-600 dark:text-gray-400 mb-2">
+                Get AI-powered cooking tips, variations, and chef's insights for this recipe.
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-500">
+                Enhance this recipe with professional chef knowledge and traditional cooking wisdom.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
