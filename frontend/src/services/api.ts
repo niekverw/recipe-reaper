@@ -129,47 +129,6 @@ class ApiService {
     })
   }
 
-  // Ingredient parsing operations
-  async parseIngredients(ingredients: string[], options?: IngredientParsingOptions) {
-    return this.request<{
-      parsed: ParsedIngredient[]
-      validation: { isValid: boolean; errors: string[] }
-      estimatedServings: number
-      estimatedPrepTime: number
-    }>('/ingredients/parse', {
-      method: 'POST',
-      body: JSON.stringify({ ingredients, options }),
-    })
-  }
-
-  async scaleIngredients(ingredients: string[], scaleFactor: number) {
-    return this.request<{
-      originalIngredients: string[]
-      scaledIngredients: string[]
-      scaleFactor: number
-    }>('/ingredients/scale', {
-      method: 'POST',
-      body: JSON.stringify({ ingredients, scaleFactor }),
-    })
-  }
-
-  async parseIngredientsFromText(text: string, options?: IngredientParsingOptions) {
-    return this.request<{
-      parsed: ParsedIngredient[]
-      validation: { isValid: boolean; errors: string[] }
-      ingredients: string[]
-      estimatedServings: number
-      estimatedPrepTime: number
-    }>('/ingredients/parse-text', {
-      method: 'POST',
-      body: JSON.stringify({ text, options }),
-    })
-  }
-
-  async healthCheck(): Promise<{ status: string; timestamp: string }> {
-    return this.request<{ status: string; timestamp: string }>('/health')
-  }
-
   // Recipe scraping operation
   async scrapeRecipeFromUrl(url: string) {
     return this.request<{
