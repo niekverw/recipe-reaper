@@ -34,7 +34,7 @@ Your task is to provide valuable insights about this recipe and return a JSON ob
   "traditionalNotes": "Information about the traditional/authentic way to prepare this dish, including cultural context and regional variations if relevant",
   "modernVariations": ["Modern twist 1: description", "Modern twist 2: description"],
   "troubleshooting": ["Common issue 1: how to fix it", "Common issue 2: how to fix it"],
-  "servingSuggestions": ["What to serve alongside", "Beverage pairings", "Presentation ideas"],
+  "servingSuggestions": ["What to serve alongside","easy side-dishes", "Beverage pairings", "Presentation ideas"],
   "storageNotes": "How to store leftovers, how long they keep, reheating instructions if applicable"
 }
 
