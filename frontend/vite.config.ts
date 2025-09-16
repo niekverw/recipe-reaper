@@ -7,6 +7,12 @@ export default defineConfig({
   server: {
     host: '0.0.0.0', // Bind to all network interfaces for phone access
     port: 5173,      // Default Vite port
+    allowedHosts: [
+      '.ngrok.io',
+      '.ngrok-free.app',
+      'localhost',
+      '127.0.0.1'
+    ],
     proxy: {
       // Proxy API requests to the backend running on localhost
       '/api': {
