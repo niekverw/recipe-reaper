@@ -13,7 +13,7 @@ Schema (return EXACTLY these keys and no additional keys):
   "prepTimeMinutes": integer|null, # e.g. 30
   "cookTimeMinutes": integer|null, # e.g. 30
   "totalTimeMinutes": integer|null, # e.g. 60
-  "servings": integer|null # e.g. 4, if not provided you can use you best guess, persons/quantity relevant for the recipe.
+  "servings": integer|null # e.g. 4, if not provided you can use you best guess of persons/quantity relevant for the recipe.
 }
 
 PARSING RULES:
