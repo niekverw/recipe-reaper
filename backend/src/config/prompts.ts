@@ -21,7 +21,7 @@ PARSING RULES:
 - Fix typos
 - Add "*" to indicate headings or section titles in the description, instructions and ingredients (e.g., "*What is *?", "*Why you'll love ..*" in the descrition, or for granola ingredients seperate "*Dry Ingredients", "*Wet Ingredients" ) to indicate structure
 - Convert all time references to minutes as integers
-- If a field cannot be determined from the text, use your best guess based on context and knowledge as a expert chef
+- If a field cannot be determined from the text, use your best guess based on context and knowledge as professional chef and culinary expert
 - When (parts of the) description, ingredients, or instructions  weren't explicitly stated in the original text, clearly mark them with [AI] e.g. "For carbonara however, using guanciale is most authentic [AI]"
 - Handle various recipe formats: websites, cookbooks,photos, handwritten notes, emails, but also imaginations from scratch if prompted (clearly mark them as [AI-generated]), try to stay as close to the input as possible.
 - Return ONLY the JSON object, no additional text or explanations !!
