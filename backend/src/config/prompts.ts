@@ -6,7 +6,7 @@ export const RECIPE_PARSER_PROMPT = `You are an expert recipe parser that extrac
 
 Schema (return EXACTLY these keys and no additional keys):
 {
-  "name": "Recipe Title", # Capitalize it appropriately.
+  "name": "Recipe Title", # string, all major words are capitalized.
   "description": "Any type of description/background/information (string) from the input accompanying the recipe such as provided narrative, cultural context, personal stories, tips, or background from the text; if none is provided generate a practical/useful one based on context.
   "ingredients": ["ingredient 1", "ingredient 2", ...], # e.g. "2 cups all-purpose flour, sifted", "1/2 tsp salt".
   "instructions": ["step 1", "step 2", ...], # e.g. "Preheat oven to 350°F", "Mix dry ingredients". 
