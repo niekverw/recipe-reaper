@@ -4,7 +4,6 @@ import { CreateRecipeRequest, UpdateRecipeRequest, RecipeFilters, IngredientCate
 import { createError } from '../middleware/errorHandler'
 import { openaiService } from '../services/openaiService'
 import { geminiService } from '../services/geminiService'
-import { visionService } from '../services/visionService'
 import { recipeEnhancementService } from '../services/recipeEnhancementService'
 import { spawn } from 'child_process'
 import { join } from 'path'
@@ -417,37 +416,8 @@ export const recipeController = {
         throw createError('Image file is required', 400)
       }
 
-      let extractedText: string
-
-      try {
-        // Extract text from the uploaded image using Google Cloud Vision API
-        extractedText = await visionService.extractTextFromImage(req.file.buffer)
-      } catch (visionError) {
-        // Handle vision service errors gracefully
-        if (visionError instanceof Error) {
-          if (visionError.message.includes('Google Cloud Vision API credentials are not configured') ||
-              visionError.message.includes('Google Cloud Vision API is not available')) {
-            throw createError(
-              'Image text extraction is currently unavailable. Please manually enter your recipe or configure Google Cloud Vision API credentials.',
-              503
-            )
-          }
-
-          if (visionError.message.includes('No text found') || visionError.message.includes('No readable text')) {
-            throw createError('No readable text found in the image. Please ensure the image contains clear, readable text.', 400)
-          }
-        }
-
-        // Re-throw other vision errors with more context
-        throw createError(`Image processing failed: ${visionError instanceof Error ? visionError.message : 'Unknown error'}`, 500)
-      }
-
-      if (!extractedText?.trim()) {
-        throw createError('No readable text found in the image', 400)
-      }
-
-      // Parse the extracted text using Gemini to create a recipe
-      const parsedData = await geminiService.parseRecipeText(extractedText)
+      // Parse the image directly using Gemini Vision to create a recipe
+      const parsedData = await geminiService.parseRecipeFromImage(req.file.buffer)
 
       // Transform to match expected response format
       const transformedData = {
@@ -463,10 +433,24 @@ export const recipeController = {
       }
 
       res.json({
-        recipeData: transformedData,
-        extractedText: extractedText  // Include the extracted text for debugging
+        recipeData: transformedData
       })
     } catch (error) {
+      // Handle Gemini vision specific errors
+      if (error instanceof Error) {
+        if (error.message.includes('API key')) {
+          throw createError('Gemini API configuration error', 500)
+        }
+        if (error.message.includes('rate limit') || error.message.includes('quota')) {
+          throw createError('Gemini service temporarily unavailable. Please try again later.', 429)
+        }
+        if (error.message.includes('Missing required recipe fields')) {
+          throw createError('Unable to extract recipe data from the image. Please ensure the image contains clear recipe information.', 400)
+        }
+        if (error.message.includes('Image buffer is required')) {
+          throw createError('Invalid image file. Please upload a valid image.', 400)
+        }
+      }
       next(error)
     }
   }
