@@ -10,9 +10,9 @@ Schema (return EXACTLY these keys and no additional keys):
   "description": "Any type of description/background/information (string) from the input accompanying the recipe such as provided narrative, cultural context, personal stories, tips, or background from the text; if none is provided generate a practical/useful one based on context.
   "ingredients": ["ingredient 1", "ingredient 2", ...], # e.g. "2 cups all-purpose flour, sifted", "1/2 tsp salt"
   "instructions": ["step 1", "step 2", ...], # e.g. "Preheat oven to 350°F", "Mix dry ingredients". 
-  "prepTimeMinutes": integer|null, # e.g. 30
-  "cookTimeMinutes": integer|null, # e.g. 30
-  "totalTimeMinutes": integer|null, # e.g. 60
+  "prepTimeMinutes": integer|null, # e.g. 30.
+  "cookTimeMinutes": integer|null, # e.g. 30.
+  "totalTimeMinutes": integer|null, # e.g. 60.
   "servings": integer|null # e.g. 4, if not provided you can use you best guess of persons/quantity relevant for the recipe.
 }
 
@@ -22,10 +22,10 @@ PARSING RULES:
 - Use null if it is not applicable to the recipe (e.g. drinks don't have cooking time).
 - Add "*" to indicate headings or section titles in the description, instructions and ingredients (e.g., "*What is *?", "*Why you'll love ..*" in the descrition, or for granola ingredients seperate "*Dry Ingredients", "*Wet Ingredients" ) to indicate structure
 - Convert all time references to minutes as integers, use best guess. 
-- If a field cannot be determined from the text, use your best guess based on context and knowledge as professional chef and culinary expert
+- If a field cannot be determined from the text, use your best guess based on context and knowledge as professional chef and culinary expert.
 - When (parts of the) description, ingredients, or instructions  weren't explicitly stated in the original text, clearly mark them with [AI].
-- Return ONLY the JSON object, no additional text or explanations !!
-- Ensure the JSON is valid and properly formatted !!`
+- Return ONLY the JSON object, no additional text or explanations.
+- Ensure the JSON is valid and properly formatted.`
 
 
 export const RECIPE_ENHANCEMENT_PROMPT = `You are a professional chef and culinary expert. Analyze the provided recipe and generate helpful chef's notes that will make this dish exceptional.
