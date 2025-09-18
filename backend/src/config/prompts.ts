@@ -10,17 +10,18 @@ Schema (return EXACTLY these keys and no additional keys):
   "description": "Any type of description/background/information (string) from the input accompanying the recipe such as provided narrative, cultural context, personal stories, tips, or background from the text; if none is provided generate a practical/useful one based on context.
   "ingredients": ["ingredient 1", "ingredient 2", ...], # e.g. "2 cups all-purpose flour, sifted", "1/2 tsp salt"
   "instructions": ["step 1", "step 2", ...], # e.g. "Preheat oven to 350°F", "Mix dry ingredients". 
-  "prepTimeMinutes": number | null, # e.g. 30, if not provided you can use you best guess.
-  "cookTimeMinutes": number | null, # e.g. 30, if not provided you can use you best guess.
-  "totalTimeMinutes": number | null, # e.g. 60, if not provided you can use you best guess.
-  "servings": number | null # e.g. 4, if not provided you can use you best guess, persons/quantity relevant for the recipe (e.g., "4 servings" = 4, "Serves 6" = 6)
+  "prepTimeMinutes": integer|null, # e.g. 30
+  "cookTimeMinutes": integer|null, # e.g. 30
+  "totalTimeMinutes": integer|null, # e.g. 60
+  "servings": integer|null # e.g. 4, if not provided you can use you best guess, persons/quantity relevant for the recipe.
 }
 
 PARSING RULES:
 - Process exactly one recipe per input. If multiple recipes are present, parse only the first one.
 - Fix typos
+- use null if it is not applicable to the recipe.
 - Add "*" to indicate headings or section titles in the description, instructions and ingredients (e.g., "*What is *?", "*Why you'll love ..*" in the descrition, or for granola ingredients seperate "*Dry Ingredients", "*Wet Ingredients" ) to indicate structure
-- Convert all time references to minutes as integers
+- Convert all time references to minutes as integers, use best guess. 
 - If a field cannot be determined from the text, use your best guess based on context and knowledge as professional chef and culinary expert
 - When (parts of the) description, ingredients, or instructions  weren't explicitly stated in the original text, clearly mark them with [AI] e.g. "For carbonara however, using guanciale is most authentic [AI]"
 - Handle various recipe formats: websites, cookbooks,photos, handwritten notes, emails, but also imaginations from scratch if prompted (clearly mark them as [AI-generated]), try to stay as close to the input as possible.
