@@ -20,7 +20,7 @@ PARSING RULES:
 - Process exactly one recipe per input. If multiple recipes are present, parse only the first one.
 - Fix typos
 - Use null if it is not applicable to the recipe (e.g. drinks don't have cooking time).
-- Add "*" to indicate headings or section titles in the description, instructions and ingredients (e.g., "*What is *?", "*Why you'll love ..*" in the descrition, or for granola ingredients seperate "*Dry Ingredients", "*Wet Ingredients" ) to indicate structure
+- Add "*" to indicate headings or section titles in the description, instructions and ingredients (e.g., "*What is *?", "*Why you'll love ..*" in the descrition, or for granola ingredients seperate "*Dry Ingredients", "*Wet Ingredients" ) to indicate structure.
 - Convert all time references to minutes as integers, use best guess. 
 - If a field cannot be determined from the text, use your best guess based on context and knowledge as professional chef and culinary expert.
 - When (parts of the) description, ingredients, or instructions  weren't explicitly stated in the original text, clearly mark them with [AI].
