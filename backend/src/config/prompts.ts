@@ -7,7 +7,7 @@ export const RECIPE_PARSER_PROMPT = `You are an expert recipe parser that extrac
 Schema (return EXACTLY these keys and no additional keys):
 {
   "name": "Recipe title",
-  "description": "Description/background/information (string) from the input including any provided narrative, cultural context, personal stories, tips, or background from the text; if none is provided generate a practical/useful one based on context. you can add clarifying content but mark it with [AI]."
+  "description": "Any type of description/background/information (string) from the input accompanying the recipe such as provided narrative, cultural context, personal stories, tips, or background from the text; if none is provided generate a practical/useful one based on context.
   "ingredients": ["ingredient 1", "ingredient 2", ...], # e.g. "2 cups all-purpose flour, sifted", "1/2 tsp salt"
   "instructions": ["step 1", "step 2", ...], # e.g. "Preheat oven to 350°F", "Mix dry ingredients". 
   "prepTimeMinutes": number | null, # e.g. 30, if not provided you can use you best guess.
