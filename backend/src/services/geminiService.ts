@@ -96,8 +96,8 @@ class GeminiService {
     const systemPrompt = RECIPE_PARSER_PROMPT
 
     try {
-      console.log('Making Gemini vision API call with model: gemini-2.0-flash-lite')
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' })
+      console.log('Making Gemini vision API call with model: gemini-2.5-flash-lite')
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' })
 
       // Downsample the image to reduce API costs and improve processing speed
       // Recipe text is usually readable even at lower resolutions
