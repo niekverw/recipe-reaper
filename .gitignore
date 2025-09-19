@@ -4,6 +4,8 @@ test-llm-parsing
 node_modules/
 frontend/node_modules/
 
+# data: 
+backend/data/
 # Vite / build outputs
 dist/
 .build/

@@ -35,6 +35,7 @@ class ImageService {
 
     // Process and optimize the image before storing
     const processedImageBuffer = await sharp(imageBuffer)
+      .rotate() // Auto-rotate based on EXIF orientation
       .resize(1200, 1200, {
         fit: 'inside',
         withoutEnlargement: true
