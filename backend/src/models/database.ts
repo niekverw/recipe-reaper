@@ -25,7 +25,7 @@ export class Database {
       await fs.mkdir(dataDir, { recursive: true })
     }
     return new Promise((resolve, reject) => {
-      this.db = new sqlite3.Database(dbPath, (err) => {
+      this.db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
         if (err) {
           reject(err)
         } else {
