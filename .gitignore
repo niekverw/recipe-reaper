@@ -6,6 +6,7 @@ frontend/node_modules/
 
 # data: 
 backend/data/
+backend/data/recipes.db
 # Vite / build outputs
 dist/
 .build/
