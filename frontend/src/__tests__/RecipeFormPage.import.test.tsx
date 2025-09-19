@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest'
@@ -36,7 +36,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Reset fetch mock
-    global.fetch = vi.fn()
+    ;(globalThis as any).fetch = vi.fn()
     // Reset window.confirm mock
     window.confirm = vi.fn().mockReturnValue(true)
   })
@@ -89,7 +89,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
         ok: true,
         json: () => Promise.resolve({ recipeData: mockRecipeData })
       })
-      global.fetch = mockFetch
+      ;(globalThis as any).fetch = mockFetch
 
       renderRecipeFormPage()
 
@@ -134,7 +134,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
       })
 
       const mockFetch = vi.fn().mockReturnValue(pendingPromise)
-      global.fetch = mockFetch
+      ;(globalThis as any).fetch = mockFetch
 
       renderRecipeFormPage()
 
@@ -170,7 +170,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
       await user.click(importButton)
 
       expect(screen.getByText('Please enter a URL')).toBeInTheDocument()
-      expect(global.fetch).not.toHaveBeenCalled()
+      expect((globalThis as any).fetch).not.toHaveBeenCalled()
     })
 
     it('should handle API errors gracefully', async () => {
@@ -180,7 +180,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
           error: { message: 'Recipe not found at the provided URL' }
         })
       })
-      global.fetch = mockFetch
+      ;(globalThis as any).fetch = mockFetch
 
       renderRecipeFormPage()
 
@@ -197,7 +197,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
 
     it('should handle network errors', async () => {
       const mockFetch = vi.fn().mockRejectedValue(new Error('Network error'))
-      global.fetch = mockFetch
+      ;(globalThis as any).fetch = mockFetch
 
       renderRecipeFormPage()
 
@@ -217,7 +217,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
         ok: true,
         json: () => Promise.resolve({ recipeData: mockRecipeData })
       })
-      global.fetch = mockFetch
+      ;(globalThis as any).fetch = mockFetch
 
       renderRecipeFormPage()
 
@@ -245,7 +245,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
         ok: true,
         json: () => Promise.resolve({ recipeData: mockRecipeData })
       })
-      global.fetch = mockFetch
+      ;(globalThis as any).fetch = mockFetch
 
       renderRecipeFormPage()
 

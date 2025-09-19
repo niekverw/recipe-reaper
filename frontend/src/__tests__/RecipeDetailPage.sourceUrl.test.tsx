@@ -273,7 +273,7 @@ describe('RecipeDetailPage - Source URL Display', () => {
       expect(await screen.findByText('Test Recipe')).toBeInTheDocument()
 
       // Check that the full attribution text is present and readable
-      const fullText = screen.getByText((content, element) => {
+      const fullText = screen.getByText((_content, element) => {
         return element?.textContent === 'Recipe adapted from example.com'
       })
       expect(fullText).toBeInTheDocument()

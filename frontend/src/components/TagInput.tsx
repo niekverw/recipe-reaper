@@ -101,7 +101,7 @@ function TagInput({ tags, onTagsChange, availableTags = [], placeholder = "Add t
     }
   }
 
-  const handleInputBlur = (e: React.FocusEvent) => {
+  const handleInputBlur = (_e: React.FocusEvent) => {
     // Delay hiding suggestions to allow clicking on them
     setTimeout(() => {
       setShowSuggestions(false)
@@ -156,7 +156,7 @@ function TagInput({ tags, onTagsChange, availableTags = [], placeholder = "Add t
           {filteredSuggestions.map((suggestion, index) => (
             <button
               key={suggestion}
-              ref={el => suggestionRefs.current[index] = el}
+              ref={el => { suggestionRefs.current[index] = el }}
               type="button"
               onClick={() => addTag(suggestion)}
               className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${

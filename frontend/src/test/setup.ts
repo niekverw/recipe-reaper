@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom'
 
 // Mock fetch for tests
-global.fetch = vi.fn()
+;(globalThis as any).fetch = vi.fn()
 
 // Mock window.confirm
 Object.defineProperty(window, 'confirm', {
@@ -10,8 +10,9 @@ Object.defineProperty(window, 'confirm', {
 })
 
 // Mock console methods to reduce noise in tests
-global.console = {
-  ...console,
+const originalConsole = { ...console }
+;(globalThis as any).console = {
+  ...originalConsole,
   error: vi.fn(),
   warn: vi.fn(),
   log: vi.fn(),
