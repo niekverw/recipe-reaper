@@ -9,8 +9,15 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB max file size
   },
   fileFilter: (req, file, cb) => {
-    // Accept only image files
-    if (file.mimetype.startsWith('image/')) {
+    // Accept image files and HEIC files
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif']
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif']
+
+    const fileExtension = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'))
+
+    if (file.mimetype.startsWith('image/') ||
+        allowedMimes.includes(file.mimetype) ||
+        allowedExtensions.includes(fileExtension)) {
       cb(null, true)
     } else {
       cb(null, false)
