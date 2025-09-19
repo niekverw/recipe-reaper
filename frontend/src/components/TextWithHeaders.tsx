@@ -25,10 +25,28 @@ export default function TextWithHeaders({ text, className = '' }: TextWithHeader
             </strong>
           )
         } else {
+          // Split text into paragraphs (double newlines) and preserve single newlines within paragraphs
+          const normalizedContent = segment.content.trim()
+          const paragraphs = normalizedContent.split(/\n\s*\n+/)
+
           return (
-            <span key={index}>
-              {segment.content}
-            </span>
+            <div key={index}>
+              {paragraphs.map((paragraph, paragraphIndex) => {
+                const trimmedParagraph = paragraph.trim()
+                if (!trimmedParagraph) return null
+
+                return (
+                  <p key={paragraphIndex} className={paragraphIndex > 0 ? "mt-4" : ""}>
+                    {trimmedParagraph.split('\n').map((line, lineIndex, lines) => (
+                      <span key={lineIndex}>
+                        {line}
+                        {lineIndex < lines.length - 1 && <br />}
+                      </span>
+                    ))}
+                  </p>
+                )
+              })}
+            </div>
           )
         }
       })}
