@@ -5,6 +5,7 @@ import { createError } from '../middleware/errorHandler'
 import { openaiService } from '../services/openaiService'
 import { geminiService } from '../services/geminiService'
 import { recipeEnhancementService } from '../services/recipeEnhancementService'
+import { imageService } from '../services/imageService'
 import { spawn } from 'child_process'
 import { join } from 'path'
 
@@ -416,6 +417,8 @@ export const recipeController = {
         throw createError('Image file is required', 400)
       }
 
+      const storedImage = await imageService.storeImage(req.file.buffer, req.file.originalname)
+
       // Parse the image directly using Gemini Vision to create a recipe
       const parsedData = await geminiService.parseRecipeFromImage(req.file.buffer)
 
@@ -429,7 +432,7 @@ export const recipeController = {
         cookTimeMinutes: parsedData.cookTimeMinutes,
         totalTimeMinutes: parsedData.totalTimeMinutes,
         servings: parseServings(parsedData.servings?.toString()),
-        image: parsedData.image
+        image: storedImage.url
       }
 
       res.json({
@@ -449,6 +452,51 @@ export const recipeController = {
         }
         if (error.message.includes('Image buffer is required')) {
           throw createError('Invalid image file. Please upload a valid image.', 400)
+        }
+      }
+      next(error)
+    }
+  },
+
+  async uploadImage(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.file) {
+        throw createError('Image file is required', 400)
+      }
+
+      const storedImage = await imageService.storeImage(req.file.buffer, req.file.originalname)
+
+      res.json({
+        imageUrl: storedImage.url
+      })
+    } catch (error) {
+      // Handle image upload specific errors
+      if (error instanceof Error) {
+        if (error.message.includes('Image file is required')) {
+          throw createError('Invalid image file. Please upload a valid image.', 400)
+        }
+      }
+      next(error)
+    }
+  },
+
+  async deleteImage(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { filename } = req.params
+
+      if (!filename) {
+        throw createError('Filename is required', 400)
+      }
+
+      // Delete the image file
+      await imageService.deleteImage(filename)
+
+      res.status(204).send()
+    } catch (error) {
+      // Handle image deletion specific errors
+      if (error instanceof Error) {
+        if (error.message.includes('Filename is required')) {
+          throw createError('Invalid filename provided', 400)
         }
       }
       next(error)

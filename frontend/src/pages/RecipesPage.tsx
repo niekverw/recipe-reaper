@@ -79,7 +79,7 @@ function RecipeGridCard({ recipe, onEdit, onDelete, onCopy, onTagClick }: Recipe
           {/* If recipe.image exists render it, otherwise keep gradient */}
           {recipe.image ? (
             <img
-              src={recipe.image}
+              src={apiService.constructImageUrl(recipe.image)}
               alt={`${recipe.name} image`}
               loading="lazy"
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
@@ -166,7 +166,7 @@ function RecipeListCard({ recipe, onEdit, onDelete, onCopy, onTagClick }: Recipe
           <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-lg flex-shrink-0 overflow-hidden">
             {recipe.image ? (
               <img
-                src={recipe.image}
+                src={apiService.constructImageUrl(recipe.image)}
                 alt={`${recipe.name} thumbnail`}
                 loading="lazy"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}

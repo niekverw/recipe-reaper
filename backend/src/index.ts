@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import { join } from 'path'
 import { Database } from './models/database'
 import { recipeRoutes } from './routes/recipes'
 import { ingredientRoutes } from './routes/ingredients'
@@ -16,6 +17,9 @@ app.use(cors({
 }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+
+// Serve uploaded images statically
+app.use('/uploads', express.static(join(process.cwd(), 'data', 'uploads')))
 
 // Health check endpoint
 app.get('/health', (req, res) => {

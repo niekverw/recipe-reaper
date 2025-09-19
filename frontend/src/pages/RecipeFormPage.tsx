@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { apiService, Recipe, CreateRecipeData } from '../services/api'
 import { IngredientHelper } from '../utils/ingredientHelper'
+import { isOurUploadedImage, getFilenameFromUrl, cleanupImage } from '../utils/imageUtils'
 import TagInput from '../components/TagInput'
 import {
   ArrowLeftIcon,
@@ -59,6 +60,11 @@ function RecipeFormPage() {
   const [isImportingImage, setIsImportingImage] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
 
+  // Image upload state (for upload button next to Image URL)
+  const [uploadImageFile, setUploadImageFile] = useState<File | null>(null)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [previousImageUrl, setPreviousImageUrl] = useState<string>('')
+
   useEffect(() => {
     // Load available tags
     loadAvailableTags()
@@ -80,8 +86,20 @@ function RecipeFormPage() {
         sourceUrl: copiedRecipe.sourceUrl,
         tags: copiedRecipe.tags || []
       })
+      setPreviousImageUrl(copiedRecipe.image || '')
     }
   }, [isEdit, id, copiedRecipe])
+
+  // Track image URL changes for cleanup
+  useEffect(() => {
+    if (formData.image !== previousImageUrl) {
+      // Clean up previous image if it was one of our uploads
+      if (previousImageUrl && isOurUploadedImage(previousImageUrl)) {
+        cleanupImage(previousImageUrl)
+      }
+      setPreviousImageUrl(formData.image || '')
+    }
+  }, [formData.image, previousImageUrl])
 
   const loadAvailableTags = async () => {
     try {
@@ -108,6 +126,7 @@ function RecipeFormPage() {
         sourceUrl: recipe.sourceUrl,
         tags: recipe.tags || []
       })
+      setPreviousImageUrl(recipe.image || '')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load recipe')
       console.error('Failed to load recipe:', err)
@@ -118,11 +137,29 @@ function RecipeFormPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'prepTimeMinutes' || name === 'servings'
+    
+    let processedValue: string | number | undefined = value
+    
+    // Special handling for image field
+    if (name === 'image') {
+      // If the user enters a full URL that matches our current domain, convert to relative
+      const currentUrl = window.location
+      const frontendBaseUrl = `${currentUrl.protocol}//${currentUrl.hostname}:${currentUrl.port || (currentUrl.protocol === 'https:' ? '443' : '80')}`
+      
+      if (value.startsWith(`${frontendBaseUrl}/uploads/`)) {
+        // Convert full URL back to relative path
+        processedValue = value.replace(frontendBaseUrl, '')
+      }
+      // External URLs are kept as-is
+    } else {
+      processedValue = name === 'prepTimeMinutes' || name === 'servings'
         ? (value === '' ? undefined : Number(value))
         : value
+    }
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: processedValue
     }))
   }
 
@@ -337,6 +374,36 @@ function RecipeFormPage() {
     }
   }
 
+  const handleImageFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setUploadImageFile(file)
+
+      // Upload immediately after file selection
+      try {
+        setIsUploadingImage(true)
+        const response = await apiService.uploadImage(file)
+
+        // Set the image URL in the form data
+        setFormData(prev => ({
+          ...prev,
+          image: response.imageUrl
+        }))
+
+        // Clear the selected file
+        setUploadImageFile(null)
+        // Reset the file input
+        e.target.value = ''
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to upload image')
+        console.error('Failed to upload image:', err)
+        // Keep the file selected if upload failed
+      } finally {
+        setIsUploadingImage(false)
+      }
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -377,8 +444,8 @@ function RecipeFormPage() {
         cookTimeMinutes: formData.cookTimeMinutes,
         totalTimeMinutes: formData.totalTimeMinutes,
         servings: formData.servings,
-        image: formData.image?.trim() || undefined,
-        sourceUrl: formData.sourceUrl?.trim() || undefined,
+        image: formData.image?.trim() || '',
+        sourceUrl: formData.sourceUrl?.trim() || '',
         tags: formData.tags
       }
 
@@ -896,16 +963,53 @@ Bake for 25-30 minutes`}
             <label htmlFor="image" className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
               Image URL
             </label>
-            <input
-              type="url"
-              id="image"
-              name="image"
-              value={formData.image}
-              onChange={handleInputChange}
-              placeholder="https://example.com/my-recipe-image.jpg"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Add a URL to an image of your completed recipe</p>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                id="image"
+                name="image"
+                value={apiService.constructImageUrl(formData.image || '')}
+                onChange={handleInputChange}
+                placeholder="https://example.com/my-recipe-image.jpg"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              />
+              <div className="relative">
+                <input
+                  id="upload-image-file"
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleImageFileSelect}
+                  disabled={isUploadingImage}
+                />
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('upload-image-file')?.click()}
+                  disabled={isUploadingImage}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors duration-200 whitespace-nowrap"
+                >
+                  {isUploadingImage ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Upload Image
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+            {uploadImageFile && (
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                Selected: {uploadImageFile.name} ({(uploadImageFile.size / 1024 / 1024).toFixed(1)} MB)
+              </p>
+            )}
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Add a URL to an image of your completed recipe or upload a file</p>
           </div>
 
           <div>

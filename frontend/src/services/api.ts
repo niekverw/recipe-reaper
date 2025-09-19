@@ -238,6 +238,59 @@ class ApiService {
     })
   }
 
+  // Upload image and get URL (no recipe parsing)
+  async uploadImage(imageFile: File) {
+    const formData = new FormData()
+    formData.append('image', imageFile)
+
+    return this.request<{
+      imageUrl: string
+    }>('/recipes/upload-image', {
+      method: 'POST',
+      body: formData,
+    })
+  }
+
+  // Helper to determine the public frontend URL for image URLs
+  private getPublicBackendUrl(): string {
+    const currentUrl = window.location
+    const hostname = currentUrl.hostname
+    const port = currentUrl.port || (currentUrl.protocol === 'https:' ? '443' : '80')
+
+    // Return the frontend URL (images will be served via proxy)
+    return `${currentUrl.protocol}//${hostname}:${port}`
+  }
+
+  // Helper to construct full URL from relative path or return external URLs as-is
+  public constructImageUrl(imagePath: string): string {
+    if (!imagePath) return ''
+
+    // If it's already a full URL (external image), return as-is
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath
+    }
+
+    // If it's a relative path starting with /uploads, construct full URL
+    if (imagePath.startsWith('/uploads/')) {
+      return `${this.getPublicBackendUrl()}${imagePath}`
+    }
+
+    // For any other relative paths, also construct full URL
+    if (imagePath.startsWith('/')) {
+      return `${this.getPublicBackendUrl()}${imagePath}`
+    }
+
+    // Fallback - return as-is
+    return imagePath
+  }
+
+  // Delete uploaded image by filename
+  async deleteImage(filename: string) {
+    return this.request<void>(`/recipes/delete-image/${filename}`, {
+      method: 'DELETE',
+    })
+  }
+
   // Get all unique tags
   async getAllTags(): Promise<string[]> {
     const response = await this.request<{ tags: string[] }>('/recipes/tags')

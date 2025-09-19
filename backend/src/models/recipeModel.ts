@@ -216,9 +216,9 @@ export const recipeModel = {
       updates.push('instructions = ?')
       params.push(JSON.stringify(data.instructions))
     }
-    if (data.image !== undefined) {
+    if ('image' in data) {
       updates.push('image = ?')
-      params.push(data.image || null)
+      params.push(data.image === '' || data.image === undefined ? null : data.image)
     }
     if (data.sourceUrl !== undefined) {
       updates.push('source_url = ?')

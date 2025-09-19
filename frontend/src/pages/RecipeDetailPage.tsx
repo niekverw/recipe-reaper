@@ -753,7 +753,7 @@ function RecipeDetailPage() {
               <>
                 <div className="mt-4 md:mt-0 md:shrink-0 md:w-56 lg:w-72 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 relative">
                   <img
-                    src={recipe.image}
+                    src={apiService.constructImageUrl(recipe.image)}
                     alt={`${recipe.name} image`}
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                     className="w-full h-36 md:h-44 lg:h-56 object-cover block cursor-pointer"
@@ -799,7 +799,7 @@ function RecipeDetailPage() {
                         ×
                       </button>
                       <img
-                        src={recipe.image}
+                        src={apiService.constructImageUrl(recipe.image)}
                         alt={`${recipe.name} full size`}
                         className="w-full h-auto max-h-[90vh] object-contain block bg-black"
                         onClick={(e) => e.stopPropagation()}

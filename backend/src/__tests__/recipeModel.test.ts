@@ -123,6 +123,23 @@ describe('Recipe Model Tests', () => {
       )
     })
 
+    it('should clear image field when empty string is provided', async () => {
+      const recipeWithImage = await recipeModel.create({
+        name: 'Recipe with Image',
+        description: 'Has an image',
+        ingredients: ['ingredient'],
+        instructions: ['step'],
+        image: 'https://example.com/image.jpg'
+      })
+
+      // Clear the image by setting it to empty string
+      const updatedRecipe = await recipeModel.update(recipeWithImage.id, {
+        image: ''
+      })
+
+      expect(updatedRecipe.image).toBeNull()
+    })
+
     it('should delete a recipe', async () => {
       const recipe = await recipeModel.create({
         name: 'To Be Deleted',

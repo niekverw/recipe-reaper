@@ -1,5 +1,7 @@
 import sqlite3 from 'sqlite3'
 import { promisify } from 'util'
+import { promises as fs } from 'fs'
+import { dirname } from 'path'
 
 export class Database {
   private static instance: Database
@@ -14,7 +16,14 @@ export class Database {
     return Database.instance
   }
 
-  async initialize(dbPath: string = './recipes.db'): Promise<void> {
+  async initialize(dbPath: string = './data/recipes.db'): Promise<void> {
+    // Ensure data directory exists
+    const dataDir = dirname(dbPath)
+    try {
+      await fs.access(dataDir)
+    } catch {
+      await fs.mkdir(dataDir, { recursive: true })
+    }
     return new Promise((resolve, reject) => {
       this.db = new sqlite3.Database(dbPath, (err) => {
         if (err) {

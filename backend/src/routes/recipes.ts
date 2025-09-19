@@ -41,6 +41,12 @@ recipeRoutes.post('/parse-text-gemini', recipeController.parseTextRecipeGemini)
 // POST /api/recipes/parse-image - Parse recipe data from image using Vision API + Gemini
 recipeRoutes.post('/parse-image', upload.single('image'), recipeController.parseImageRecipe)
 
+// POST /api/recipes/upload-image - Upload image and get URL (no parsing)
+recipeRoutes.post('/upload-image', upload.single('image'), recipeController.uploadImage)
+
+// DELETE /api/recipes/delete-image/:filename - Delete uploaded image
+recipeRoutes.delete('/delete-image/:filename', recipeController.deleteImage)
+
 // GET /api/recipes/:id - Get a specific recipe
 recipeRoutes.get('/:id', recipeController.getRecipeById)
 
