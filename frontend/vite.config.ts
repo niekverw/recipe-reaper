@@ -28,4 +28,14 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    host: '0.0.0.0', // Bind to all network interfaces for phone access
+    port: 5173,      // Same port as development server
+    allowedHosts: [
+      '.ngrok.io',
+      '.ngrok-free.app',
+      'localhost',
+      '127.0.0.1'
+    ],
+  },
 })
