@@ -4,6 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider } from './contexts/AuthContext'
 import Navigation from './components/Navigation'
 import AuthModal from './components/auth/AuthModal'
+import PWAInstallPrompt from './components/PWAInstallPrompt'
 import RecipesPage from './pages/RecipesPage'
 import RecipeDetailPage from './pages/RecipeDetailPage'
 import RecipeFormPage from './pages/RecipeFormPage'
@@ -43,6 +44,7 @@ function App() {
               onClose={handleAuthModalClose}
               initialMode={authModal.mode}
             />
+            <PWAInstallPrompt />
           </div>
         </Router>
       </AuthProvider>
