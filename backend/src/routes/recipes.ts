@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import { Router, Request, Response, NextFunction } from 'express'
 import multer from 'multer'
 import { recipeController } from '../controllers/recipeController'
 import { requireAuth, optionalAuth } from '../middleware/auth'
@@ -28,14 +28,26 @@ const upload = multer({
 
 export const recipeRoutes = Router()
 
-// GET /api/recipes - List recipes with optional filters (public access, user context optional)
-recipeRoutes.get('/', optionalAuth, recipeController.getRecipes)
+// GET /api/recipes - List recipes with optional filters
+// In production, require auth unless ALLOW_PUBLIC_API=true
+const recipeListAuth = process.env.NODE_ENV === 'production' && process.env.ALLOW_PUBLIC_API !== 'true'
+  ? requireAuth
+  : optionalAuth
+recipeRoutes.get('/', recipeListAuth, recipeController.getRecipes)
 
-// GET /api/recipes/tags - Get all unique tags (public access)
-recipeRoutes.get('/tags', recipeController.getAllTags)
+// GET /api/recipes/tags - Get all unique tags
+// In production, require auth unless ALLOW_PUBLIC_API=true
+const tagsAuth = process.env.NODE_ENV === 'production' && process.env.ALLOW_PUBLIC_API !== 'true'
+  ? requireAuth
+  : (req: Request, res: Response, next: NextFunction) => next() // no auth required
+recipeRoutes.get('/tags', tagsAuth, recipeController.getAllTags)
 
 // GET /api/recipes/check-name - Check if recipe name exists in public recipes
-recipeRoutes.get('/check-name', recipeController.checkRecipeName)
+// In production, require auth unless ALLOW_PUBLIC_API=true
+const checkNameAuth = process.env.NODE_ENV === 'production' && process.env.ALLOW_PUBLIC_API !== 'true'
+  ? requireAuth
+  : (req: Request, res: Response, next: NextFunction) => next() // no auth required
+recipeRoutes.get('/check-name', checkNameAuth, recipeController.checkRecipeName)
 
 // POST /api/recipes - Create a new recipe (requires authentication)
 recipeRoutes.post('/', requireAuth, recipeController.createRecipe)

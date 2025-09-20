@@ -19,7 +19,7 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/',
+        scope: '/', 
         start_url: '/',
         id: 'recipe-reaper',
         icons: [
