@@ -12,14 +12,16 @@ export default defineConfig({
       includeAssets: ['favicon-16x16.png', 'favicon-32x32.png', 'icon-192.png', 'icon-512.png', 'icon.svg'],
       manifest: {
         name: 'Recipe Reaper',
-        short_name: 'Recipe-Reaper',
+        short_name: 'Recipe Reaper',
         description: 'Your personal recipe reaper with cooking tips and variations',
+        version: '1.1.0',
         theme_color: '#1a1a1a',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
+        id: 'recipe-reaper',
         icons: [
           {
             src: 'icon-192.png',
@@ -45,15 +47,10 @@ export default defineConfig({
             type: 'image/png',
             purpose: 'maskable'
           },
-          {
-            src: 'icon.svg',
-            sizes: '192x192 512x512',
-            type: 'image/svg+xml',
-            purpose: 'any'
-          }
         ]
       },
       workbox: {
+        cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp}'],
         runtimeCaching: [
           {
