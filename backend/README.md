@@ -2,6 +2,11 @@
 
 A Node.js/Express API for managing recipes with web scraping capabilities.
 
+## Quick Run: 
+```bash
+cd /home/tafelplankje/repos/recipeapp/backend && npm run serve:tunnel
+```
+
 ## Quick Setup
 
 **1. Install Node.js dependencies:**
