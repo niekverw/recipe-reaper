@@ -18,7 +18,7 @@ export interface Recipe {
   isPublic: boolean
   aiEnhancedNotes?: string | null
   tags?: string[]
-  // Future-ready fields for user/household support
+  // Simplified 2-level privacy: private (personal/household) vs public
   userId?: string
   householdId?: string
   createdAt: string
@@ -38,6 +38,10 @@ export interface CreateRecipeRequest {
   sourceUrl?: string
   isPublic?: boolean
   tags?: string[]
+  // User context (set by controller)
+  userId?: string
+  householdId?: string
+  copiedFrom?: string
 }
 
 export interface UpdateRecipeRequest {
@@ -62,4 +66,9 @@ export interface RecipeFilters {
   tags?: string[]
   limit?: number
   offset?: number
+  // User context for access control
+  userId?: string
+  householdId?: string
+  // Recipe context
+  scope?: 'my' | 'public' | 'all'  // 'my' = user's accessible recipes, 'public' = only public, 'all' = everything user can see
 }

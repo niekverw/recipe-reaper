@@ -6,6 +6,7 @@ import { openaiService } from '../services/openaiService'
 import { geminiService } from '../services/geminiService'
 import { recipeEnhancementService } from '../services/recipeEnhancementService'
 import { imageService } from '../services/imageService'
+import { User } from '../types/user'
 import { spawn } from 'child_process'
 import { join } from 'path'
 
@@ -98,13 +99,20 @@ function parseImageUrl(image?: any): string | undefined {
 export const recipeController = {
   async getRecipes(req: Request, res: Response, next: NextFunction) {
     try {
+      const user = req.user as User | undefined
+      const scope = req.query.scope as 'my' | 'public' | 'all' || 'all'
+
       const filters: RecipeFilters = {
         search: req.query.search as string,
         sortBy: req.query.sortBy as 'name' | 'time' | 'servings' | 'recent',
         isPublic: req.query.isPublic === 'true' ? true : req.query.isPublic === 'false' ? false : undefined,
         tags: req.query.tags ? (req.query.tags as string).split(',') : undefined,
         limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
-        offset: req.query.offset ? parseInt(req.query.offset as string) : undefined
+        offset: req.query.offset ? parseInt(req.query.offset as string) : undefined,
+        // Add user context for access control
+        userId: user?.id,
+        householdId: user?.householdId,
+        scope: scope
       }
 
       const recipes = await recipeModel.findAll(filters)
@@ -131,6 +139,11 @@ export const recipeController = {
 
   async createRecipe(req: Request, res: Response, next: NextFunction) {
     try {
+      const user = req.user as User | undefined
+      if (!user) {
+        throw createError('Authentication required', 401)
+      }
+
       const recipeData: CreateRecipeRequest = req.body
 
       // Validation
@@ -145,6 +158,15 @@ export const recipeController = {
       }
       if (!recipeData.instructions?.length) {
         throw createError('At least one instruction is required', 400)
+      }
+
+      // Add user context
+      recipeData.userId = user.id
+      if (recipeData.householdId) {
+        // If sharing to household, verify user is in that household
+        if (user.householdId !== recipeData.householdId) {
+          throw createError('You can only share recipes to your own household', 403)
+        }
       }
 
       const recipe = await recipeModel.create(recipeData)
@@ -499,6 +521,72 @@ export const recipeController = {
           throw createError('Invalid filename provided', 400)
         }
       }
+      next(error)
+    }
+  },
+
+  // Check if recipe name exists in public recipes
+  async checkRecipeName(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { name } = req.query
+      const { excludeId } = req.query
+
+      if (!name || typeof name !== 'string') {
+        throw createError('Recipe name is required', 400)
+      }
+
+      const exists = await recipeModel.checkPublicNameExists(
+        name.trim(),
+        excludeId as string || undefined
+      )
+
+      res.json({
+        exists,
+        message: exists ? 'A public recipe with this name already exists' : 'Name is available'
+      })
+    } catch (error) {
+      next(error)
+    }
+  },
+
+  // Copy a recipe to user's collection
+  async copyRecipe(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user as User | undefined
+      if (!user) {
+        throw createError('Authentication required', 401)
+      }
+
+      const { id } = req.params
+      const { householdId } = req.body
+
+      // Verify the source recipe exists and is accessible
+      const sourceRecipe = await recipeModel.findById(id)
+      if (!sourceRecipe) {
+        throw createError('Recipe not found', 404)
+      }
+
+      // Check if user can access this recipe
+      if (!sourceRecipe.isPublic && sourceRecipe.userId !== user.id && sourceRecipe.householdId !== user.householdId) {
+        throw createError('You cannot copy this recipe', 403)
+      }
+
+      // If copying to household, verify user is in that household
+      if (householdId && user.householdId !== householdId) {
+        throw createError('You can only copy recipes to your own household', 403)
+      }
+
+      const copiedRecipe = await recipeModel.copyRecipe(
+        id,
+        user.id,
+        householdId || undefined
+      )
+
+      res.status(201).json({
+        recipe: copiedRecipe,
+        message: 'Recipe copied successfully'
+      })
+    } catch (error) {
       next(error)
     }
   }

@@ -12,28 +12,56 @@ import {
   PlusIcon,
   DocumentDuplicateIcon,
   XMarkIcon,
-  TagIcon
+  TagIcon,
+  LockClosedIcon,
+  GlobeAltIcon,
+  HomeIcon
 } from '@heroicons/react/24/outline'
 import { apiService, Recipe } from '../services/api'
+import { useAuth } from '../contexts/AuthContext'
 
 interface RecipeActionsProps {
-  recipeId: string
+  recipe: Recipe
   onEdit: (id: string, e: React.MouseEvent) => void
   onDelete: (id: string, e: React.MouseEvent) => void
   onCopy: (id: string, e: React.MouseEvent) => void
+  currentUserId?: string
 }
 
-function RecipeActions({ recipeId, onEdit, onDelete, onCopy }: RecipeActionsProps) {
+function RecipeActions({ recipe, onEdit, onDelete, onCopy, currentUserId }: RecipeActionsProps) {
+  const isOwner = currentUserId && (recipe.userId === currentUserId || recipe.householdId)
+  const isPublicRecipe = recipe.isPublic && recipe.userId !== currentUserId
+
+  // For public recipes by other users, only show copy button
+  if (isPublicRecipe) {
+    return (
+      <div className="flex items-center gap-2">
+        <button
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onCopy(recipe.id, e)
+          }}
+          className="p-2 rounded-full bg-black/30 hover:bg-black/40 dark:bg-black/30 dark:hover:bg-black/40 text-white backdrop-blur-sm transition-colors"
+          aria-label="Copy to my recipes"
+        >
+          <DocumentDuplicateIcon className="w-5 h-5 text-white" />
+        </button>
+      </div>
+    )
+  }
+
+  // For user's own recipes or household recipes, show edit and delete
   return (
     <div className="flex items-center gap-2">
       <button
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          onCopy(recipeId, e)
+          onCopy(recipe.id, e)
         }}
         className="p-2 rounded-full bg-black/30 hover:bg-black/40 dark:bg-black/30 dark:hover:bg-black/40 text-white backdrop-blur-sm transition-colors"
-        aria-label="Copy recipe"
+        aria-label="Duplicate recipe"
       >
         <DocumentDuplicateIcon className="w-5 h-5 text-white" />
       </button>
@@ -41,7 +69,7 @@ function RecipeActions({ recipeId, onEdit, onDelete, onCopy }: RecipeActionsProp
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          onEdit(recipeId, e)
+          onEdit(recipe.id, e)
         }}
         className="p-2 rounded-full bg-black/30 hover:bg-black/40 dark:bg-black/30 dark:hover:bg-black/40 text-white backdrop-blur-sm transition-colors"
         aria-label="Edit recipe"
@@ -52,7 +80,7 @@ function RecipeActions({ recipeId, onEdit, onDelete, onCopy }: RecipeActionsProp
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          onDelete(recipeId, e)
+          onDelete(recipe.id, e)
         }}
         className="p-2 rounded-full bg-black/30 hover:bg-black/40 dark:bg-black/30 dark:hover:bg-black/40 text-white backdrop-blur-sm transition-colors"
         aria-label="Delete recipe"
@@ -69,9 +97,10 @@ interface RecipeGridCardProps {
   onDelete: (id: string, e: React.MouseEvent) => void
   onCopy: (id: string, e: React.MouseEvent) => void
   onTagClick: (tag: string) => void
+  currentUserId?: string
 }
 
-function RecipeGridCard({ recipe, onEdit, onDelete, onCopy, onTagClick }: RecipeGridCardProps) {
+function RecipeGridCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentUserId }: RecipeGridCardProps) {
   return (
     <Link to={`/recipe/${recipe.id}`} className="block group">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 overflow-hidden">
@@ -91,11 +120,23 @@ function RecipeGridCard({ recipe, onEdit, onDelete, onCopy, onTagClick }: Recipe
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
           <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
             <RecipeActions
-              recipeId={recipe.id}
+              recipe={recipe}
               onEdit={onEdit}
               onDelete={onDelete}
               onCopy={onCopy}
+              currentUserId={currentUserId}
             />
+          </div>
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
+            <div className="p-1.5 rounded-full bg-black/30 backdrop-blur-sm">
+              {recipe.isPublic ? (
+                <GlobeAltIcon className="w-4 h-4 text-white" title="Public recipe" />
+              ) : recipe.householdId ? (
+                <HomeIcon className="w-4 h-4 text-white" title="Household recipe" />
+              ) : (
+                <LockClosedIcon className="w-4 h-4 text-white" title="Private recipe" />
+              )}
+            </div>
           </div>
           <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3">
             <div className="flex items-center gap-2">
@@ -156,9 +197,10 @@ interface RecipeListCardProps {
   onDelete: (id: string, e: React.MouseEvent) => void
   onCopy: (id: string, e: React.MouseEvent) => void
   onTagClick: (tag: string) => void
+  currentUserId?: string
 }
 
-function RecipeListCard({ recipe, onEdit, onDelete, onCopy, onTagClick }: RecipeListCardProps) {
+function RecipeListCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentUserId }: RecipeListCardProps) {
   return (
     <Link to={`/recipe/${recipe.id}`} className="block group">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 p-2 sm:p-3 md:p-4">
@@ -182,7 +224,16 @@ function RecipeListCard({ recipe, onEdit, onDelete, onCopy, onTagClick }: Recipe
               {recipe.description}
             </p>
             <div className="flex items-center gap-2 sm:gap-3 mb-1">
-              <div className="text-xs text-gray-500 dark:text-gray-400">{formatDateShort(recipe.createdAt)}</div>
+              <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                {recipe.isPublic ? (
+                  <GlobeAltIcon className="w-3 h-3" title="Public recipe" />
+                ) : recipe.householdId ? (
+                  <HomeIcon className="w-3 h-3" title="Household recipe" />
+                ) : (
+                  <LockClosedIcon className="w-3 h-3" title="Private recipe" />
+                )}
+                <span>{formatDateShort(recipe.createdAt)}</span>
+              </div>
               <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                 <ClockIcon className="w-3 h-3" />
                 <span>{(recipe.totalTimeMinutes || recipe.prepTimeMinutes)}m</span>
@@ -218,10 +269,11 @@ function RecipeListCard({ recipe, onEdit, onDelete, onCopy, onTagClick }: Recipe
             )}
           </div>
           <RecipeActions
-            recipeId={recipe.id}
+            recipe={recipe}
             onEdit={onEdit}
             onDelete={onDelete}
             onCopy={onCopy}
+            currentUserId={currentUserId}
           />
         </div>
       </div>
@@ -232,6 +284,7 @@ function RecipeListCard({ recipe, onEdit, onDelete, onCopy, onTagClick }: Recipe
 function RecipesPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const { user, household } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('recent')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -241,6 +294,9 @@ function RecipesPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [availableTags, setAvailableTags] = useState<string[]>([])
   const [showTagFilter, setShowTagFilter] = useState(false)
+
+  // Get scope from URL parameters
+  const scope = searchParams.get('scope') as 'my' | 'public' | 'all' || (user ? 'my' : 'public')
 
   const filteredAndSortedRecipes = useMemo(() => {
     let filtered = recipes.filter(recipe => {
@@ -275,7 +331,7 @@ function RecipesPage() {
   useEffect(() => {
     loadRecipes()
     loadAvailableTags()
-  }, [])
+  }, [scope])
 
   // Handle URL parameters for tag filtering
   useEffect(() => {
@@ -296,7 +352,7 @@ function RecipesPage() {
     try {
       setLoading(true)
       setError(null)
-      const fetchedRecipes = await apiService.getRecipes()
+      const fetchedRecipes = await apiService.getRecipes({ scope })
       setRecipes(fetchedRecipes)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load recipes')
@@ -373,26 +429,42 @@ function RecipesPage() {
     e.stopPropagation()
 
     try {
-      // Fetch the original recipe
-      const originalRecipe = await apiService.getRecipe(id)
-      
-      // Navigate to add recipe page with the copied data as state
-      navigate('/add-recipe', {
-        state: {
-          copiedRecipe: {
-            name: `${originalRecipe.name} (Copy)`,
-            description: originalRecipe.description,
-            prepTimeMinutes: originalRecipe.prepTimeMinutes,
-            cookTimeMinutes: originalRecipe.cookTimeMinutes,
-            totalTimeMinutes: originalRecipe.totalTimeMinutes,
-            servings: originalRecipe.servings,
-            ingredients: originalRecipe.ingredients,
-            instructions: originalRecipe.instructions,
-            image: originalRecipe.image,
-            sourceUrl: originalRecipe.sourceUrl
-          }
+      const originalRecipe = recipes.find(r => r.id === id)
+      if (!originalRecipe) return
+
+      // For public recipes, use the API copy endpoint
+      if (originalRecipe.isPublic && originalRecipe.userId !== user?.id) {
+        const copiedRecipe = await apiService.copyRecipe(id, {
+          householdId: household?.id
+        })
+
+        // Navigate to edit the copied recipe or to My Recipes page
+        if (scope === 'public') {
+          // If we're browsing public recipes, navigate to My Recipes to see the copy
+          navigate('/?scope=my')
+        } else {
+          // If we're already in My Recipes, navigate to edit the copied recipe
+          navigate(`/recipe/${copiedRecipe.id}/edit`)
         }
-      })
+      } else {
+        // For own recipes, navigate to add recipe page with copied data
+        navigate('/add-recipe', {
+          state: {
+            copiedRecipe: {
+              name: `${originalRecipe.name} (Copy)`,
+              description: originalRecipe.description,
+              prepTimeMinutes: originalRecipe.prepTimeMinutes,
+              cookTimeMinutes: originalRecipe.cookTimeMinutes,
+              totalTimeMinutes: originalRecipe.totalTimeMinutes,
+              servings: originalRecipe.servings,
+              ingredients: originalRecipe.ingredients,
+              instructions: originalRecipe.instructions,
+              image: originalRecipe.image,
+              sourceUrl: originalRecipe.sourceUrl
+            }
+          }
+        })
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to copy recipe')
       console.error('Failed to copy recipe:', err)
@@ -407,20 +479,39 @@ function RecipesPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                {CONTENT.pageTitle}
+                {getPageTitle(scope, user)}
               </h1>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
                 {filteredAndSortedRecipes.length} {CONTENT.recipesLabel}
               </span>
             </div>
-            <Link
-              to="/add-recipe"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-            >
-              <PlusIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">Add Recipe</span>
-            </Link>
           </div>
+
+          {/* Scope Navigation */}
+          {user && (
+            <div className="flex items-center gap-1 border-b border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => setSearchParams({ scope: 'my' })}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  scope === 'my'
+                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                }`}
+              >
+                Recipes
+              </button>
+              <button
+                onClick={() => setSearchParams({ scope: 'public' })}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  scope === 'public'
+                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                }`}
+              >
+                Browse Public
+              </button>
+            </div>
+          )}
 
           {/* Search and Controls */}
           <div className="flex flex-col sm:flex-row gap-3">
@@ -600,6 +691,7 @@ function RecipesPage() {
                     onDelete={handleDelete}
                     onCopy={handleCopy}
                     onTagClick={addTagFilter}
+                    currentUserId={user?.id}
                   />
                 ))}
               </div>
@@ -613,6 +705,7 @@ function RecipesPage() {
                     onDelete={handleDelete}
                     onCopy={handleCopy}
                     onTagClick={addTagFilter}
+                    currentUserId={user?.id}
                   />
                 ))}
               </div>
@@ -628,7 +721,6 @@ export default RecipesPage
 
 // Static content
 const CONTENT = {
-  pageTitle: 'Recipe Collection',
   searchPlaceholder: 'Search recipes...',
   recipesLabel: 'recipes',
   noResultsTitle: 'No recipes found',
@@ -649,5 +741,20 @@ function formatDateShort(dateStr: string) {
     return `${monthDay} '${twoDigitYear}`
   } catch (e) {
     return ''
+  }
+}
+
+function getPageTitle(scope: string, user: any) {
+  if (!user) return 'Public Recipes'
+
+  switch (scope) {
+    case 'my':
+      return 'Recipes'
+    case 'public':
+      return 'Browse Public Recipes'
+    case 'all':
+      return 'All Recipes'
+    default:
+      return 'Recipes'
   }
 }

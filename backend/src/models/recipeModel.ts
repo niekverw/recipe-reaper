@@ -59,6 +59,35 @@ export const recipeModel = {
     let sql = 'SELECT * FROM recipes WHERE 1=1'
     const params: any[] = []
 
+    // Simplified 2-level privacy: private (personal + household) vs public
+    if (filters.scope === 'my' && filters.userId) {
+      // User's accessible recipes: private recipes (personal + household)
+      if (filters.householdId) {
+        // User has household: show personal recipes + household recipes
+        sql += ' AND ((user_id = ? AND household_id IS NULL) OR household_id = ?)'
+        params.push(filters.userId, filters.householdId)
+      } else {
+        // User has no household: show only personal recipes
+        sql += ' AND (user_id = ? AND household_id IS NULL)'
+        params.push(filters.userId)
+      }
+    } else if (filters.scope === 'public') {
+      // Only public recipes
+      sql += ' AND is_public = 1'
+    } else if (filters.scope === 'all' && filters.userId) {
+      // Everything user can see: private recipes + public recipes
+      if (filters.householdId) {
+        sql += ' AND ((user_id = ? AND household_id IS NULL) OR household_id = ? OR is_public = 1)'
+        params.push(filters.userId, filters.householdId)
+      } else {
+        sql += ' AND ((user_id = ? AND household_id IS NULL) OR is_public = 1)'
+        params.push(filters.userId)
+      }
+    } else if (!filters.userId) {
+      // Unauthenticated users can only see public recipes
+      sql += ' AND is_public = 1'
+    }
+
     // Add search filter
     if (filters.search) {
       sql += ' AND (name LIKE ? OR description LIKE ?)'
@@ -66,7 +95,7 @@ export const recipeModel = {
       params.push(searchTerm, searchTerm)
     }
 
-    // Add public filter
+    // Add explicit public filter (overrides scope if set)
     if (filters.isPublic !== undefined) {
       sql += ' AND is_public = ?'
       params.push(filters.isPublic ? 1 : 0)
@@ -120,6 +149,20 @@ export const recipeModel = {
     return row ? rowToRecipe(row) : null
   },
 
+  async checkPublicNameExists(name: string, excludeId?: string): Promise<boolean> {
+    const db = Database.getInstance()
+    let sql = 'SELECT COUNT(*) as count FROM recipes WHERE name = ? AND is_public = 1'
+    const params: any[] = [name.trim()]
+
+    if (excludeId) {
+      sql += ' AND id != ?'
+      params.push(excludeId)
+    }
+
+    const result = await db.get<{ count: number }>(sql, params)
+    return (result?.count || 0) > 0
+  },
+
   async create(data: CreateRecipeRequest): Promise<Recipe> {
     const db = Database.getInstance()
     const id = uuidv4()
@@ -145,11 +188,26 @@ export const recipeModel = {
     const prepTimeMinutes = data.prepTimeMinutes || this.inferPrepTime(data.instructions, flatIngredients)
     const servings = data.servings || this.inferServings(flatIngredients)
 
+    // Simplified 2-level privacy logic
+    let isPublic = data.isPublic !== false // Default to true unless explicitly false
+    let householdId = null
+
+    if (!isPublic && data.userId) {
+      // Private recipe: use household if user has one, otherwise personal
+      householdId = data.householdId || null
+    }
+
+    // Auto-switch to private if name exists publicly (only for public recipes)
+    if (isPublic && await this.checkPublicNameExists(data.name)) {
+      isPublic = false
+      householdId = data.householdId || null
+    }
+
     const sql = `
       INSERT INTO recipes (
         id, name, description, prep_time_minutes, cook_time_minutes, total_time_minutes, servings,
-        ingredients, instructions, image, source_url, is_public, tags, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ingredients, instructions, image, source_url, is_public, user_id, household_id, copied_from, tags, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
 
     const params = [
@@ -164,7 +222,10 @@ export const recipeModel = {
       JSON.stringify(data.instructions),
       data.image || null,
       data.sourceUrl || null,
-      data.isPublic !== false ? 1 : 0,
+      isPublic ? 1 : 0,
+      data.userId || null,
+      householdId,
+      data.copiedFrom || null,
       JSON.stringify(normalizedTags),
       now,
       now
@@ -306,5 +367,33 @@ export const recipeModel = {
   inferServings(ingredients: string[]): number {
     // Use ingredient parser for better serving estimation
     return ingredientParser.estimateServingsFromIngredients(ingredients)
+  },
+
+  async copyRecipe(sourceId: string, userId: string, householdId?: string): Promise<Recipe> {
+    const sourceRecipe = await this.findById(sourceId)
+    if (!sourceRecipe) {
+      throw new Error('Source recipe not found')
+    }
+
+    // Create copy data
+    const copyData: CreateRecipeRequest = {
+      name: sourceRecipe.name,
+      description: sourceRecipe.description,
+      prepTimeMinutes: sourceRecipe.prepTimeMinutes,
+      cookTimeMinutes: sourceRecipe.cookTimeMinutes,
+      totalTimeMinutes: sourceRecipe.totalTimeMinutes,
+      servings: sourceRecipe.servings,
+      ingredients: sourceRecipe.ingredients,
+      instructions: sourceRecipe.instructions,
+      image: sourceRecipe.image,
+      sourceUrl: sourceRecipe.sourceUrl,
+      tags: sourceRecipe.tags,
+      isPublic: false, // Copies are always private initially
+      userId: userId,
+      householdId: householdId,
+      copiedFrom: sourceId
+    }
+
+    return this.create(copyData)
   }
 }

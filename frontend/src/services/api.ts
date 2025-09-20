@@ -1,3 +1,5 @@
+import { Household } from '../types/user'
+
 const API_BASE_URL = '/api'
 
 export interface IngredientCategory {
@@ -19,6 +21,9 @@ export interface Recipe {
   sourceUrl?: string
   aiEnhancedNotes?: string
   tags?: string[]
+  isPublic: boolean
+  userId?: string
+  householdId?: string
   createdAt: string
   updatedAt: string
 }
@@ -35,18 +40,19 @@ export interface CreateRecipeData {
   image?: string
   sourceUrl?: string
   tags?: string[]
+  isPublic?: boolean
+  householdId?: string
 }
 
 export interface UpdateRecipeData extends Partial<CreateRecipeData> {}
 
 export interface RecipeFilters {
   search?: string
-  isPublic?: boolean
-  sortBy?: 'name' | 'createdAt' | 'prepTimeMinutes' | 'servings'
-  sortOrder?: 'asc' | 'desc'
+  sortBy?: 'name' | 'time' | 'servings' | 'recent'
   tags?: string[]
   limit?: number
   offset?: number
+  scope?: 'my' | 'public' | 'all'
 }
 
 export interface IngredientParsingOptions {
@@ -99,12 +105,11 @@ class ApiService {
     const params = new URLSearchParams()
 
     if (filters?.search) params.append('search', filters.search)
-    if (filters?.isPublic !== undefined) params.append('isPublic', filters.isPublic.toString())
     if (filters?.sortBy) params.append('sortBy', filters.sortBy)
-    if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder)
     if (filters?.tags && filters.tags.length > 0) params.append('tags', filters.tags.join(','))
     if (filters?.limit) params.append('limit', filters.limit.toString())
     if (filters?.offset) params.append('offset', filters.offset.toString())
+    if (filters?.scope) params.append('scope', filters.scope)
 
     const queryString = params.toString()
     const endpoint = queryString ? `/recipes?${queryString}` : '/recipes'
@@ -295,6 +300,35 @@ class ApiService {
   async getAllTags(): Promise<string[]> {
     const response = await this.request<{ tags: string[] }>('/recipes/tags')
     return response.tags
+  }
+
+  // Copy recipe to user's collection
+  async copyRecipe(id: string, data: { householdId?: string } = {}): Promise<Recipe> {
+    const response = await this.request<{ recipe: Recipe }>(`/recipes/${id}/copy`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+    return response.recipe
+  }
+
+  // Check if recipe name exists in public recipes
+  async checkRecipeName(name: string, excludeId?: string): Promise<{ exists: boolean; message: string }> {
+    const params = new URLSearchParams()
+    params.append('name', name)
+    if (excludeId) params.append('excludeId', excludeId)
+
+    return this.request<{ exists: boolean; message: string }>(`/recipes/check-name?${params.toString()}`)
+  }
+
+  // Household management functions
+  async getCurrentHousehold(): Promise<{ household: Household | null }> {
+    return this.request<{ household: Household | null }>('/households/current')
+  }
+
+  async regenerateInviteCode(): Promise<{ household: Household }> {
+    return this.request<{ household: Household }>('/households/regenerate-invite', {
+      method: 'POST'
+    })
   }
 }
 

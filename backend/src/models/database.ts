@@ -37,6 +37,42 @@ export class Database {
   }
 
   private async createTables(): Promise<void> {
+    // Users table
+    const createUsersTable = `
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        household_id TEXT,
+        google_id TEXT UNIQUE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (household_id) REFERENCES households(id)
+      )
+    `
+
+    // Households table
+    const createHouseholdsTable = `
+      CREATE TABLE IF NOT EXISTS households (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        invite_code TEXT UNIQUE,
+        created_by TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (created_by) REFERENCES users(id)
+      )
+    `
+
+    // Sessions table for express-session with connect-sqlite3
+    const createSessionsTable = `
+      CREATE TABLE IF NOT EXISTS sessions (
+        sid TEXT PRIMARY KEY,
+        sess TEXT NOT NULL,
+        expired INTEGER NOT NULL
+      )
+    `
+
     const createRecipesTable = `
       CREATE TABLE IF NOT EXISTS recipes (
         id TEXT PRIMARY KEY,
@@ -53,8 +89,12 @@ export class Database {
         is_public BOOLEAN DEFAULT true,
         user_id TEXT,
         household_id TEXT,
+        copied_from TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (household_id) REFERENCES households(id),
+        FOREIGN KEY (copied_from) REFERENCES recipes(id)
       )
     `
 
@@ -80,14 +120,24 @@ export class Database {
       ALTER TABLE recipes ADD COLUMN tags TEXT
     `
 
+    const addCopiedFromColumn = `
+      ALTER TABLE recipes ADD COLUMN copied_from TEXT
+    `
+
     try {
+      // Create new tables first
+      await this.run(createUsersTable)
+      await this.run(createHouseholdsTable)
+      await this.run(createSessionsTable)
       await this.run(createRecipesTable)
+
       // Try to add the columns, but ignore errors if they already exist
       await this.run(addSourceUrlColumn).catch(() => {})
       await this.run(addCookTimeColumn).catch(() => {})
       await this.run(addTotalTimeColumn).catch(() => {})
       await this.run(addAiEnhancedNotesColumn).catch(() => {})
       await this.run(addTagsColumn).catch(() => {})
+      await this.run(addCopiedFromColumn).catch(() => {})
     } catch (error) {
       // Column might already exist, check if it's a harmless error
       if (!String(error).includes('duplicate column name')) {

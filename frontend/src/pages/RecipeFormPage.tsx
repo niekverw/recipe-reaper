@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { apiService, Recipe, CreateRecipeData } from '../services/api'
+import { useAuth } from '../contexts/AuthContext'
 import { IngredientHelper } from '../utils/ingredientHelper'
 import { isOurUploadedImage, cleanupImage } from '../utils/imageUtils'
 import TagInput from '../components/TagInput'
 import {
   ArrowLeftIcon,
-  CheckIcon
+  CheckIcon,
+  LockClosedIcon,
+  GlobeAltIcon,
+  HomeIcon,
+  InformationCircleIcon
 } from '@heroicons/react/24/outline'
 
 interface RecipeFormData {
@@ -21,6 +26,7 @@ interface RecipeFormData {
   image?: string
   sourceUrl?: string
   tags: string[]
+  isPublic?: boolean
 }
 
 
@@ -28,6 +34,7 @@ function RecipeFormPage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const location = useLocation()
+  const { user, household } = useAuth()
   const isEdit = Boolean(id)
   const copiedRecipe = location.state?.copiedRecipe
 
@@ -42,13 +49,21 @@ function RecipeFormPage() {
     servings: undefined,
     image: '',
     sourceUrl: undefined,
-    tags: []
+    tags: [],
+    isPublic: true // Default to public
   })
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoadingRecipe, setIsLoadingRecipe] = useState(isEdit)
   const [availableTags, setAvailableTags] = useState<string[]>([])
+
+  // Privacy state
+  const [nameExists, setNameExists] = useState(false)
+  const [isCheckingName, setIsCheckingName] = useState(false)
+  const [nameCheckDebounce, setNameCheckDebounce] = useState<NodeJS.Timeout | null>(null)
+  const [privacyMessage, setPrivacyMessage] = useState<string>('')
+  const [privacyError, setPrivacyError] = useState<string | null>(null)
 
   // Import state
   const [importType, setImportType] = useState<'url' | 'text' | 'image'>('url')
@@ -84,7 +99,8 @@ function RecipeFormPage() {
         servings: copiedRecipe.servings,
         image: copiedRecipe.image || '',
         sourceUrl: copiedRecipe.sourceUrl,
-        tags: copiedRecipe.tags || []
+        tags: copiedRecipe.tags || [],
+        isPublic: false // Copied recipes default to private
       })
       setPreviousImageUrl(copiedRecipe.image || '')
     }
@@ -124,7 +140,8 @@ function RecipeFormPage() {
         servings: recipe.servings,
         image: recipe.image || '',
         sourceUrl: recipe.sourceUrl,
-        tags: recipe.tags || []
+        tags: recipe.tags || [],
+        isPublic: recipe.isPublic
       })
       setPreviousImageUrl(recipe.image || '')
     } catch (err) {
@@ -137,15 +154,15 @@ function RecipeFormPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    
+
     let processedValue: string | number | undefined = value
-    
+
     // Special handling for image field
     if (name === 'image') {
       // If the user enters a full URL that matches our current domain, convert to relative
       const currentUrl = window.location
       const frontendBaseUrl = `${currentUrl.protocol}//${currentUrl.hostname}:${currentUrl.port || (currentUrl.protocol === 'https:' ? '443' : '80')}`
-      
+
       if (value.startsWith(`${frontendBaseUrl}/uploads/`)) {
         // Convert full URL back to relative path
         processedValue = value.replace(frontendBaseUrl, '')
@@ -156,11 +173,16 @@ function RecipeFormPage() {
         ? (value === '' ? undefined : Number(value))
         : value
     }
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: processedValue
     }))
+
+    // Check name availability for smart privacy defaulting
+    if (name === 'name' && value.trim() && !isEdit) {
+      checkNameAvailability(value.trim())
+    }
   }
 
   const handleImportFromUrl = async () => {
@@ -199,7 +221,8 @@ function RecipeFormPage() {
         servings: recipeData.servings,
         image: recipeData.image || '',
         sourceUrl: recipeData.sourceUrl,
-        tags: []
+        tags: [],
+        isPublic: true
       })
 
       // Clear import URL
@@ -248,7 +271,8 @@ function RecipeFormPage() {
         servings: recipeData.servings,
         image: recipeData.image || '',
         sourceUrl: recipeData.sourceUrl,
-        tags: []
+        tags: [],
+        isPublic: true
       })
 
       // Clear import text
@@ -297,7 +321,8 @@ function RecipeFormPage() {
         servings: recipeData.servings,
         image: recipeData.image || '',
         sourceUrl: recipeData.sourceUrl,
-        tags: []
+        tags: [],
+        isPublic: true
       })
 
       // Clear import text
@@ -356,7 +381,8 @@ function RecipeFormPage() {
         servings: recipeData.servings,
         image: recipeData.image || '',
         sourceUrl: recipeData.sourceUrl,
-        tags: []
+        tags: [],
+        isPublic: true
       })
 
       // Clear import image
@@ -429,6 +455,27 @@ function RecipeFormPage() {
       return
     }
 
+    if (!user) {
+      setError('You must be logged in to save recipes')
+      return
+    }
+
+    // Validate name conflicts for public recipes
+    if (formData.isPublic && formData.name.trim()) {
+      try {
+        const result = await apiService.checkRecipeName(formData.name.trim(), isEdit ? id : undefined)
+        if (result.exists) {
+          setError(`Cannot save recipe as public: A public recipe with the name "${formData.name.trim()}" already exists.`)
+          setPrivacyError(`Cannot save recipe as public: A public recipe with the name "${formData.name.trim()}" already exists.`)
+          return
+        }
+      } catch (err) {
+        console.error('Failed to check recipe name:', err)
+        setError('Failed to validate recipe name. Please try again.')
+        return
+      }
+    }
+
     try {
       setLoading(true)
 
@@ -446,7 +493,9 @@ function RecipeFormPage() {
         servings: formData.servings,
         image: formData.image?.trim() || '',
         sourceUrl: formData.sourceUrl?.trim() || '',
-        tags: formData.tags
+        tags: formData.tags,
+        isPublic: formData.isPublic,
+        householdId: household?.id
       }
 
       let savedRecipe: Recipe
@@ -464,6 +513,61 @@ function RecipeFormPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handlePrivacyChange = async (isPublic: boolean) => {
+    if (isPublic && formData.name.trim()) {
+      // Check if trying to make public and name already exists
+      try {
+        const result = await apiService.checkRecipeName(formData.name.trim(), isEdit ? id : undefined)
+        if (result.exists) {
+          setPrivacyError(`Cannot make recipe public: A public recipe with the name "${formData.name.trim()}" already exists.`)
+          return // Don't change the privacy setting
+        }
+      } catch (err) {
+        console.error('Failed to check recipe name:', err)
+      }
+    }
+
+    setFormData(prev => ({ ...prev, isPublic }))
+    setPrivacyError(null) // Clear any previous errors
+  }
+
+  const checkNameAvailability = async (name: string) => {
+    if (nameCheckDebounce) {
+      clearTimeout(nameCheckDebounce)
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        setIsCheckingName(true)
+        const result = await apiService.checkRecipeName(name, isEdit ? id : undefined)
+        setNameExists(result.exists)
+
+        if (result.exists && formData.isPublic) {
+          setFormData(prev => ({ ...prev, isPublic: false }))
+          setPrivacyMessage(
+            `A public recipe with the name "${name}" already exists. ` +
+            'This recipe has been automatically set to private to avoid duplicates.'
+          )
+        } else if (!result.exists && !formData.isPublic && !copiedRecipe) {
+          // If name is unique and user hasn't manually set to private, suggest public
+          setPrivacyMessage(
+            `The name "${name}" is unique! Consider making this recipe public to share with the community.`
+          )
+        } else {
+          setPrivacyMessage('')
+        }
+      } catch (err) {
+        console.error('Failed to check recipe name:', err)
+        setNameExists(false)
+        setPrivacyMessage('')
+      } finally {
+        setIsCheckingName(false)
+      }
+    }, 500) // 500ms debounce
+
+    setNameCheckDebounce(timeoutId)
   }
 
   const handleCancel = () => {
@@ -797,16 +901,30 @@ Serves: 24 cookies`}
               <label htmlFor="name" className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
                 Recipe Name *
               </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                required
-                value={formData.name}
-                onChange={handleInputChange}
-                placeholder="Enter recipe name"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  required
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter recipe name"
+                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                    nameExists ? 'border-yellow-300 dark:border-yellow-600' : 'border-gray-300 dark:border-gray-600'
+                  }`}
+                />
+                {isCheckingName && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
+              {nameExists && (
+                <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                  A public recipe with this name already exists
+                </p>
+              )}
             </div>
 
             <div>
@@ -1027,6 +1145,74 @@ Bake for 25-30 minutes`}
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">URL of the original recipe or inspiration source</p>
           </div>
+
+          {/* Privacy Settings */}
+          {user && (
+            <div>
+              <label className="block text-sm font-medium mb-3 text-gray-900 dark:text-white">
+                Recipe Privacy
+              </label>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="radio"
+                    id="privacy-public"
+                    name="privacy"
+                    checked={formData.isPublic === true}
+                    onChange={() => handlePrivacyChange(true)}
+                    className="mt-0.5 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800"
+                  />
+                  <label htmlFor="privacy-public" className="flex-1 cursor-pointer">
+                    <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
+                      <GlobeAltIcon className="w-4 h-4" />
+                      Public Recipe
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Anyone can view and copy this recipe. Great for sharing with the community.
+                    </p>
+                  </label>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <input
+                    type="radio"
+                    id="privacy-private"
+                    name="privacy"
+                    checked={formData.isPublic === false}
+                    onChange={() => handlePrivacyChange(false)}
+                    className="mt-0.5 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800"
+                  />
+                  <label htmlFor="privacy-private" className="flex-1 cursor-pointer">
+                    <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
+                      {household ? <HomeIcon className="w-4 h-4" /> : <LockClosedIcon className="w-4 h-4" />}
+                      {household ? 'Household Recipe' : 'Private Recipe'}
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {household
+                        ? `Only you and your household (${household.name}) can view and edit this recipe.`
+                        : 'Only you can view and edit this recipe.'}
+                    </p>
+                  </label>
+                </div>
+
+                {/* Privacy Error */}
+                {privacyError && (
+                  <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <InformationCircleIcon className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-red-800 dark:text-red-200">{privacyError}</p>
+                  </div>
+                )}
+
+                {/* Smart Privacy Message */}
+                {privacyMessage && (
+                  <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <InformationCircleIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-blue-800 dark:text-blue-200">{privacyMessage}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
