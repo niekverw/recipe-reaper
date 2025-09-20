@@ -9,7 +9,6 @@ import {
   FunnelIcon,
   Bars3BottomLeftIcon,
   Squares2X2Icon,
-  PlusIcon,
   DocumentDuplicateIcon,
   XMarkIcon,
   TagIcon,
@@ -29,7 +28,6 @@ interface RecipeActionsProps {
 }
 
 function RecipeActions({ recipe, onEdit, onDelete, onCopy, currentUserId }: RecipeActionsProps) {
-  const isOwner = currentUserId && (recipe.userId === currentUserId || recipe.householdId)
   const isPublicRecipe = recipe.isPublic && recipe.userId !== currentUserId
 
   // For public recipes by other users, only show copy button

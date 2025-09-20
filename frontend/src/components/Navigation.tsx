@@ -2,6 +2,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom'
 import { SunIcon, MoonIcon, PlusIcon, HomeIcon, UserIcon } from '@heroicons/react/24/outline'
 import { useTheme } from '../contexts/ThemeContext'
 import { useAuth } from '../contexts/AuthContext'
+import Logo from './Logo'
 
 interface NavigationProps {
   onAuthModalOpen: (mode: 'login' | 'register') => void
@@ -24,9 +25,9 @@ function Navigation({ onAuthModalOpen }: NavigationProps) {
         <div className="flex justify-between items-center h-16">
           <RouterLink
             to="/"
-            className="font-bold text-xl tracking-tight text-gray-900 dark:text-white transition-colors duration-200"
+            className="transition-colors duration-200"
           >
-            Recipes
+            <Logo className="font-bold text-xl tracking-tight text-gray-900 dark:text-white" />
           </RouterLink>
 
           <div className="flex items-center space-x-2 sm:space-x-4">

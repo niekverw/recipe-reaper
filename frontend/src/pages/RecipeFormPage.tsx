@@ -61,7 +61,7 @@ function RecipeFormPage() {
   // Privacy state
   const [nameExists, setNameExists] = useState(false)
   const [isCheckingName, setIsCheckingName] = useState(false)
-  const [nameCheckDebounce, setNameCheckDebounce] = useState<NodeJS.Timeout | null>(null)
+  const [nameCheckDebounce, setNameCheckDebounce] = useState<number | null>(null)
   const [privacyMessage, setPrivacyMessage] = useState<string>('')
   const [privacyError, setPrivacyError] = useState<string | null>(null)
 
@@ -116,6 +116,11 @@ function RecipeFormPage() {
       setPreviousImageUrl(formData.image || '')
     }
   }, [formData.image, previousImageUrl])
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   const loadAvailableTags = async () => {
     try {

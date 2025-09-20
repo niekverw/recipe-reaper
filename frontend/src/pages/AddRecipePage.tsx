@@ -1,4 +1,11 @@
+import { useEffect } from 'react'
+
 function AddRecipePage() {
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
   return (
     <div className="px-4 py-6 max-w-3xl mx-auto space-y-6">
       <div className="text-center">

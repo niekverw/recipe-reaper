@@ -12,13 +12,12 @@ import {
   HomeIcon,
   ExclamationTriangleIcon,
   CheckIcon,
-  InformationCircleIcon,
   EnvelopeIcon,
   ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline'
 
 function SettingsPage() {
-  const { user, household, refreshUser, createHousehold, joinHousehold, leaveHousehold, logout } = useAuth()
+  const { user, household, createHousehold, joinHousehold, leaveHousehold, logout } = useAuth()
   const [householdData, setHouseholdData] = useState<Household | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -43,6 +42,11 @@ function SettingsPage() {
       loadHouseholdDetails()
     }
   }, [household])
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   const loadHouseholdDetails = async () => {
     if (!household) return

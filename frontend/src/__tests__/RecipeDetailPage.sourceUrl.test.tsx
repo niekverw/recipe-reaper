@@ -41,6 +41,7 @@ const createMockRecipe = (overrides: Partial<Recipe> = {}): Recipe => ({
   ingredients: ['2 cups flour', '1 tsp salt'],
   instructions: ['Mix ingredients', 'Bake for 30 minutes'],
   image: 'https://example.com/image.jpg',
+  isPublic: false,
   createdAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z',
   ...overrides
