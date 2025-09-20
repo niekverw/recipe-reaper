@@ -9,11 +9,11 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon-16x16.png', 'favicon-32x32.png', 'icon-192.png', 'icon-512.png', 'icon.svg'],
       manifest: {
         name: 'Recipe Reaper',
-        short_name: 'Reaper',
-        description: 'Your personal recipe collection with cooking tips and variations',
+        short_name: 'Recipe-Reaper',
+        description: 'Your personal recipe reaper with cooking tips and variations',
         theme_color: '#1a1a1a',
         background_color: '#ffffff',
         display: 'standalone',
