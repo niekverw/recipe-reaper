@@ -1,9 +1,13 @@
-import 'dotenv/config'
+import { config } from 'dotenv'
+import { join } from 'path'
+
+// Load .env from the root directory (parent of backend)
+config({ path: join(__dirname, '../../.env') })
+
 import express from 'express'
 import cors from 'cors'
 import session from 'express-session'
 import rateLimit from 'express-rate-limit'
-import { join } from 'path'
 import { PostgreSQLDatabase } from './models/database-pg'
 import { recipeRoutes } from './routes/recipes'
 import { ingredientRoutes } from './routes/ingredients'
