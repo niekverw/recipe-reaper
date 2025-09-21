@@ -41,7 +41,7 @@ Thumbs.db
 .env.local
 .env.*.local
 
-# Local backend data (sqlite)
+# Local backend data
 backend/venv/
 backend/__pycache__/
 backend/*.pyc

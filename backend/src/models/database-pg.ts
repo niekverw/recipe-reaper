@@ -71,14 +71,8 @@ export class PostgreSQLDatabase {
         )
       `
 
-      // Sessions table for express-session
-      const createSessionsTable = `
-        CREATE TABLE IF NOT EXISTS sessions (
-          sid TEXT PRIMARY KEY,
-          sess TEXT NOT NULL,
-          expired BIGINT NOT NULL
-        )
-      `
+      // Sessions table for express-session (connect-pg-simple will create this automatically)
+      // We don't need to create this table as connect-pg-simple handles it
 
       // Recipes table
       const createRecipesTable = `
@@ -115,13 +109,11 @@ export class PostgreSQLDatabase {
         'CREATE INDEX IF NOT EXISTS idx_recipes_user_id ON recipes(user_id)',
         'CREATE INDEX IF NOT EXISTS idx_recipes_household_id ON recipes(household_id)',
         'CREATE INDEX IF NOT EXISTS idx_recipes_is_public ON recipes(is_public)',
-        'CREATE INDEX IF NOT EXISTS idx_sessions_expired ON sessions(expired)'
       ]
 
       // Execute table creation
       await client.query(createHouseholdsTable)
       await client.query(createUsersTable)
-      await client.query(createSessionsTable)
       await client.query(createRecipesTable)
 
       // Create indexes

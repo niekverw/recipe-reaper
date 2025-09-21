@@ -189,7 +189,7 @@ To enable easy deployment across different environments, the application will st
 - **Load Balancing:** Horizontal scaling with multiple backend instances
 
 ### Mobile App Performance
-- **Offline Support:** Local SQLite database sync (user recipes only)
+- **Offline Support:** PWA with local storage caching (user recipes only)
 - **Image Optimization:** Multiple resolutions, lazy loading
 - **Network Resilience:** Retry logic, offline queue
 - **Memory Management:** Recipe list virtualization

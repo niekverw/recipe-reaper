@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import { Database } from './database'
+import { PostgreSQLDatabase } from './database-pg'
 import { Recipe, CreateRecipeRequest, UpdateRecipeRequest, RecipeFilters, IngredientCategory } from '../types/recipe'
 import { ingredientParser } from '../utils/ingredientParser'
 import { IngredientCategoryParser } from '../utils/ingredientCategoryParser'
@@ -55,7 +55,7 @@ function rowToRecipe(row: RecipeRow): Recipe {
 
 export const recipeModel = {
   async findAll(filters: RecipeFilters = {}): Promise<Recipe[]> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     let sql = 'SELECT * FROM recipes WHERE 1=1'
     const params: any[] = []
 
@@ -144,13 +144,13 @@ export const recipeModel = {
   },
 
   async findById(id: string): Promise<Recipe | null> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const row = await db.get<RecipeRow>('SELECT * FROM recipes WHERE id = $1', [id])
     return row ? rowToRecipe(row) : null
   },
 
   async checkPublicNameExists(name: string, excludeId?: string): Promise<boolean> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     let sql = 'SELECT COUNT(*) as count FROM recipes WHERE name = $1 AND is_public = true'
     const params: any[] = [name.trim()]
 
@@ -164,7 +164,7 @@ export const recipeModel = {
   },
 
   async create(data: CreateRecipeRequest): Promise<Recipe> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const id = uuidv4()
     const now = new Date().toISOString()
 
@@ -236,7 +236,7 @@ export const recipeModel = {
   },
 
   async update(id: string, data: UpdateRecipeRequest): Promise<Recipe> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const now = new Date().toISOString()
 
     const updates: string[] = []
@@ -306,12 +306,12 @@ export const recipeModel = {
   },
 
   async delete(id: string): Promise<void> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     await db.run('DELETE FROM recipes WHERE id = $1', [id])
   },
 
   async updateAiEnhancedNotes(id: string, enhancedNotes: string): Promise<Recipe> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const now = new Date().toISOString()
 
     await db.run(
@@ -323,12 +323,12 @@ export const recipeModel = {
   },
 
   async getAllTags(): Promise<string[]> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const rows = await db.all<{ tags: string }>('SELECT DISTINCT tags FROM recipes WHERE tags IS NOT NULL AND tags != $1', ['[]'])
 
     const allTags = new Set<string>()
 
-    rows.forEach(row => {
+    rows.forEach((row: { tags: string }) => {
       if (row.tags) {
         try {
           const parsedTags = JSON.parse(row.tags)

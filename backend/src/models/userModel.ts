@@ -1,23 +1,23 @@
 import { v4 as uuidv4 } from 'uuid'
 import bcrypt from 'bcryptjs'
-import { Database } from './database'
+import { PostgreSQLDatabase } from './database-pg'
 import { User, CreateUserRequest, UserRow } from '../types/user'
 
 export const userModel = {
   async findById(id: string): Promise<UserRow | null> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const row = await db.get<UserRow>('SELECT * FROM users WHERE id = $1', [id])
     return row || null
   },
 
   async findByEmail(email: string): Promise<UserRow | null> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const row = await db.get<UserRow>('SELECT * FROM users WHERE email = $1', [email])
     return row || null
   },
 
   async create(data: CreateUserRequest): Promise<User> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const id = uuidv4()
     const now = new Date().toISOString()
 
@@ -52,7 +52,7 @@ export const userModel = {
   },
 
   async updateHousehold(userId: string, householdId: string | null): Promise<void> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const now = new Date().toISOString()
 
     await db.run(
@@ -62,7 +62,7 @@ export const userModel = {
   },
 
   async getHouseholdMembers(householdId: string): Promise<UserRow[]> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const rows = await db.all<UserRow>(
       'SELECT * FROM users WHERE household_id = $1 ORDER BY created_at ASC',
       [householdId]
@@ -76,7 +76,7 @@ export const userModel = {
   },
 
   async createGoogleUser(data: { email: string; displayName: string; googleId: string }): Promise<User> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const id = uuidv4()
     const now = new Date().toISOString()
 
@@ -109,7 +109,7 @@ export const userModel = {
   },
 
   async linkGoogleAccount(userId: string, googleId: string): Promise<void> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const now = new Date().toISOString()
 
     await db.run(

@@ -17,8 +17,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "init-postgres": "npx ts-node init-postgres-tables.ts",
-    "migrate-to-postgres": "npx ts-node migrate-to-postgres.ts"
+    "init-postgres": "npx ts-node init-postgres-tables.ts"
   },
   "keywords": [],
   "author": "",
@@ -29,7 +28,6 @@
     "@types/pg": "^8.15.5",
     "bcryptjs": "^3.0.2",
     "connect-pg-simple": "^10.0.0",
-    "connect-sqlite3": "^0.9.16",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
@@ -46,7 +44,6 @@
     "passport-local": "^1.0.0",
     "pg": "^8.16.3",
     "sharp": "^0.33.5",
-    "sqlite3": "^5.1.7",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

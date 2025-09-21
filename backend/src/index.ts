@@ -4,7 +4,7 @@ import cors from 'cors'
 import session from 'express-session'
 import rateLimit from 'express-rate-limit'
 import { join } from 'path'
-import { Database } from './models/database'
+import { PostgreSQLDatabase } from './models/database-pg'
 import { recipeRoutes } from './routes/recipes'
 import { ingredientRoutes } from './routes/ingredients'
 import { authRoutes } from './routes/auth'
@@ -165,7 +165,7 @@ app.use((req, res) => {
 // Initialize database and start server
 async function startServer() {
   try {
-    await Database.getInstance().initialize()
+    await PostgreSQLDatabase.getInstance().initialize()
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`)
@@ -180,7 +180,7 @@ async function startServer() {
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\nShutting down server...')
-  await Database.getInstance().close()
+  await PostgreSQLDatabase.getInstance().close()
   process.exit(0)
 })
 

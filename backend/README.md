@@ -53,7 +53,7 @@ python scraper.py "https://cooking.nytimes.com/recipes/1027165-eggplant-chickpea
 
 ### Recipe Management
 - Full CRUD operations for recipes
-- SQLite database with proper schema
+- PostgreSQL database with proper schema
 - Filtering and search capabilities
 - Public/private recipe visibility
 
@@ -81,13 +81,13 @@ npm run test:coverage # Test coverage
 ```
 
 ### Database
-- SQLite database (`recipes.db`)
-- Auto-initialized on server start
-- Tables: recipes (with full metadata)
+- PostgreSQL database with connection pooling
+- Initialized with `npm run init-postgres`
+- Tables: recipes, users, households (with full metadata)
 
 ### Architecture
 ```
-Express API → Controllers → Models → SQLite Database
+Express API → Controllers → Models → PostgreSQL Database
                     ↓
             Python Scraper (for web scraping)
 ```
@@ -95,7 +95,7 @@ Express API → Controllers → Models → SQLite Database
 ### Environment
 - **Port:** 3001 (configurable via `PORT`)
 - **Frontend URLs:** localhost:5173-5175 (configurable via `FRONTEND_URL`)
-- **Database:** `./recipes.db`
+- **Database:** PostgreSQL (configured via environment variables)
 
 ## Python Scraper Details
 

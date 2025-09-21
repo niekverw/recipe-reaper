@@ -13,7 +13,7 @@ A minimal recipe app for storing, viewing, and sharing recipes. Focus on ease of
 
 ## Technical Stack
 - **Frontend:**  React, Vite
-- **Backend:** Node.js + Express + SQLite, use this schema where relevant: https://schema.org/Recipe.
+- **Backend:** Node.js + Express + PostgreSQL, use this schema where relevant: https://schema.org/Recipe.
 - **Auth (Future-Ready):** eg Firebase Auth (Google OAuth)
 
 ## Development Plan

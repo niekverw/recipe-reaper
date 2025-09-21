@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import { Database } from './database'
+import { PostgreSQLDatabase } from './database-pg'
 import { Household, CreateHouseholdRequest, HouseholdRow, HouseholdMember } from '../types/household'
 import { userModel } from './userModel'
 
@@ -15,19 +15,19 @@ function generateInviteCode(): string {
 
 export const householdModel = {
   async findById(id: string): Promise<HouseholdRow | null> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const row = await db.get<HouseholdRow>('SELECT * FROM households WHERE id = $1', [id])
     return row || null
   },
 
   async findByInviteCode(inviteCode: string): Promise<HouseholdRow | null> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const row = await db.get<HouseholdRow>('SELECT * FROM households WHERE invite_code = $1', [inviteCode])
     return row || null
   },
 
   async create(data: CreateHouseholdRequest, createdBy: string): Promise<Household> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const id = uuidv4()
     const now = new Date().toISOString()
     const inviteCode = generateInviteCode()
@@ -91,7 +91,7 @@ export const householdModel = {
   },
 
   async regenerateInviteCode(householdId: string): Promise<string> {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     const newInviteCode = generateInviteCode()
 
     await db.run(
