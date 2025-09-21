@@ -69,6 +69,10 @@ function AddRecipePage() {
                   borderRadius: 'var(--border-radius-medium)',
                   color: 'var(--color-input-text)'
                 }}
+                autoComplete="off"
+                autoCapitalize="words"
+                autoCorrect="off"
+                spellCheck="false"
               />
             </div>
 
@@ -201,6 +205,8 @@ function AddRecipePage() {
                     borderRadius: 'var(--border-radius-medium)',
                     color: 'var(--color-input-text)'
                   }}
+                  autoComplete="off"
+                  inputMode="numeric"
                 />
                 <div className="text-xs mt-0.5 opacity-70" style={{ color: 'var(--color-text-secondary)' }}>
                   Leave empty to auto-infer
@@ -227,6 +233,8 @@ function AddRecipePage() {
                     borderRadius: 'var(--border-radius-medium)',
                     color: 'var(--color-input-text)'
                   }}
+                  autoComplete="off"
+                  inputMode="numeric"
                 />
                 <div className="text-xs mt-0.5 opacity-70" style={{ color: 'var(--color-text-secondary)' }}>
                   Leave empty to auto-infer
@@ -255,6 +263,11 @@ function AddRecipePage() {
                   borderRadius: 'var(--border-radius-medium)',
                   color: 'var(--color-input-text)'
                 }}
+                autoComplete="off"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
+                inputMode="url"
               />
               <div className="text-xs mt-0.5 opacity-70" style={{ color: 'var(--color-text-secondary)' }}>
                 Add a URL to an image of your completed recipe
@@ -282,6 +295,11 @@ function AddRecipePage() {
                   borderRadius: 'var(--border-radius-medium)',
                   color: 'var(--color-input-text)'
                 }}
+                autoComplete="off"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
+                inputMode="url"
               />
               <div className="text-xs mt-0.5 opacity-70" style={{ color: 'var(--color-text-secondary)' }}>
                 URL of the original recipe or inspiration source

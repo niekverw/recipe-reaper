@@ -1,7 +1,15 @@
 import { Request, Response } from 'express'
+import crypto from 'crypto'
 import passport from 'passport'
 import { userModel } from '../models/userModel'
 import { CreateUserRequest, LoginRequest } from '../types/user'
+
+// Extend Express session to include OAuth state
+declare module 'express-session' {
+  interface SessionData {
+    oauthState?: string
+  }
+}
 
 export const authController = {
   // Register new user
@@ -123,7 +131,14 @@ export const authController = {
 
   // Initiate Google OAuth
   googleAuth(req: Request, res: Response, next: any) {
-    const options: any = { scope: ['profile', 'email'] }
+    // Generate cryptographically secure state parameter to prevent CSRF
+    const state = crypto.randomBytes(32).toString('hex')
+    req.session.oauthState = state
+
+    const options: any = {
+      scope: ['profile', 'email'],
+      state: state
+    }
 
     // Pass through query parameters like prompt=select_account
     if (req.query.prompt) {
@@ -138,6 +153,16 @@ export const authController = {
     const frontendUrl = process.env.NODE_ENV === 'production'
       ? process.env.FRONTEND_URL?.split(',')[0]?.trim() || 'https://recipereaper.app'
       : 'http://localhost:5173'
+
+    // Validate OAuth state parameter to prevent CSRF attacks
+    const { state } = req.query
+    if (!state || state !== req.session.oauthState) {
+      console.error('OAuth state validation failed - possible CSRF attack')
+      return res.redirect(`${frontendUrl}/login?error=invalid_state`)
+    }
+
+    // Clear the used state to prevent replay attacks
+    delete req.session.oauthState
 
     console.log('=== GOOGLE CALLBACK DEBUG ===')
     console.log('NODE_ENV:', process.env.NODE_ENV)

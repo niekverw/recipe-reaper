@@ -687,6 +687,10 @@ function RecipeFormPage() {
                   pattern="https?://.*"
                   title="Please enter a valid URL starting with http:// or https://"
                   inputMode="url"
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
                 />
                 <button
                   type="button"
@@ -920,6 +924,10 @@ Serves: 24 cookies`}
                     nameExists ? 'border-yellow-300 dark:border-yellow-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   inputMode="text"
+                  autoComplete="off"
+                  autoCapitalize="words"
+                  autoCorrect="off"
+                  spellCheck="false"
                 />
                 {isCheckingName && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -1030,6 +1038,8 @@ Bake for 25-30 minutes`}
                 onChange={handleInputChange}
                 placeholder="30"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                autoComplete="off"
+                inputMode="numeric"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Active prep time</p>
             </div>
@@ -1046,6 +1056,8 @@ Bake for 25-30 minutes`}
                 onChange={handleInputChange}
                 placeholder="25"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                autoComplete="off"
+                inputMode="numeric"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Cooking/baking time</p>
             </div>
@@ -1062,6 +1074,8 @@ Bake for 25-30 minutes`}
                 onChange={handleInputChange}
                 placeholder="55"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                autoComplete="off"
+                inputMode="numeric"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total recipe time</p>
             </div>
@@ -1079,6 +1093,8 @@ Bake for 25-30 minutes`}
                 onChange={handleInputChange}
                 placeholder="4"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                autoComplete="off"
+                inputMode="numeric"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Leave empty to auto-infer</p>
             </div>
