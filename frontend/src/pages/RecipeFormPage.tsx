@@ -103,8 +103,20 @@ function RecipeFormPage() {
         isPublic: false // Copied recipes default to private
       })
       setPreviousImageUrl(copiedRecipe.image || '')
+    } else if (location.state?.importUrl) {
+      // Handle shared URL from share target
+      setImportUrl(location.state.importUrl)
+      setImportType('url')
+      // Auto-import the shared URL
+      handleImportUrl(location.state.importUrl)
+    } else if (location.state?.importText) {
+      // Handle shared text from share target
+      setImportText(location.state.importText)
+      setImportType('text')
+      // Auto-import the shared text
+      handleImportText(location.state.importText)
     }
-  }, [isEdit, id, copiedRecipe])
+  }, [isEdit, id, copiedRecipe, location.state])
 
   // Track image URL changes for cleanup
   useEffect(() => {
@@ -187,6 +199,65 @@ function RecipeFormPage() {
     // Check name availability for smart privacy defaulting
     if (name === 'name' && value.trim() && !isEdit) {
       checkNameAvailability(value.trim())
+    }
+  }
+
+  // Wrapper functions for auto-importing shared content
+  const handleImportUrl = async (url: string) => {
+    setImportUrl(url)
+    setImportType('url')
+    setIsImporting(true)
+    setImportError(null)
+
+    try {
+      const response = await apiService.scrapeRecipeFromUrl(url)
+      const recipeData = response.recipeData
+      setFormData(prev => ({
+        ...prev,
+        name: recipeData.name || '',
+        description: recipeData.description || '',
+        ingredients: recipeData.ingredients ? IngredientHelper.toTextareaFormat(recipeData.ingredients) : '',
+        instructions: recipeData.instructions ? recipeData.instructions.join('\n') : '',
+        prepTimeMinutes: recipeData.prepTimeMinutes,
+        servings: recipeData.servings,
+        image: recipeData.image || '',
+        sourceUrl: recipeData.sourceUrl || url
+      }))
+      setImportUrl('')
+    } catch (error) {
+      console.error('Failed to import recipe from URL:', error)
+      setImportError('Failed to import recipe from URL. Please check the URL and try again.')
+    } finally {
+      setIsImporting(false)
+    }
+  }
+
+  const handleImportText = async (text: string) => {
+    setImportText(text)
+    setImportType('text')
+    setIsImporting(true)
+    setImportError(null)
+
+    try {
+      const response = await apiService.parseRecipeFromText(text)
+      const recipeData = response.recipeData
+      setFormData(prev => ({
+        ...prev,
+        name: recipeData.name || '',
+        description: recipeData.description || '',
+        ingredients: recipeData.ingredients ? IngredientHelper.toTextareaFormat(recipeData.ingredients) : '',
+        instructions: recipeData.instructions ? recipeData.instructions.join('\n') : '',
+        prepTimeMinutes: recipeData.prepTimeMinutes,
+        servings: recipeData.servings,
+        image: recipeData.image || '',
+        sourceUrl: recipeData.sourceUrl
+      }))
+      setImportText('')
+    } catch (error) {
+      console.error('Failed to parse recipe from text:', error)
+      setImportError('Failed to parse recipe from text. Please try again.')
+    } finally {
+      setIsImporting(false)
     }
   }
 

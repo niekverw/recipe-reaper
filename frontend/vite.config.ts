@@ -47,7 +47,31 @@ export default defineConfig({
             type: 'image/png',
             purpose: 'maskable'
           },
-        ]
+        ],
+        shortcuts: [
+          {
+            name: 'Add Recipe',
+            short_name: 'Add Recipe',
+            description: 'Quickly add a new recipe',
+            url: '/add-recipe',
+            icons: [
+              {
+                src: 'icon-192.png',
+                sizes: '192x192',
+                type: 'image/png'
+              }
+            ]
+          }
+        ],
+        share_target: {
+          action: '/share-target',
+          method: 'POST',
+          enctype: 'application/x-www-form-urlencoded',
+          params: {
+            url: 'url',
+            text: 'text'
+          }
+        }
       },
       workbox: {
         cleanupOutdatedCaches: true,

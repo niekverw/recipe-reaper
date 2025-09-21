@@ -1,5 +1,10 @@
 import { onCLS, onFCP, onLCP, onTTFB, type Metric } from 'web-vitals'
 
+// Declare gtag function for Google Analytics
+declare global {
+  function gtag(...args: any[]): void
+}
+
 export interface PerformanceMetric {
   name: string
   value: number
@@ -17,6 +22,8 @@ class PerformanceMonitor {
   private metrics: PerformanceMetric[] = []
   private pwaMetrics: PWAMetric[] = []
   private isInitialized = false
+  private analyticsEnabled = false
+  private installStartTime: number | null = null
 
   // Core Web Vitals thresholds
   private static readonly THRESHOLDS = {
@@ -41,6 +48,16 @@ class PerformanceMonitor {
 
     console.log(`${emoji} ${metric.name}: ${metric.value.toFixed(2)}ms (${rating})`)
 
+    // Send to analytics if enabled
+    if (this.analyticsEnabled) {
+      this.sendToAnalytics('web_vitals', {
+        name: metric.name,
+        value: metric.value,
+        rating: rating,
+        timestamp: metric.timestamp
+      })
+    }
+
     // Store in localStorage for debugging
     this.storeMetric(metric)
   }
@@ -62,8 +79,37 @@ class PerformanceMonitor {
     }
   }
 
+  private sendToAnalytics(eventName: string, data: any) {
+    // Google Analytics 4 integration
+    if (typeof gtag !== 'undefined') {
+      gtag('event', eventName, {
+        custom_map: { metric_value: data.value },
+        ...data
+      })
+    }
+
+    // Custom analytics endpoint (if configured)
+    const analyticsUrl = import.meta.env.VITE_ANALYTICS_ENDPOINT
+    if (analyticsUrl) {
+      fetch(analyticsUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: eventName, data, timestamp: Date.now() })
+      }).catch(error => console.warn('Failed to send analytics:', error))
+    }
+  }
+
   private logPWAMetric(metric: PWAMetric) {
     console.log(`🔧 PWA ${metric.name}:`, metric.value)
+
+    // Send to analytics if enabled
+    if (this.analyticsEnabled) {
+      this.sendToAnalytics('pwa_metric', {
+        metric_name: metric.name,
+        metric_value: metric.value,
+        timestamp: metric.timestamp
+      })
+    }
 
     // Store PWA metrics separately
     try {
@@ -86,6 +132,17 @@ class PerformanceMonitor {
     this.isInitialized = true
 
     console.log('🚀 Initializing PWA Performance Monitoring...')
+
+    // Check if analytics is enabled
+    this.analyticsEnabled = import.meta.env.VITE_GA_MEASUREMENT_ID ||
+                           import.meta.env.VITE_ANALYTICS_ENDPOINT ? true : false
+
+    if (this.analyticsEnabled) {
+      console.log('📊 Analytics integration enabled')
+    }
+
+    // Track install start time
+    this.installStartTime = Date.now()
 
     // Track Core Web Vitals
     onCLS((metric: Metric) => {
@@ -194,11 +251,20 @@ class PerformanceMonitor {
     })
 
     window.addEventListener('appinstalled', () => {
+      const installTime = this.installStartTime ? Date.now() - this.installStartTime : null
       this.logPWAMetric({
         name: 'InstallEvent',
         value: 'installed',
         timestamp: Date.now()
       })
+
+      if (installTime) {
+        this.logPWAMetric({
+          name: 'InstallTime',
+          value: installTime,
+          timestamp: Date.now()
+        })
+      }
     })
 
     // Track online/offline status
@@ -237,10 +303,29 @@ class PerformanceMonitor {
 
         // Check cache sizes (approximate)
         let totalSize = 0
+        let cacheHitRate = 0
+
         for (const cacheName of cacheNames) {
           const cache = await caches.open(cacheName)
           const keys = await cache.keys()
           totalSize += keys.length
+
+          // Check cache hit rate by testing a few requests
+          if (keys.length > 0) {
+            const testRequests = keys.slice(0, Math.min(5, keys.length))
+            let hits = 0
+
+            for (const request of testRequests) {
+              try {
+                const response = await cache.match(request)
+                if (response) hits++
+              } catch (e) {
+                // Ignore errors
+              }
+            }
+
+            cacheHitRate = Math.max(cacheHitRate, hits / testRequests.length)
+          }
         }
 
         this.logPWAMetric({
@@ -248,10 +333,38 @@ class PerformanceMonitor {
           value: totalSize,
           timestamp: Date.now()
         })
+
+        if (cacheHitRate > 0) {
+          this.logPWAMetric({
+            name: 'CacheHitRate',
+            value: Math.round(cacheHitRate * 100),
+            timestamp: Date.now()
+          })
+        }
       }
     } catch (error) {
       console.warn('Failed to check cache status:', error)
     }
+  }
+
+  public trackUserInteraction(interactionType: string, details?: any) {
+    const metric: PWAMetric = {
+      name: 'UserInteraction',
+      value: { type: interactionType, details },
+      timestamp: Date.now()
+    }
+    this.pwaMetrics.push(metric)
+    this.logPWAMetric(metric)
+  }
+
+  public trackPageView(page: string) {
+    const metric: PWAMetric = {
+      name: 'PageView',
+      value: page,
+      timestamp: Date.now()
+    }
+    this.pwaMetrics.push(metric)
+    this.logPWAMetric(metric)
   }
 
   public getMetrics(): PerformanceMetric[] {

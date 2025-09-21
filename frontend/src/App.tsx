@@ -3,6 +3,9 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider } from './contexts/AuthContext'
 import Navigation from './components/Navigation'
 import PWAInstallPrompt from './components/PWAInstallPrompt'
+import GoogleAnalytics from './components/GoogleAnalytics'
+import PageTracker from './components/PageTracker'
+import PerformanceDashboard from './components/PerformanceDashboard'
 import RecipesPage from './pages/RecipesPage'
 import RecipeDetailPage from './pages/RecipeDetailPage'
 import RecipeFormPage from './pages/RecipeFormPage'
@@ -10,6 +13,7 @@ import SettingsPage from './pages/SettingsPage'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import AuthCallbackPage from './pages/AuthCallbackPage'
+import ShareTargetPage from './pages/ShareTargetPage'
 import { useEffect } from 'react'
 
 function App() {
@@ -38,7 +42,9 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+        <GoogleAnalytics />
         <Router>
+          <PageTracker />
           <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200">
             <Navigation />
             <main>
@@ -47,6 +53,7 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/auth/callback" element={<AuthCallbackPage />} />
+                <Route path="/share-target" element={<ShareTargetPage />} />
                 <Route path="/recipe/:id" element={<RecipeDetailPage />} />
                 <Route path="/add-recipe" element={<RecipeFormPage />} />
                 <Route path="/recipe/:id/edit" element={<RecipeFormPage />} />
@@ -55,6 +62,7 @@ function App() {
             </main>
             <PWAInstallPrompt />
           </div>
+          {import.meta.env.DEV && <PerformanceDashboard />}
         </Router>
       </AuthProvider>
     </ThemeProvider>
