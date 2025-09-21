@@ -19,6 +19,7 @@ describe('Server Basic Tests', () => {
     it('should include CORS headers', async () => {
       const response = await request(app)
         .get('/health')
+        .set('Origin', 'http://localhost:5173')
         .expect(200)
 
       expect(response.headers['access-control-allow-origin']).toBeDefined()

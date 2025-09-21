@@ -1,12 +1,23 @@
 import { recipeModel } from '../models/recipeModel'
 import { CreateRecipeRequest, UpdateRecipeRequest } from '../types/recipe'
-import { Database } from '../models/database'
+import { PostgreSQLDatabase } from '../models/database-pg'
 
 describe('Recipe Model Tests', () => {
   beforeEach(async () => {
     // Clear the database between tests
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     await db.run('DELETE FROM recipes')
+    
+    // Ensure test user exists
+    try {
+      await db.run(`
+        INSERT INTO users (id, email, password_hash, display_name, google_id)
+        VALUES ('test-user-id', 'test@example.com', 'dummy-hash', 'Test User', 'test-google-id')
+        ON CONFLICT (id) DO NOTHING
+      `)
+    } catch (error) {
+      // User might already exist, ignore
+    }
   })
   describe('CRUD Operations', () => {
     it('should create a recipe with all fields', async () => {
@@ -28,7 +39,7 @@ describe('Recipe Model Tests', () => {
         description: recipeData.description,
         prepTimeMinutes: recipeData.prepTimeMinutes,
         servings: recipeData.servings,
-        ingredients: recipeData.ingredients,
+        ingredients: [{ items: recipeData.ingredients }],
         instructions: recipeData.instructions,
         image: recipeData.image,
         isPublic: recipeData.isPublic
@@ -137,7 +148,7 @@ describe('Recipe Model Tests', () => {
         image: ''
       })
 
-      expect(updatedRecipe.image).toBeNull()
+      expect(updatedRecipe.image).toBeUndefined()
     })
 
     it('should delete a recipe', async () => {
@@ -158,7 +169,7 @@ describe('Recipe Model Tests', () => {
   describe('Filtering and Sorting', () => {
     beforeEach(async () => {
       // Clear existing data first
-      const db = Database.getInstance()
+      const db = PostgreSQLDatabase.getInstance()
       await db.run('DELETE FROM recipes')
 
       // Create test data
@@ -169,7 +180,8 @@ describe('Recipe Model Tests', () => {
         servings: 8,
         ingredients: ['chocolate', 'flour'],
         instructions: ['mix', 'bake'],
-        isPublic: true
+        isPublic: true,
+        userId: 'test-user-id'
       })
 
       await recipeModel.create({
@@ -179,7 +191,8 @@ describe('Recipe Model Tests', () => {
         servings: 12,
         ingredients: ['vanilla', 'flour'],
         instructions: ['mix', 'bake', 'cool'],
-        isPublic: false
+        isPublic: false,
+        userId: 'test-user-id'
       })
 
       await recipeModel.create({
@@ -189,7 +202,8 @@ describe('Recipe Model Tests', () => {
         servings: 6,
         ingredients: ['apples', 'flour', 'sugar'],
         instructions: ['prepare', 'fill', 'bake', 'cool'],
-        isPublic: true
+        isPublic: true,
+        userId: 'test-user-id'
       })
     })
 
@@ -200,14 +214,14 @@ describe('Recipe Model Tests', () => {
     })
 
     it('should search recipes by description', async () => {
-      const results = await recipeModel.findAll({ search: 'simple' })
+      const results = await recipeModel.findAll({ search: 'simple', userId: 'test-user-id' })
       expect(results).toHaveLength(1)
       expect(results[0].name).toBe('Vanilla Cookies')
     })
 
     it('should filter by public status', async () => {
       const publicRecipes = await recipeModel.findAll({ isPublic: true })
-      const privateRecipes = await recipeModel.findAll({ isPublic: false })
+      const privateRecipes = await recipeModel.findAll({ isPublic: false, userId: 'test-user-id' })
 
       expect(publicRecipes).toHaveLength(2)
       expect(privateRecipes).toHaveLength(1)
@@ -216,28 +230,29 @@ describe('Recipe Model Tests', () => {
 
     it('should sort by name', async () => {
       const results = await recipeModel.findAll({ sortBy: 'name' })
+      expect(results).toHaveLength(2)
       expect(results[0].name).toBe('Apple Pie')
       expect(results[1].name).toBe('Chocolate Cake')
-      expect(results[2].name).toBe('Vanilla Cookies')
     })
 
     it('should sort by prep time', async () => {
       const results = await recipeModel.findAll({ sortBy: 'time' })
-      expect(results[0].prepTimeMinutes).toBe(30)
-      expect(results[1].prepTimeMinutes).toBe(60)
-      expect(results[2].prepTimeMinutes).toBe(90)
+      expect(results).toHaveLength(2)
+      expect(results[0].prepTimeMinutes).toBe(60)
+      expect(results[1].prepTimeMinutes).toBe(90)
     })
 
     it('should sort by servings', async () => {
-      const results = await recipeModel.findAll({ sortBy: 'servings' })
+      const results = await recipeModel.findAll({ sortBy: 'servings', userId: 'test-user-id' })
+      expect(results).toHaveLength(3)
       expect(results[0].servings).toBe(6)
       expect(results[1].servings).toBe(8)
       expect(results[2].servings).toBe(12)
     })
 
     it('should handle pagination', async () => {
-      const page1 = await recipeModel.findAll({ limit: 2, offset: 0 })
-      const page2 = await recipeModel.findAll({ limit: 2, offset: 2 })
+      const page1 = await recipeModel.findAll({ limit: 2, offset: 0, userId: 'test-user-id' })
+      const page2 = await recipeModel.findAll({ limit: 2, offset: 2, userId: 'test-user-id' })
 
       expect(page1).toHaveLength(2)
       expect(page2).toHaveLength(1)

@@ -100,6 +100,7 @@ export const recipeController = {
   async getRecipes(req: Request, res: Response, next: NextFunction) {
     try {
       const user = req.user as User | undefined
+
       const scope = req.query.scope as 'my' | 'public' | 'all' || 'all'
 
       const filters: RecipeFilters = {

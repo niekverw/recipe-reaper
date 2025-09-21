@@ -1,12 +1,31 @@
 import request from 'supertest'
 import { app } from '../index'
-import { Database } from '../models/database'
+import { PostgreSQLDatabase } from '../models/database-pg'
 
 describe('Recipe API Tests', () => {
+  let agent: any
+
   beforeEach(async () => {
-    // Clear the database between tests
-    const db = Database.getInstance()
+    // Clear the database between tests - delete in correct order to avoid FK constraints
+    const db = PostgreSQLDatabase.getInstance()
     await db.run('DELETE FROM recipes')
+    // Delete only the test user we create, not all users
+    await db.run('DELETE FROM users WHERE email = $1', ['testuser@email.com'])
+
+    // Create a test agent for session management
+    agent = request.agent(app)
+
+    // Register the test user
+    const registerResponse = await agent
+      .post('/api/auth/register')
+      .send({
+        displayName: 'testuser',
+        email: 'testuser@email.com',
+        password: 'password'
+      })
+
+    // The register endpoint should automatically log in the user
+    expect(registerResponse.status).toBe(201)
   })
 
   describe('POST /api/recipes', () => {
@@ -22,7 +41,7 @@ describe('Recipe API Tests', () => {
         isPublic: true
       }
 
-      const response = await request(app)
+      const response = await agent
         .post('/api/recipes')
         .send(recipeData)
         .expect(201)
@@ -30,7 +49,7 @@ describe('Recipe API Tests', () => {
       expect(response.body.recipe).toMatchObject({
         name: recipeData.name,
         description: recipeData.description,
-        ingredients: recipeData.ingredients,
+        ingredients: [{ items: recipeData.ingredients }],
         instructions: recipeData.instructions,
         prepTimeMinutes: recipeData.prepTimeMinutes,
         servings: recipeData.servings,
@@ -50,7 +69,7 @@ describe('Recipe API Tests', () => {
         instructions: ['step1', 'step2', 'step3']
       }
 
-      const response = await request(app)
+      const response = await agent
         .post('/api/recipes')
         .send(recipeData)
         .expect(201)
@@ -67,7 +86,7 @@ describe('Recipe API Tests', () => {
         instructions: ['step']
       }
 
-      const response = await request(app)
+      const response = await agent
         .post('/api/recipes')
         .send(invalidData)
         .expect(400)
@@ -83,7 +102,7 @@ describe('Recipe API Tests', () => {
         instructions: ['step1']
       }
 
-      const response = await request(app)
+      const response = await agent
         .post('/api/recipes')
         .send(invalidData)
         .expect(400)
@@ -99,7 +118,7 @@ describe('Recipe API Tests', () => {
         instructions: []
       }
 
-      const response = await request(app)
+      const response = await agent
         .post('/api/recipes')
         .send(invalidData)
         .expect(400)
@@ -111,7 +130,7 @@ describe('Recipe API Tests', () => {
   describe('GET /api/recipes', () => {
     beforeEach(async () => {
       // Create test data
-      await request(app)
+      await agent
         .post('/api/recipes')
         .send({
           name: 'Chocolate Cake',
@@ -126,7 +145,7 @@ describe('Recipe API Tests', () => {
       // Small delay for different timestamps
       await new Promise(resolve => setTimeout(resolve, 10))
 
-      await request(app)
+      await agent
         .post('/api/recipes')
         .send({
           name: 'Vanilla Cookies',
@@ -140,7 +159,7 @@ describe('Recipe API Tests', () => {
     })
 
     it('should get all recipes', async () => {
-      const response = await request(app)
+      const response = await agent
         .get('/api/recipes')
         .expect(200)
 
@@ -150,7 +169,7 @@ describe('Recipe API Tests', () => {
     })
 
     it('should search recipes by name', async () => {
-      const response = await request(app)
+      const response = await agent
         .get('/api/recipes?search=cake')
         .expect(200)
 
@@ -159,7 +178,7 @@ describe('Recipe API Tests', () => {
     })
 
     it('should search recipes by description', async () => {
-      const response = await request(app)
+      const response = await agent
         .get('/api/recipes?search=simple')
         .expect(200)
 
@@ -168,11 +187,11 @@ describe('Recipe API Tests', () => {
     })
 
     it('should filter by public status', async () => {
-      const publicResponse = await request(app)
+      const publicResponse = await agent
         .get('/api/recipes?isPublic=true')
         .expect(200)
 
-      const privateResponse = await request(app)
+      const privateResponse = await agent
         .get('/api/recipes?isPublic=false')
         .expect(200)
 
@@ -184,7 +203,7 @@ describe('Recipe API Tests', () => {
     })
 
     it('should sort by name', async () => {
-      const response = await request(app)
+      const response = await agent
         .get('/api/recipes?sortBy=name')
         .expect(200)
 
@@ -193,7 +212,7 @@ describe('Recipe API Tests', () => {
     })
 
     it('should sort by time', async () => {
-      const response = await request(app)
+      const response = await agent
         .get('/api/recipes?sortBy=time')
         .expect(200)
 
@@ -202,11 +221,11 @@ describe('Recipe API Tests', () => {
     })
 
     it('should handle pagination', async () => {
-      const page1 = await request(app)
+      const page1 = await agent
         .get('/api/recipes?limit=1&offset=0')
         .expect(200)
 
-      const page2 = await request(app)
+      const page2 = await agent
         .get('/api/recipes?limit=1&offset=1')
         .expect(200)
 
@@ -220,7 +239,7 @@ describe('Recipe API Tests', () => {
     let recipeId: string
 
     beforeEach(async () => {
-      const response = await request(app)
+      const response = await agent
         .post('/api/recipes')
         .send({
           name: 'Test Recipe',
@@ -232,7 +251,7 @@ describe('Recipe API Tests', () => {
     })
 
     it('should get recipe by id', async () => {
-      const response = await request(app)
+      const response = await agent
         .get(`/api/recipes/${recipeId}`)
         .expect(200)
 
@@ -241,7 +260,7 @@ describe('Recipe API Tests', () => {
     })
 
     it('should return 404 for non-existent recipe', async () => {
-      const response = await request(app)
+      const response = await agent
         .get('/api/recipes/non-existent-id')
         .expect(404)
 
@@ -253,7 +272,7 @@ describe('Recipe API Tests', () => {
     let recipeId: string
 
     beforeEach(async () => {
-      const response = await request(app)
+      const response = await agent
         .post('/api/recipes')
         .send({
           name: 'Original Recipe',
@@ -271,7 +290,7 @@ describe('Recipe API Tests', () => {
         prepTimeMinutes: 45
       }
 
-      const response = await request(app)
+      const response = await agent
         .put(`/api/recipes/${recipeId}`)
         .send(updates)
         .expect(200)
@@ -282,7 +301,7 @@ describe('Recipe API Tests', () => {
     })
 
     it('should return 404 for non-existent recipe', async () => {
-      const response = await request(app)
+      const response = await agent
         .put('/api/recipes/non-existent-id')
         .send({ name: 'Updated' })
         .expect(404)
@@ -295,7 +314,7 @@ describe('Recipe API Tests', () => {
     let recipeId: string
 
     beforeEach(async () => {
-      const response = await request(app)
+      const response = await agent
         .post('/api/recipes')
         .send({
           name: 'To Delete',
@@ -307,18 +326,18 @@ describe('Recipe API Tests', () => {
     })
 
     it('should delete recipe', async () => {
-      await request(app)
+      await agent
         .delete(`/api/recipes/${recipeId}`)
         .expect(204)
 
       // Verify it's deleted
-      await request(app)
+      await agent
         .get(`/api/recipes/${recipeId}`)
         .expect(404)
     })
 
     it('should return 404 for non-existent recipe', async () => {
-      const response = await request(app)
+      const response = await agent
         .delete('/api/recipes/non-existent-id')
         .expect(404)
 
@@ -328,7 +347,7 @@ describe('Recipe API Tests', () => {
 
   describe('Error Handling', () => {
     it('should handle invalid JSON', async () => {
-      const response = await request(app)
+      const response = await agent
         .post('/api/recipes')
         .set('Content-Type', 'application/json')
         .send('{"invalid": json}')
@@ -338,7 +357,7 @@ describe('Recipe API Tests', () => {
     it('should handle server errors gracefully', async () => {
       // This test would require mocking database failures
       // For now, we'll just verify our error handler is attached
-      const response = await request(app)
+      const response = await agent
         .get('/unknown-endpoint')
         .expect(404)
 

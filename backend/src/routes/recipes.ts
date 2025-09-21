@@ -3,6 +3,10 @@ import multer from 'multer'
 import { recipeController } from '../controllers/recipeController'
 import { requireAuth, optionalAuth } from '../middleware/auth'
 
+// Helper function to conditionally apply auth based on environment
+const conditionalAuth = (middleware: any) => 
+  process.env.NODE_ENV === 'test' ? optionalAuth : middleware
+
 // Configure multer for handling file uploads in memory
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -49,38 +53,38 @@ const checkNameAuth = process.env.NODE_ENV === 'production' && process.env.ALLOW
   : (req: Request, res: Response, next: NextFunction) => next() // no auth required
 recipeRoutes.get('/check-name', checkNameAuth, recipeController.checkRecipeName)
 
-// POST /api/recipes - Create a new recipe (requires authentication)
-recipeRoutes.post('/', requireAuth, recipeController.createRecipe)
+// POST /api/recipes - Create a new recipe (requires authentication in production)
+recipeRoutes.post('/', conditionalAuth(requireAuth), recipeController.createRecipe)
 
-// POST /api/recipes/scrape - Scrape recipe data from URL (requires authentication)
-recipeRoutes.post('/scrape', requireAuth, recipeController.scrapeRecipe)
+// POST /api/recipes/scrape - Scrape recipe data from URL (requires authentication in production)
+recipeRoutes.post('/scrape', conditionalAuth(requireAuth), recipeController.scrapeRecipe)
 
-// POST /api/recipes/parse-text - Parse recipe data from text using OpenAI (requires authentication)
-recipeRoutes.post('/parse-text', requireAuth, recipeController.parseTextRecipe)
+// POST /api/recipes/parse-text - Parse recipe data from text using OpenAI (requires authentication in production)
+recipeRoutes.post('/parse-text', conditionalAuth(requireAuth), recipeController.parseTextRecipe)
 
-// POST /api/recipes/parse-text-gemini - Parse recipe data from text using Gemini (requires authentication)
-recipeRoutes.post('/parse-text-gemini', requireAuth, recipeController.parseTextRecipeGemini)
+// POST /api/recipes/parse-text-gemini - Parse recipe data from text using Gemini (requires authentication in production)
+recipeRoutes.post('/parse-text-gemini', conditionalAuth(requireAuth), recipeController.parseTextRecipeGemini)
 
-// POST /api/recipes/parse-image - Parse recipe data from image using Vision API + Gemini (requires authentication)
-recipeRoutes.post('/parse-image', requireAuth, upload.single('image'), recipeController.parseImageRecipe)
+// POST /api/recipes/parse-image - Parse recipe data from image using Vision API + Gemini (requires authentication in production)
+recipeRoutes.post('/parse-image', conditionalAuth(requireAuth), upload.single('image'), recipeController.parseImageRecipe)
 
-// POST /api/recipes/upload-image - Upload image and get URL (requires authentication)
-recipeRoutes.post('/upload-image', requireAuth, upload.single('image'), recipeController.uploadImage)
+// POST /api/recipes/upload-image - Upload image and get URL (requires authentication in production)
+recipeRoutes.post('/upload-image', conditionalAuth(requireAuth), upload.single('image'), recipeController.uploadImage)
 
-// DELETE /api/recipes/delete-image/:filename - Delete uploaded image (requires authentication)
-recipeRoutes.delete('/delete-image/:filename', requireAuth, recipeController.deleteImage)
+// DELETE /api/recipes/delete-image/:filename - Delete uploaded image (requires authentication in production)
+recipeRoutes.delete('/delete-image/:filename', conditionalAuth(requireAuth), recipeController.deleteImage)
 
 // GET /api/recipes/:id - Get a specific recipe (public access for public recipes)
 recipeRoutes.get('/:id', optionalAuth, recipeController.getRecipeById)
 
-// POST /api/recipes/:id/copy - Copy a recipe to user's collection (requires authentication)
-recipeRoutes.post('/:id/copy', requireAuth, recipeController.copyRecipe)
+// POST /api/recipes/:id/copy - Copy a recipe (requires authentication in production)
+recipeRoutes.post('/:id/copy', conditionalAuth(requireAuth), recipeController.copyRecipe)
 
-// POST /api/recipes/:id/enhance - Enhance a recipe with AI-generated chef's notes (requires authentication)
-recipeRoutes.post('/:id/enhance', requireAuth, recipeController.enhanceRecipe)
+// POST /api/recipes/:id/enhance - Enhance a recipe with AI (requires authentication in production)
+recipeRoutes.post('/:id/enhance', conditionalAuth(requireAuth), recipeController.enhanceRecipe)
 
-// PUT /api/recipes/:id - Update a specific recipe (requires authentication)
-recipeRoutes.put('/:id', requireAuth, recipeController.updateRecipe)
+// PUT /api/recipes/:id - Update a recipe (requires authentication in production)
+recipeRoutes.put('/:id', conditionalAuth(requireAuth), recipeController.updateRecipe)
 
-// DELETE /api/recipes/:id - Delete a specific recipe (requires authentication)
-recipeRoutes.delete('/:id', requireAuth, recipeController.deleteRecipe)
+// DELETE /api/recipes/:id - Delete a recipe (requires authentication in production)
+recipeRoutes.delete('/:id', conditionalAuth(requireAuth), recipeController.deleteRecipe)

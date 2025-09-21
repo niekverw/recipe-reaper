@@ -1,30 +1,32 @@
-import { Database } from '../models/database'
+import { PostgreSQLDatabase } from '../models/database-pg'
 import { recipeModel } from '../models/recipeModel'
 import { CreateRecipeRequest, UpdateRecipeRequest } from '../types/recipe'
 
 describe('Recipe Model - Source URL Support', () => {
   beforeAll(async () => {
-    await Database.getInstance().initialize(':memory:')
+    // Database is already initialized by setup.ts
   })
 
   afterAll(async () => {
-    await Database.getInstance().close()
+    // Database will be closed by setup.ts
   })
 
   afterEach(async () => {
     // Clean up recipes after each test
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     await db.run('DELETE FROM recipes')
   })
 
   describe('Database Schema', () => {
     it('should have source_url column in recipes table', async () => {
-      const db = Database.getInstance()
-      const tableInfo = await db.all<{name: string, type: string}>('PRAGMA table_info(recipes)')
+      const db = PostgreSQLDatabase.getInstance()
+      const tableInfo = await db.all<{column_name: string, data_type: string}>(
+        "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'recipes' AND column_name = 'source_url'"
+      )
 
-      const sourceUrlColumn = tableInfo.find((col) => col.name === 'source_url')
+      const sourceUrlColumn = tableInfo.find((col) => col.column_name === 'source_url')
       expect(sourceUrlColumn).toBeDefined()
-      expect(sourceUrlColumn?.type).toBe('TEXT')
+      expect(sourceUrlColumn?.data_type).toBe('text')
     })
   })
 
@@ -167,14 +169,16 @@ describe('Recipe Model - Source URL Support', () => {
         description: 'First recipe',
         ingredients: ['ingredient 1'],
         instructions: ['instruction 1'],
-        sourceUrl: 'https://example.com/recipe1'
+        sourceUrl: 'https://example.com/recipe1',
+        userId: 'test-user-id'
       }
 
       const recipe2Data: CreateRecipeRequest = {
         name: 'Recipe 2',
         description: 'Second recipe',
         ingredients: ['ingredient 2'],
-        instructions: ['instruction 2']
+        instructions: ['instruction 2'],
+        userId: 'test-user-id'
       }
 
       await recipeModel.create(recipe1Data)
