@@ -10,8 +10,30 @@ import SettingsPage from './pages/SettingsPage'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import AuthCallbackPage from './pages/AuthCallbackPage'
+import { useEffect } from 'react'
 
 function App() {
+  useEffect(() => {
+    // Check if performance monitoring is enabled (default: true)
+    const enablePerformanceMonitoring = import.meta.env.VITE_ENABLE_PERFORMANCE_MONITORING !== 'false'
+
+    if (enablePerformanceMonitoring) {
+      // Initialize performance monitoring
+      import('./utils/performanceMonitor').then(({ performanceMonitor }) => {
+        performanceMonitor.initialize()
+        // Add debug commands to console
+        ;(window as any).debugPerformance = () => performanceMonitor.debug()
+        ;(window as any).clearPerformanceMetrics = () => performanceMonitor.clearStoredMetrics()
+        console.log('✅ Performance monitoring enabled. Use debugPerformance() in console.')
+      }).catch((error) => {
+        console.error('Failed to initialize performance monitoring:', error)
+      })
+    } else {
+      console.log('ℹ️ Performance monitoring disabled via VITE_ENABLE_PERFORMANCE_MONITORING=false')
+    }
+
+    console.log('💡 Tip: Use debugPerformance() in console to see metrics, clearPerformanceMetrics() to reset')
+  }, [])
 
   return (
     <ThemeProvider>

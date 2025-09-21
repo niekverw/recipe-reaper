@@ -27,7 +27,8 @@
     "react-router-dom": "^7.9.1",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2",
-    "vite": "^7.1.5"
+    "vite": "^7.1.5",
+    "web-vitals": "^5.1.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
