@@ -455,7 +455,8 @@ export const recipeController = {
         cookTimeMinutes: parsedData.cookTimeMinutes,
         totalTimeMinutes: parsedData.totalTimeMinutes,
         servings: parseServings(parsedData.servings?.toString()),
-        image: storedImage.url
+        image: storedImage.url,
+        imageSizes: storedImage.sizes
       }
 
       res.json({
@@ -490,7 +491,8 @@ export const recipeController = {
       const storedImage = await imageService.storeImage(req.file.buffer, req.file.originalname)
 
       res.json({
-        imageUrl: storedImage.url
+        imageUrl: storedImage.url,
+        imageSizes: storedImage.sizes
       })
     } catch (error) {
       // Handle image upload specific errors

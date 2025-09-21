@@ -1,10 +1,10 @@
-import { Database } from './src/models/database'
+import { PostgreSQLDatabase } from './src/models/database-pg'
 
 async function initializeTables() {
   console.log('Initializing PostgreSQL tables...')
 
   try {
-    const db = Database.getInstance()
+    const db = PostgreSQLDatabase.getInstance()
     await db.initialize()
     console.log('PostgreSQL tables created successfully!')
     await db.close()

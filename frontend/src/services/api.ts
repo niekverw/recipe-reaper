@@ -18,6 +18,11 @@ export interface Recipe {
   ingredients: string[] | IngredientCategory[]
   instructions: string[]
   image?: string
+  imageSizes?: {
+    small: { url: string; width: number }
+    medium: { url: string; width: number }
+    large: { url: string; width: number }
+  }
   sourceUrl?: string
   aiEnhancedNotes?: string
   tags?: string[]
@@ -250,6 +255,11 @@ class ApiService {
 
     return this.request<{
       imageUrl: string
+      imageSizes: {
+        small: { url: string; width: number }
+        medium: { url: string; width: number }
+        large: { url: string; width: number }
+      }
     }>('/recipes/upload-image', {
       method: 'POST',
       body: formData,

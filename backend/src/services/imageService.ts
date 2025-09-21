@@ -8,6 +8,11 @@ interface StoredImageResult {
   filename: string
   url: string
   path: string
+  sizes: {
+    small: { url: string; width: number }
+    medium: { url: string; width: number }
+    large: { url: string; width: number }
+  }
 }
 
 class ImageService {
@@ -31,7 +36,8 @@ class ImageService {
 
     // Generate unique filename
     const fileExtension = this.getFileExtension(originalName) || 'jpg'
-    const filename = `${uuidv4()}.${fileExtension}`
+    const baseFilename = uuidv4()
+    const filename = `${baseFilename}.${fileExtension}`
     const filePath = join(this.uploadsDir, filename)
 
     let processedBuffer = imageBuffer
@@ -48,7 +54,40 @@ class ImageService {
       }
     }
 
-    // Process and optimize the image before storing
+    // Process and generate multiple sizes
+    const sizes = {
+      small: { width: 400, quality: 80 },
+      medium: { width: 800, quality: 85 },
+      large: { width: 1200, quality: 85 }
+    }
+
+    const generatedSizes: { [key: string]: { url: string; width: number } } = {}
+
+    for (const [sizeName, config] of Object.entries(sizes)) {
+      const sizeFilename = `${baseFilename}_${sizeName}.${fileExtension}`
+      const sizeFilePath = join(this.uploadsDir, sizeFilename)
+
+      const resizedBuffer = await sharp(processedBuffer)
+        .rotate() // Auto-rotate based on EXIF orientation
+        .resize(config.width, config.width, {
+          fit: 'inside',
+          withoutEnlargement: true
+        })
+        .jpeg({
+          quality: config.quality,
+          progressive: true
+        })
+        .toBuffer()
+
+      await fs.writeFile(sizeFilePath, resizedBuffer)
+
+      generatedSizes[sizeName as keyof typeof generatedSizes] = {
+        url: `/uploads/${sizeFilename}`,
+        width: config.width
+      }
+    }
+
+    // Also save the original processed version as the "large" size
     const finalImageBuffer = await sharp(processedBuffer)
       .rotate() // Auto-rotate based on EXIF orientation
       .resize(1200, 1200, {
@@ -61,7 +100,6 @@ class ImageService {
       })
       .toBuffer()
 
-    // Save the processed image
     await fs.writeFile(filePath, finalImageBuffer)
 
     // Return relative URL - frontend will construct full URL based on current location
@@ -70,7 +108,12 @@ class ImageService {
     return {
       filename,
       url: relativeUrl,
-      path: filePath
+      path: filePath,
+      sizes: {
+        small: generatedSizes.small,
+        medium: generatedSizes.medium,
+        large: { url: relativeUrl, width: 1200 }
+      }
     }
   }
 

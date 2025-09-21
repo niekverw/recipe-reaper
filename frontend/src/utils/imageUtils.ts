@@ -29,14 +29,65 @@ export const getFilenameFromUrl = (url: string): string | null => {
 /**
  * Clean up an uploaded image by deleting it from the server
  */
-export const cleanupImage = async (imageUrl: string): Promise<void> => {
-  const filename = getFilenameFromUrl(imageUrl)
-  if (filename) {
-    try {
-      await apiService.deleteImage(filename)
-    } catch (err) {
-      console.warn('Failed to delete image:', err)
-      // Don't show error to user as this is background cleanup
-    }
+export const deleteUploadedImage = async (url: string): Promise<void> => {
+  const filename = getFilenameFromUrl(url)
+  if (!filename) return
+
+  try {
+    await apiService.deleteImage(filename)
+  } catch (error) {
+    console.error('Failed to delete uploaded image:', error)
+  }
+}
+
+/**
+ * Generate responsive image attributes for uploaded images
+ */
+export interface ImageSizes {
+  small: { url: string; width: number }
+  medium: { url: string; width: number }
+  large: { url: string; width: number }
+}
+
+/**
+ * Generate srcset attribute for responsive images
+ */
+export const generateSrcSet = (imageSizes: ImageSizes): string => {
+  return [
+    `${imageSizes.small.url} ${imageSizes.small.width}w`,
+    `${imageSizes.medium.url} ${imageSizes.medium.width}w`,
+    `${imageSizes.large.url} ${imageSizes.large.width}w`
+  ].join(', ')
+}
+
+/**
+ * Generate sizes attribute based on display context
+ */
+export const generateSizes = (context: 'grid' | 'list' | 'detail' = 'grid'): string => {
+  switch (context) {
+    case 'grid':
+      // Grid view: responsive breakpoints
+      return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw'
+    case 'list':
+      // List view: fixed small size
+      return '64px'
+    case 'detail':
+      // Detail view: larger responsive
+      return '(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 60vw'
+    default:
+      return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw'
+  }
+}
+
+/**
+ * Get the best image URL for a specific max width
+ */
+export const getOptimalImageUrl = (imageSizes: ImageSizes, maxWidth: number): string => {
+  if (maxWidth <= imageSizes.small.width) {
+    return imageSizes.small.url
+  } else if (maxWidth <= imageSizes.medium.width) {
+    return imageSizes.medium.url
+  } else {
+    return imageSizes.large.url
   }
 }

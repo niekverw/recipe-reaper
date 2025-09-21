@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { apiService, Recipe, CreateRecipeData } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { IngredientHelper } from '../utils/ingredientHelper'
-import { isOurUploadedImage, cleanupImage } from '../utils/imageUtils'
+import { isOurUploadedImage, deleteUploadedImage } from '../utils/imageUtils'
 import TagInput from '../components/TagInput'
 import {
   ArrowLeftIcon,
@@ -111,7 +111,7 @@ function RecipeFormPage() {
     if (formData.image !== previousImageUrl) {
       // Clean up previous image if it was one of our uploads
       if (previousImageUrl && isOurUploadedImage(previousImageUrl)) {
-        cleanupImage(previousImageUrl)
+        deleteUploadedImage(previousImageUrl)
       }
       setPreviousImageUrl(formData.image || '')
     }

@@ -87,6 +87,7 @@ export class PostgreSQLDatabase {
           ingredients TEXT NOT NULL,
           instructions TEXT NOT NULL,
           image TEXT,
+          image_sizes TEXT,
           source_url TEXT,
           is_public BOOLEAN DEFAULT true,
           user_id TEXT,
@@ -120,6 +121,12 @@ export class PostgreSQLDatabase {
       for (const indexQuery of createIndexes) {
         await client.query(indexQuery)
       }
+
+      // Add image_sizes column if it doesn't exist (for migration)
+      await client.query(`
+        ALTER TABLE recipes
+        ADD COLUMN IF NOT EXISTS image_sizes TEXT
+      `)
 
       await client.query('COMMIT')
       console.log('PostgreSQL tables and indexes created successfully')

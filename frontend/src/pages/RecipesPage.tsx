@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { apiService, Recipe } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
+import { generateSrcSet, generateSizes } from '../utils/imageUtils'
 
 interface RecipeActionsProps {
   recipe: Recipe
@@ -105,13 +106,29 @@ function RecipeGridCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentU
         <div className="h-24 sm:h-36 md:h-48 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 relative overflow-hidden">
           {/* If recipe.image exists render it, otherwise keep gradient */}
           {recipe.image ? (
-            <img
-              src={apiService.constructImageUrl(recipe.image)}
-              alt={`${recipe.name} image`}
-              loading="lazy"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-              className="absolute inset-0 w-full h-full object-cover block"
-            />
+            recipe.imageSizes ? (
+              <img
+                src={apiService.constructImageUrl(recipe.imageSizes.large.url)}
+                srcSet={generateSrcSet({
+                  small: { url: apiService.constructImageUrl(recipe.imageSizes.small.url), width: recipe.imageSizes.small.width },
+                  medium: { url: apiService.constructImageUrl(recipe.imageSizes.medium.url), width: recipe.imageSizes.medium.width },
+                  large: { url: apiService.constructImageUrl(recipe.imageSizes.large.url), width: recipe.imageSizes.large.width }
+                })}
+                sizes={generateSizes('grid')}
+                alt={`${recipe.name} image`}
+                loading="lazy"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                className="absolute inset-0 w-full h-full object-cover block"
+              />
+            ) : (
+              <img
+                src={apiService.constructImageUrl(recipe.image)}
+                alt={`${recipe.name} image`}
+                loading="lazy"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                className="absolute inset-0 w-full h-full object-cover block"
+              />
+            )
           ) : (
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
           )}
@@ -205,13 +222,29 @@ function RecipeListCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentU
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
           <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-lg flex-shrink-0 overflow-hidden">
             {recipe.image ? (
-              <img
-                src={apiService.constructImageUrl(recipe.image)}
-                alt={`${recipe.name} thumbnail`}
-                loading="lazy"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                className="w-full h-full object-cover block"
-              />
+              recipe.imageSizes ? (
+                <img
+                  src={apiService.constructImageUrl(recipe.imageSizes.small.url)}
+                  srcSet={generateSrcSet({
+                    small: { url: apiService.constructImageUrl(recipe.imageSizes.small.url), width: recipe.imageSizes.small.width },
+                    medium: { url: apiService.constructImageUrl(recipe.imageSizes.medium.url), width: recipe.imageSizes.medium.width },
+                    large: { url: apiService.constructImageUrl(recipe.imageSizes.large.url), width: recipe.imageSizes.large.width }
+                  })}
+                  sizes={generateSizes('list')}
+                  alt={`${recipe.name} thumbnail`}
+                  loading="lazy"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                  className="w-full h-full object-cover block"
+                />
+              ) : (
+                <img
+                  src={apiService.constructImageUrl(recipe.image)}
+                  alt={`${recipe.name} thumbnail`}
+                  loading="lazy"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                  className="w-full h-full object-cover block"
+                />
+              )
             ) : null}
           </div>
           <div className="flex-1 min-w-0">

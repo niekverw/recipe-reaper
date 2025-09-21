@@ -14,6 +14,11 @@ export interface Recipe {
   ingredients: string[] | IngredientCategory[]
   instructions: string[]
   image?: string
+  imageSizes?: {
+    small: { url: string; width: number }
+    medium: { url: string; width: number }
+    large: { url: string; width: number }
+  }
   sourceUrl?: string
   isPublic: boolean
   aiEnhancedNotes?: string | null
@@ -35,6 +40,11 @@ export interface CreateRecipeRequest {
   ingredients: string[] | IngredientCategory[]
   instructions: string[]
   image?: string
+  imageSizes?: {
+    small: { url: string; width: number }
+    medium: { url: string; width: number }
+    large: { url: string; width: number }
+  }
   sourceUrl?: string
   isPublic?: boolean
   tags?: string[]
@@ -54,6 +64,11 @@ export interface UpdateRecipeRequest {
   ingredients?: string[] | IngredientCategory[]
   instructions?: string[]
   image?: string
+  imageSizes?: {
+    small: { url: string; width: number }
+    medium: { url: string; width: number }
+    large: { url: string; width: number }
+  }
   sourceUrl?: string
   isPublic?: boolean
   tags?: string[]

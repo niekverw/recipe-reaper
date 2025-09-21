@@ -17,6 +17,7 @@ interface RecipeRow {
   ingredients: string
   instructions: string
   image: string | null
+  image_sizes: string | null
   source_url: string | null
   is_public: boolean
   ai_enhanced_notes: string | null
@@ -30,6 +31,7 @@ interface RecipeRow {
 function rowToRecipe(row: RecipeRow): Recipe {
   const parsedIngredients = JSON.parse(row.ingredients)
   const parsedTags = row.tags ? JSON.parse(row.tags) : []
+  const parsedImageSizes = row.image_sizes ? JSON.parse(row.image_sizes) : undefined
 
   return {
     id: row.id,
@@ -42,6 +44,7 @@ function rowToRecipe(row: RecipeRow): Recipe {
     ingredients: parsedIngredients,
     instructions: JSON.parse(row.instructions),
     image: row.image || undefined,
+    imageSizes: parsedImageSizes,
     sourceUrl: row.source_url || undefined,
     isPublic: row.is_public === true,
     aiEnhancedNotes: row.ai_enhanced_notes || undefined,
@@ -206,8 +209,8 @@ export const recipeModel = {
     const sql = `
       INSERT INTO recipes (
         id, name, description, prep_time_minutes, cook_time_minutes, total_time_minutes, servings,
-        ingredients, instructions, image, source_url, is_public, user_id, household_id, copied_from, tags, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+        ingredients, instructions, image, image_sizes, source_url, is_public, user_id, household_id, copied_from, tags, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
     `
 
     const params = [
@@ -221,6 +224,7 @@ export const recipeModel = {
       JSON.stringify(processedIngredients),
       JSON.stringify(data.instructions),
       data.image || null,
+      data.imageSizes ? JSON.stringify(data.imageSizes) : null,
       data.sourceUrl || null,
       isPublic,
       data.userId || null,
@@ -280,6 +284,10 @@ export const recipeModel = {
     if ('image' in data) {
       updates.push(`image = $${params.length + 1}`)
       params.push(data.image === '' || data.image === undefined ? null : data.image)
+    }
+    if ('imageSizes' in data) {
+      updates.push(`image_sizes = $${params.length + 1}`)
+      params.push(data.imageSizes ? JSON.stringify(data.imageSizes) : null)
     }
     if (data.sourceUrl !== undefined) {
       updates.push(`source_url = $${params.length + 1}`)
