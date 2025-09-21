@@ -18,7 +18,7 @@ interface RecipeRow {
   instructions: string
   image: string | null
   source_url: string | null
-  is_public: number
+  is_public: boolean
   ai_enhanced_notes: string | null
   tags: string | null
   user_id: string | null
@@ -43,7 +43,7 @@ function rowToRecipe(row: RecipeRow): Recipe {
     instructions: JSON.parse(row.instructions),
     image: row.image || undefined,
     sourceUrl: row.source_url || undefined,
-    isPublic: row.is_public === 1,
+    isPublic: row.is_public === true,
     aiEnhancedNotes: row.ai_enhanced_notes || undefined,
     tags: parsedTags,
     userId: row.user_id || undefined,
@@ -64,47 +64,47 @@ export const recipeModel = {
       // User's accessible recipes: private recipes (personal + household)
       if (filters.householdId) {
         // User has household: show personal recipes + household recipes
-        sql += ' AND ((user_id = ? AND household_id IS NULL) OR household_id = ?)'
+        sql += ` AND ((user_id = $${params.length + 1} AND household_id IS NULL) OR household_id = $${params.length + 2})`
         params.push(filters.userId, filters.householdId)
       } else {
         // User has no household: show only personal recipes
-        sql += ' AND (user_id = ? AND household_id IS NULL)'
+        sql += ` AND (user_id = $${params.length + 1} AND household_id IS NULL)`
         params.push(filters.userId)
       }
     } else if (filters.scope === 'public') {
       // Only public recipes
-      sql += ' AND is_public = 1'
+      sql += ' AND is_public = true'
     } else if (filters.scope === 'all' && filters.userId) {
       // Everything user can see: private recipes + public recipes
       if (filters.householdId) {
-        sql += ' AND ((user_id = ? AND household_id IS NULL) OR household_id = ? OR is_public = 1)'
+        sql += ` AND ((user_id = $${params.length + 1} AND household_id IS NULL) OR household_id = $${params.length + 2} OR is_public = true)`
         params.push(filters.userId, filters.householdId)
       } else {
-        sql += ' AND ((user_id = ? AND household_id IS NULL) OR is_public = 1)'
+        sql += ` AND ((user_id = $${params.length + 1} AND household_id IS NULL) OR is_public = true)`
         params.push(filters.userId)
       }
     } else if (!filters.userId) {
       // Unauthenticated users can only see public recipes
-      sql += ' AND is_public = 1'
+      sql += ' AND is_public = true'
     }
 
     // Add search filter
     if (filters.search) {
-      sql += ' AND (name LIKE ? OR description LIKE ?)'
+      sql += ` AND (name LIKE $${params.length + 1} OR description LIKE $${params.length + 2})`
       const searchTerm = `%${filters.search}%`
       params.push(searchTerm, searchTerm)
     }
 
     // Add explicit public filter (overrides scope if set)
     if (filters.isPublic !== undefined) {
-      sql += ' AND is_public = ?'
-      params.push(filters.isPublic ? 1 : 0)
+      sql += ` AND is_public = $${params.length + 1}`
+      params.push(filters.isPublic)
     }
 
     // Add tag filter
     if (filters.tags && filters.tags.length > 0) {
       // Use JSON_EXTRACT to check if any of the provided tags exist in the recipe's tags array
-      const tagConditions = filters.tags.map(() => 'JSON_EXTRACT(tags, "$") LIKE ?').join(' OR ')
+      const tagConditions = filters.tags.map((_, index) => `JSON_EXTRACT(tags, "$") LIKE $${params.length + index + 1}`).join(' OR ')
       sql += ` AND (${tagConditions})`
       filters.tags.forEach(tag => {
         params.push(`%"${tag}"%`)
@@ -131,11 +131,11 @@ export const recipeModel = {
 
     // Add pagination
     if (filters.limit) {
-      sql += ' LIMIT ?'
+      sql += ` LIMIT $${params.length + 1}`
       params.push(filters.limit)
     }
     if (filters.offset) {
-      sql += ' OFFSET ?'
+      sql += ` OFFSET $${params.length + 1}`
       params.push(filters.offset)
     }
 
@@ -145,17 +145,17 @@ export const recipeModel = {
 
   async findById(id: string): Promise<Recipe | null> {
     const db = Database.getInstance()
-    const row = await db.get<RecipeRow>('SELECT * FROM recipes WHERE id = ?', [id])
+    const row = await db.get<RecipeRow>('SELECT * FROM recipes WHERE id = $1', [id])
     return row ? rowToRecipe(row) : null
   },
 
   async checkPublicNameExists(name: string, excludeId?: string): Promise<boolean> {
     const db = Database.getInstance()
-    let sql = 'SELECT COUNT(*) as count FROM recipes WHERE name = ? AND is_public = 1'
+    let sql = 'SELECT COUNT(*) as count FROM recipes WHERE name = $1 AND is_public = true'
     const params: any[] = [name.trim()]
 
     if (excludeId) {
-      sql += ' AND id != ?'
+      sql += ' AND id != $2'
       params.push(excludeId)
     }
 
@@ -207,7 +207,7 @@ export const recipeModel = {
       INSERT INTO recipes (
         id, name, description, prep_time_minutes, cook_time_minutes, total_time_minutes, servings,
         ingredients, instructions, image, source_url, is_public, user_id, household_id, copied_from, tags, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
     `
 
     const params = [
@@ -222,7 +222,7 @@ export const recipeModel = {
       JSON.stringify(data.instructions),
       data.image || null,
       data.sourceUrl || null,
-      isPublic ? 1 : 0,
+      isPublic,
       data.userId || null,
       householdId,
       data.copiedFrom || null,
@@ -243,63 +243,63 @@ export const recipeModel = {
     const params: any[] = []
 
     if (data.name !== undefined) {
-      updates.push('name = ?')
+      updates.push(`name = $${params.length + 1}`)
       params.push(data.name.trim())
     }
     if (data.description !== undefined) {
-      updates.push('description = ?')
+      updates.push(`description = $${params.length + 1}`)
       params.push(data.description.trim())
     }
     if (data.prepTimeMinutes !== undefined) {
-      updates.push('prep_time_minutes = ?')
+      updates.push(`prep_time_minutes = $${params.length + 1}`)
       params.push(data.prepTimeMinutes)
     }
     if (data.cookTimeMinutes !== undefined) {
-      updates.push('cook_time_minutes = ?')
+      updates.push(`cook_time_minutes = $${params.length + 1}`)
       params.push(data.cookTimeMinutes)
     }
     if (data.totalTimeMinutes !== undefined) {
-      updates.push('total_time_minutes = ?')
+      updates.push(`total_time_minutes = $${params.length + 1}`)
       params.push(data.totalTimeMinutes)
     }
     if (data.servings !== undefined) {
-      updates.push('servings = ?')
+      updates.push(`servings = $${params.length + 1}`)
       params.push(data.servings)
     }
     if (data.ingredients !== undefined) {
       // Process ingredients - convert to categorized format
       const processedIngredients = IngredientCategoryParser.parseIngredientsFromMixed(data.ingredients)
 
-      updates.push('ingredients = ?')
+      updates.push(`ingredients = $${params.length + 1}`)
       params.push(JSON.stringify(processedIngredients))
     }
     if (data.instructions !== undefined) {
-      updates.push('instructions = ?')
+      updates.push(`instructions = $${params.length + 1}`)
       params.push(JSON.stringify(data.instructions))
     }
     if ('image' in data) {
-      updates.push('image = ?')
+      updates.push(`image = $${params.length + 1}`)
       params.push(data.image === '' || data.image === undefined ? null : data.image)
     }
     if (data.sourceUrl !== undefined) {
-      updates.push('source_url = ?')
+      updates.push(`source_url = $${params.length + 1}`)
       params.push(data.sourceUrl || null)
     }
     if (data.isPublic !== undefined) {
-      updates.push('is_public = ?')
-      params.push(data.isPublic ? 1 : 0)
+      updates.push(`is_public = $${params.length + 1}`)
+      params.push(data.isPublic)
     }
     if (data.tags !== undefined) {
-      updates.push('tags = ?')
+      updates.push(`tags = $${params.length + 1}`)
       const normalizedTags = TagHelper.normalizeTags(data.tags || [])
       params.push(JSON.stringify(normalizedTags))
     }
 
-    updates.push('updated_at = ?')
+    updates.push(`updated_at = $${params.length + 1}`)
     params.push(now)
     params.push(id)
 
-    const sql = `UPDATE recipes SET ${updates.join(', ')} WHERE id = ?`
+    const sql = `UPDATE recipes SET ${updates.join(', ')} WHERE id = $${params.length}`
     await db.run(sql, params)
 
     return this.findById(id) as Promise<Recipe>
@@ -307,7 +307,7 @@ export const recipeModel = {
 
   async delete(id: string): Promise<void> {
     const db = Database.getInstance()
-    await db.run('DELETE FROM recipes WHERE id = ?', [id])
+    await db.run('DELETE FROM recipes WHERE id = $1', [id])
   },
 
   async updateAiEnhancedNotes(id: string, enhancedNotes: string): Promise<Recipe> {
@@ -315,7 +315,7 @@ export const recipeModel = {
     const now = new Date().toISOString()
 
     await db.run(
-      'UPDATE recipes SET ai_enhanced_notes = ?, updated_at = ? WHERE id = ?',
+      'UPDATE recipes SET ai_enhanced_notes = $1, updated_at = $2 WHERE id = $3',
       [enhancedNotes, now, id]
     )
 
@@ -324,7 +324,7 @@ export const recipeModel = {
 
   async getAllTags(): Promise<string[]> {
     const db = Database.getInstance()
-    const rows = await db.all<{ tags: string }>('SELECT DISTINCT tags FROM recipes WHERE tags IS NOT NULL AND tags != "[]"')
+    const rows = await db.all<{ tags: string }>('SELECT DISTINCT tags FROM recipes WHERE tags IS NOT NULL AND tags != $1', ['[]'])
 
     const allTags = new Set<string>()
 

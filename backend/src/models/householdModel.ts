@@ -16,13 +16,13 @@ function generateInviteCode(): string {
 export const householdModel = {
   async findById(id: string): Promise<HouseholdRow | null> {
     const db = Database.getInstance()
-    const row = await db.get<HouseholdRow>('SELECT * FROM households WHERE id = ?', [id])
+    const row = await db.get<HouseholdRow>('SELECT * FROM households WHERE id = $1', [id])
     return row || null
   },
 
   async findByInviteCode(inviteCode: string): Promise<HouseholdRow | null> {
     const db = Database.getInstance()
-    const row = await db.get<HouseholdRow>('SELECT * FROM households WHERE invite_code = ?', [inviteCode])
+    const row = await db.get<HouseholdRow>('SELECT * FROM households WHERE invite_code = $1', [inviteCode])
     return row || null
   },
 
@@ -35,7 +35,7 @@ export const householdModel = {
     const sql = `
       INSERT INTO households (
         id, name, invite_code, created_by, created_at
-      ) VALUES (?, ?, ?, ?, ?)
+      ) VALUES ($1, $2, $3, $4, $5)
     `
 
     const params = [
@@ -95,7 +95,7 @@ export const householdModel = {
     const newInviteCode = generateInviteCode()
 
     await db.run(
-      'UPDATE households SET invite_code = ? WHERE id = ?',
+      'UPDATE households SET invite_code = $1 WHERE id = $2',
       [newInviteCode, householdId]
     )
 

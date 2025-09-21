@@ -48,7 +48,7 @@ describe('Database Tests', () => {
           id, name, description, prep_time_minutes, servings,
           ingredients, instructions, image, is_public, user_id, household_id,
           created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       `, [
         testRecipe.id, testRecipe.name, testRecipe.description,
         testRecipe.prep_time_minutes, testRecipe.servings,
@@ -57,7 +57,7 @@ describe('Database Tests', () => {
         testRecipe.household_id, testRecipe.created_at, testRecipe.updated_at
       ])
 
-      const result = await db.get('SELECT * FROM recipes WHERE id = ?', [testRecipe.id])
+      const result = await db.get('SELECT * FROM recipes WHERE id = $1', [testRecipe.id])
       expect(result).toEqual(testRecipe)
     })
 
@@ -69,7 +69,7 @@ describe('Database Tests', () => {
         INSERT INTO recipes (
           id, name, description, prep_time_minutes, servings,
           ingredients, instructions, is_public, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       `, [
         recipeId, 'Original Name', 'Original Description', 20, 2,
         JSON.stringify(['ingredient 1']), JSON.stringify(['step 1']),
@@ -78,9 +78,9 @@ describe('Database Tests', () => {
 
       // Update recipe
       const newName = 'Updated Name'
-      await db.run('UPDATE recipes SET name = ? WHERE id = ?', [newName, recipeId])
+      await db.run('UPDATE recipes SET name = $1 WHERE id = $2', [newName, recipeId])
 
-      const result = await db.get('SELECT name FROM recipes WHERE id = ?', [recipeId])
+      const result = await db.get('SELECT name FROM recipes WHERE id = $1', [recipeId])
       expect(result).toEqual({ name: newName })
     })
 
@@ -92,7 +92,7 @@ describe('Database Tests', () => {
         INSERT INTO recipes (
           id, name, description, prep_time_minutes, servings,
           ingredients, instructions, is_public, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       `, [
         recipeId, 'To Delete', 'Description', 15, 1,
         JSON.stringify(['ingredient']), JSON.stringify(['step']),
@@ -100,9 +100,9 @@ describe('Database Tests', () => {
       ])
 
       // Delete recipe
-      await db.run('DELETE FROM recipes WHERE id = ?', [recipeId])
+      await db.run('DELETE FROM recipes WHERE id = $1', [recipeId])
 
-      const result = await db.get('SELECT * FROM recipes WHERE id = ?', [recipeId])
+      const result = await db.get('SELECT * FROM recipes WHERE id = $1', [recipeId])
       expect(result).toBeUndefined()
     })
   })
@@ -137,7 +137,7 @@ describe('Database Tests', () => {
       await expect(
         db.run(`
           INSERT INTO recipes (id, description, prep_time_minutes, servings, ingredients, instructions)
-          VALUES (?, ?, ?, ?, ?, ?)
+          VALUES ($1, $2, $3, $4, $5, $6)
         `, ['test-id', 'Description', 30, 4, '[]', '[]'])
       ).rejects.toThrow()
     })

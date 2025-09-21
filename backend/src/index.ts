@@ -12,9 +12,9 @@ import { householdRoutes } from './routes/households'
 import { errorHandler } from './middleware/errorHandler'
 import passport from './config/passport'
 
-// Import connect-sqlite3 and create session store
-const connectSqlite3 = require('connect-sqlite3')
-const SQLiteStore = connectSqlite3(session)
+// Import connect-pg-simple and create session store
+const connectPgSimple = require('connect-pg-simple')
+const PgStore = connectPgSimple(session)
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -93,9 +93,10 @@ app.use(express.urlencoded({ extended: true }))
 
 // Session configuration
 app.use(session({
-  store: new SQLiteStore({
-    db: 'sessions.db',
-    dir: './data'
+  store: new PgStore({
+    conString: `postgresql://${process.env.DB_USER || 'recipeapp_user'}:${process.env.DB_PASSWORD || 'recipeapp123'}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || '5432'}/${process.env.DB_NAME || 'recipeapp'}`,
+    tableName: 'session',
+    createTableIfMissing: true
   }),
   secret: process.env.SESSION_SECRET || 'your-secret-key-change-this-in-production',
   resave: false,

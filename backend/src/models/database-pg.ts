@@ -1,16 +1,16 @@
-import { Pool } from 'pg'
+import { Pool, Client } from 'pg'
 
-export class Database {
-  private static instance: Database
+export class PostgreSQLDatabase {
+  private static instance: PostgreSQLDatabase
   private pool: Pool | null = null
 
   private constructor() {}
 
-  static getInstance(): Database {
-    if (!Database.instance) {
-      Database.instance = new Database()
+  static getInstance(): PostgreSQLDatabase {
+    if (!PostgreSQLDatabase.instance) {
+      PostgreSQLDatabase.instance = new PostgreSQLDatabase()
     }
-    return Database.instance
+    return PostgreSQLDatabase.instance
   }
 
   async initialize(): Promise<void> {
@@ -76,7 +76,7 @@ export class Database {
         CREATE TABLE IF NOT EXISTS sessions (
           sid TEXT PRIMARY KEY,
           sess TEXT NOT NULL,
-          expire BIGINT NOT NULL
+          expired BIGINT NOT NULL
         )
       `
 
@@ -115,7 +115,7 @@ export class Database {
         'CREATE INDEX IF NOT EXISTS idx_recipes_user_id ON recipes(user_id)',
         'CREATE INDEX IF NOT EXISTS idx_recipes_household_id ON recipes(household_id)',
         'CREATE INDEX IF NOT EXISTS idx_recipes_is_public ON recipes(is_public)',
-        'CREATE INDEX IF NOT EXISTS idx_sessions_expire ON sessions(expire)'
+        'CREATE INDEX IF NOT EXISTS idx_sessions_expired ON sessions(expired)'
       ]
 
       // Execute table creation

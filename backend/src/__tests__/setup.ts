@@ -2,10 +2,11 @@
 import { Database } from '../models/database'
 
 beforeAll(async () => {
-  // Use in-memory database for tests
+  // Use test PostgreSQL database for tests
   process.env.NODE_ENV = 'test'
+  process.env.DB_NAME = 'recipeapp_test'
   const db = Database.getInstance()
-  await db.initialize(':memory:')
+  await db.initialize()
 })
 
 afterAll(async () => {

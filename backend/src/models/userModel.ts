@@ -6,13 +6,13 @@ import { User, CreateUserRequest, UserRow } from '../types/user'
 export const userModel = {
   async findById(id: string): Promise<UserRow | null> {
     const db = Database.getInstance()
-    const row = await db.get<UserRow>('SELECT * FROM users WHERE id = ?', [id])
+    const row = await db.get<UserRow>('SELECT * FROM users WHERE id = $1', [id])
     return row || null
   },
 
   async findByEmail(email: string): Promise<UserRow | null> {
     const db = Database.getInstance()
-    const row = await db.get<UserRow>('SELECT * FROM users WHERE email = ?', [email])
+    const row = await db.get<UserRow>('SELECT * FROM users WHERE email = $1', [email])
     return row || null
   },
 
@@ -28,7 +28,7 @@ export const userModel = {
     const sql = `
       INSERT INTO users (
         id, email, password_hash, display_name, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?)
+      ) VALUES ($1, $2, $3, $4, $5, $6)
     `
 
     const params = [
@@ -56,7 +56,7 @@ export const userModel = {
     const now = new Date().toISOString()
 
     await db.run(
-      'UPDATE users SET household_id = ?, updated_at = ? WHERE id = ?',
+      'UPDATE users SET household_id = $1, updated_at = $2 WHERE id = $3',
       [householdId, now, userId]
     )
   },
@@ -64,7 +64,7 @@ export const userModel = {
   async getHouseholdMembers(householdId: string): Promise<UserRow[]> {
     const db = Database.getInstance()
     const rows = await db.all<UserRow>(
-      'SELECT * FROM users WHERE household_id = ? ORDER BY created_at ASC',
+      'SELECT * FROM users WHERE household_id = $1 ORDER BY created_at ASC',
       [householdId]
     )
     return rows
@@ -83,7 +83,7 @@ export const userModel = {
     const sql = `
       INSERT INTO users (
         id, email, password_hash, display_name, google_id, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
     `
 
     const params = [
@@ -113,7 +113,7 @@ export const userModel = {
     const now = new Date().toISOString()
 
     await db.run(
-      'UPDATE users SET google_id = ?, updated_at = ? WHERE id = ?',
+      'UPDATE users SET google_id = $1, updated_at = $2 WHERE id = $3',
       [googleId, now, userId]
     )
   }
