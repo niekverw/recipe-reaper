@@ -3,6 +3,7 @@ export interface User {
   email: string
   displayName: string
   householdId?: string
+  googleId?: string
   createdAt: string
   updatedAt: string
 }

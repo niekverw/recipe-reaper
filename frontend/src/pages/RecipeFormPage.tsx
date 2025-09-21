@@ -686,6 +686,7 @@ function RecipeFormPage() {
                   disabled={isImporting}
                   pattern="https?://.*"
                   title="Please enter a valid URL starting with http:// or https://"
+                  inputMode="url"
                 />
                 <button
                   type="button"
@@ -918,6 +919,7 @@ Serves: 24 cookies`}
                   className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
                     nameExists ? 'border-yellow-300 dark:border-yellow-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
+                  inputMode="text"
                 />
                 {isCheckingName && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -1147,6 +1149,7 @@ Bake for 25-30 minutes`}
               onChange={handleInputChange}
               placeholder="https://example.com/original-recipe"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              inputMode="url"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">URL of the original recipe or inspiration source</p>
           </div>

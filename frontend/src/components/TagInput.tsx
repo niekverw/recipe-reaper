@@ -147,6 +147,7 @@ function TagInput({ tags, onTagsChange, availableTags = [], placeholder = "Add t
           placeholder={tags.length === 0 ? placeholder : ''}
           disabled={disabled}
           className="flex-1 min-w-[120px] px-1 py-1 bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+          inputMode="text"
         />
       </div>
 

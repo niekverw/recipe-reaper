@@ -59,6 +59,7 @@ function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
               onChange={handleChange('email')}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               placeholder="your@email.com"
+              inputMode="email"
             />
           </div>
 
@@ -107,8 +108,22 @@ function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
           <button
             onClick={() => {
               const url = `${import.meta.env.VITE_API_BASE_URL || `${window.location.origin}/api`}/auth/google`
-              // Force a full page navigation that completely bypasses the SPA
-              window.location.assign(url)
+
+              // For PWA compatibility, ensure proper navigation
+              try {
+                // Clear any cached Google session data that might interfere with PWA keyboard
+                if ('serviceWorker' in navigator) {
+                  // Force a clean navigation for PWA environments
+                  window.location.href = url
+                } else {
+                  // Regular browser navigation
+                  window.location.assign(url)
+                }
+              } catch (error) {
+                console.error('Navigation error:', error)
+                // Fallback to simple assignment
+                window.location.href = url
+              }
             }}
             type="button"
             className="w-full mt-4 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center justify-center gap-3"

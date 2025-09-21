@@ -52,6 +52,9 @@ input[type="url"],
 input[type="search"],
 textarea {
   cursor: text;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0;
 }
 
 select {

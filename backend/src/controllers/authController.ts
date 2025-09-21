@@ -123,7 +123,14 @@ export const authController = {
 
   // Initiate Google OAuth
   googleAuth(req: Request, res: Response, next: any) {
-    passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next)
+    const options: any = { scope: ['profile', 'email'] }
+
+    // Pass through query parameters like prompt=select_account
+    if (req.query.prompt) {
+      options.prompt = req.query.prompt
+    }
+
+    passport.authenticate('google', options)(req, res, next)
   },
 
   // Handle Google OAuth callback
