@@ -24,7 +24,8 @@ const app = express()
 const PORT = process.env.PORT || 3001
 
 // Trust proxy for accurate IP detection (important for rate limiting and security)
-app.set('trust proxy', true)
+// Set to 1 to trust only one proxy hop instead of unlimited hops
+app.set('trust proxy', 1)
 
 // Middleware
 app.use(cors({
