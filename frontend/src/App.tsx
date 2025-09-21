@@ -9,6 +9,9 @@ import RecipesPage from './pages/RecipesPage'
 import RecipeDetailPage from './pages/RecipeDetailPage'
 import RecipeFormPage from './pages/RecipeFormPage'
 import SettingsPage from './pages/SettingsPage'
+import LoginPage from './pages/LoginPage'
+import DashboardPage from './pages/DashboardPage'
+import AuthCallbackPage from './pages/AuthCallbackPage'
 
 function App() {
   const [authModal, setAuthModal] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({
@@ -33,6 +36,9 @@ function App() {
             <main>
               <Routes>
                 <Route path="/" element={<RecipesPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/auth/callback" element={<AuthCallbackPage />} />
                 <Route path="/recipe/:id" element={<RecipeDetailPage />} />
                 <Route path="/add-recipe" element={<RecipeFormPage />} />
                 <Route path="/recipe/:id/edit" element={<RecipeFormPage />} />

@@ -28,6 +28,8 @@ interface AuthProviderProps {
   children: ReactNode
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [household, setHousehold] = useState<Household | null>(null)
@@ -40,7 +42,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const checkAuthStatus = async () => {
     try {
-      const response = await fetch('/api/auth/status', {
+      const response = await fetch(`${API_BASE_URL}/auth/status`, {
         credentials: 'include'
       })
       const data = await response.json()
@@ -58,7 +60,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const loadHousehold = async () => {
     try {
-      const response = await fetch('/api/households/current', {
+      const response = await fetch(`${API_BASE_URL}/households/current`, {
         credentials: 'include'
       })
       if (response.ok) {
@@ -71,7 +73,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const login = async (loginData: LoginData) => {
-    const response = await fetch('/api/auth/login', {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -91,7 +93,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const register = async (registerData: RegisterData) => {
-    const response = await fetch('/api/auth/register', {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -111,7 +113,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const logout = async () => {
-    const response = await fetch('/api/auth/logout', {
+    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
       method: 'POST',
       credentials: 'include'
     })
@@ -125,7 +127,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const createHousehold = async (householdData: CreateHouseholdData) => {
-    const response = await fetch('/api/households', {
+    const response = await fetch(`${API_BASE_URL}/households`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -145,7 +147,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const joinHousehold = async (joinData: JoinHouseholdData) => {
-    const response = await fetch('/api/households/join', {
+    const response = await fetch(`${API_BASE_URL}/households/join`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -165,7 +167,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const leaveHousehold = async () => {
-    const response = await fetch('/api/households/leave', {
+    const response = await fetch(`${API_BASE_URL}/households/leave`, {
       method: 'POST',
       credentials: 'include'
     })

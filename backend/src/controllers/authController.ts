@@ -119,5 +119,51 @@ export const authController = {
       authenticated: !!req.user,
       user: req.user || null
     })
+  },
+
+  // Initiate Google OAuth
+  googleAuth(req: Request, res: Response, next: any) {
+    passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next)
+  },
+
+  // Handle Google OAuth callback
+  googleAuthCallback(req: Request, res: Response, next: any) {
+    const frontendUrl = process.env.NODE_ENV === 'production'
+      ? process.env.FRONTEND_URL?.split(',')[0]?.trim() || 'https://recipereaper.app'
+      : 'http://localhost:5173'
+
+    console.log('=== GOOGLE CALLBACK DEBUG ===')
+    console.log('NODE_ENV:', process.env.NODE_ENV)
+    console.log('FRONTEND_URL:', process.env.FRONTEND_URL)
+    console.log('Computed Frontend URL:', frontendUrl)
+    console.log('Request URL:', req.url)
+    console.log('Request query:', req.query)
+    console.log('==============================')
+
+    passport.authenticate('google', {
+      failureRedirect: `${frontendUrl}/login?error=auth_failed`
+    }, (err: any, user: any) => {
+      console.log('=== PASSPORT CALLBACK DEBUG ===')
+      console.log('Error:', err)
+      console.log('User:', user ? `${user.email} (${user.id})` : 'null')
+      console.log('================================')
+
+      if (err) {
+        console.error('Google auth error:', err)
+        return res.redirect(`${frontendUrl}/login?error=auth_failed`)
+      }
+      if (!user) {
+        console.log('No user returned from passport')
+        return res.redirect(`${frontendUrl}/login?error=auth_failed`)
+      }
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          console.error('Google login error:', loginErr)
+          return res.redirect(`${frontendUrl}/login?error=login_failed`)
+        }
+        console.log('Login successful, redirecting to:', `${frontendUrl}/dashboard`)
+        res.redirect(`${frontendUrl}/dashboard`)
+      })
+    })(req, res, next)
   }
 }

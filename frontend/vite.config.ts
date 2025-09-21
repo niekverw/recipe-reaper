@@ -72,7 +72,11 @@ export default defineConfig({
             }
           },
           {
-            urlPattern: /^\/api\//,
+            urlPattern: ({ url }) => {
+              // Exclude ALL auth routes from Service Worker caching
+              return url.pathname.startsWith('/api/') &&
+                     !url.pathname.startsWith('/api/auth/')
+            },
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
@@ -93,7 +97,9 @@ export default defineConfig({
               }
             }
           }
-        ]
+        ],
+        // Explicitly skip auth routes to prevent Service Worker interference
+        navigateFallbackDenylist: [/^\/api\/auth/]
       }
     })
   ],

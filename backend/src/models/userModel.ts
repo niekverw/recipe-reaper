@@ -73,5 +73,48 @@ export const userModel = {
   async emailExists(email: string): Promise<boolean> {
     const user = await this.findByEmail(email)
     return !!user
+  },
+
+  async createGoogleUser(data: { email: string; displayName: string; googleId: string }): Promise<User> {
+    const db = Database.getInstance()
+    const id = uuidv4()
+    const now = new Date().toISOString()
+
+    const sql = `
+      INSERT INTO users (
+        id, email, password_hash, display_name, google_id, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `
+
+    const params = [
+      id,
+      data.email.toLowerCase().trim(),
+      '', // Empty password hash for Google OAuth users
+      data.displayName.trim(),
+      data.googleId,
+      now,
+      now
+    ]
+
+    await db.run(sql, params)
+
+    return {
+      id,
+      email: data.email.toLowerCase().trim(),
+      displayName: data.displayName.trim(),
+      googleId: data.googleId,
+      createdAt: now,
+      updatedAt: now
+    }
+  },
+
+  async linkGoogleAccount(userId: string, googleId: string): Promise<void> {
+    const db = Database.getInstance()
+    const now = new Date().toISOString()
+
+    await db.run(
+      'UPDATE users SET google_id = ?, updated_at = ? WHERE id = ?',
+      [googleId, now, userId]
+    )
   }
 }

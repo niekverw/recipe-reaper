@@ -4,6 +4,8 @@ import { apiService } from '../services/api'
  * Utility functions for handling uploaded images
  */
 
+const UPLOADS_BASE_URL = import.meta.env.VITE_UPLOADS_BASE_URL || '/uploads'
+
 /**
  * Check if a URL points to one of our uploaded images
  */
@@ -12,7 +14,7 @@ export const isOurUploadedImage = (url: string): boolean => {
   // Check if it's a URL pointing to our uploads endpoint
   const currentUrl = window.location
   const frontendBaseUrl = `${currentUrl.protocol}//${currentUrl.hostname}:${currentUrl.port || (currentUrl.protocol === 'https:' ? '443' : '80')}`
-  return url.startsWith('/uploads/') || url.startsWith(`${frontendBaseUrl}/uploads/`)
+  return url.startsWith('/uploads/') || url.startsWith(`${frontendBaseUrl}/uploads/`) || url.startsWith(UPLOADS_BASE_URL)
 }
 
 /**

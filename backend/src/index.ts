@@ -19,6 +19,9 @@ const SQLiteStore = connectSqlite3(session)
 const app = express()
 const PORT = process.env.PORT || 3001
 
+// Trust proxy for accurate IP detection (important for rate limiting and security)
+app.set('trust proxy', true)
+
 // Middleware
 app.use(cors({
   origin: (origin, callback) => {
@@ -98,9 +101,10 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production' && process.env.FORCE_HTTPS === 'true', // Only secure in production with HTTPS
+    secure: process.env.NODE_ENV === 'production', // Secure cookies in production (assumes HTTPS)
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Allow cross-site cookies for OAuth in production
   }
 }))
 
@@ -121,6 +125,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/recipes', recipeRoutes)
@@ -140,7 +145,14 @@ app.use(errorHandler)
 // Serve React app for all non-API routes (SPA fallback) - must be last
 if (process.env.NODE_ENV === 'production') {
   app.get(/^\/(?!api|uploads).*/, (req, res) => {
+    console.log('Serving React app for path:', req.path)
     res.sendFile(join(process.cwd(), '../frontend/dist/index.html'))
+  })
+
+  // Catch any API routes that weren't handled
+  app.get(/^\/api\/.*/, (req, res) => {
+    console.log('Unhandled API path:', req.path)
+    res.status(404).json({ error: 'API route not found' })
   })
 }
 
