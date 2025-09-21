@@ -4,11 +4,9 @@ import { useTheme } from '../contexts/ThemeContext'
 import { useAuth } from '../contexts/AuthContext'
 import Logo from './Logo'
 
-interface NavigationProps {
-  onAuthModalOpen: (mode: 'login' | 'register') => void
-}
+interface NavigationProps {}
 
-function Navigation({ onAuthModalOpen }: NavigationProps) {
+function Navigation({}: NavigationProps) {
   const location = useLocation()
   const { isDark, toggleTheme } = useTheme()
   const { user } = useAuth()
@@ -95,18 +93,12 @@ function Navigation({ onAuthModalOpen }: NavigationProps) {
               </div>
             ) : (
               <div className="flex items-center space-x-2 ml-2 sm:ml-4 pl-2 sm:pl-4 border-l border-gray-200 dark:border-gray-700">
-                <button
-                  onClick={() => onAuthModalOpen('login')}
-                  className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => onAuthModalOpen('register')}
+                <RouterLink
+                  to="/login"
                   className="text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition-colors duration-200"
                 >
-                  Sign Up
-                </button>
+                  Sign In
+                </RouterLink>
               </div>
             )}
 

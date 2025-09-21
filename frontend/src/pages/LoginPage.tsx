@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import LoginForm from '../components/auth/LoginForm'
+import RegisterForm from '../components/auth/RegisterForm'
 
 function LoginPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { user, isLoading } = useAuth()
   const [error, setError] = useState<string | null>(null)
+  const [mode, setMode] = useState<'login' | 'register'>('login')
 
   useEffect(() => {
     // Handle OAuth errors from URL parameters
@@ -33,7 +35,7 @@ function LoginPage() {
     }
   }, [user, isLoading, navigate])
 
-  const handleLoginSuccess = () => {
+  const handleSuccess = () => {
     navigate('/dashboard')
   }
 
@@ -62,7 +64,17 @@ function LoginPage() {
           </div>
         )}
 
-        <LoginForm onSuccess={handleLoginSuccess} />
+        {mode === 'login' ? (
+          <LoginForm
+            onSuccess={handleSuccess}
+            onSwitchToRegister={() => setMode('register')}
+          />
+        ) : (
+          <RegisterForm
+            onSuccess={handleSuccess}
+            onSwitchToLogin={() => setMode('login')}
+          />
+        )}
       </div>
     </div>
   )
