@@ -715,7 +715,7 @@ function RecipeFormPage() {
                   : 'text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100'
               }`}
             >
-              Import from URL
+              URL
             </button>
             <button
               type="button"
@@ -726,7 +726,7 @@ function RecipeFormPage() {
                   : 'text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100'
               }`}
             >
-              Import Text
+              Text
             </button>
             <button
               type="button"
@@ -737,7 +737,7 @@ function RecipeFormPage() {
                   : 'text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100'
               }`}
             >
-              Import from Image
+              Image
             </button>
           </div>
 
