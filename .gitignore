@@ -37,7 +37,7 @@ Thumbs.db
 *.tsbuildinfo
 
 # Env files
-# .env
+.env
 .env.local
 .env.*.local
 

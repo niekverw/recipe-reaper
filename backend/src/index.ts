@@ -1,5 +1,6 @@
 import { config } from 'dotenv'
-import { join } from 'path'
+import { join, resolve } from 'path'
+import { existsSync } from 'fs'
 
 // Load .env from the root directory (parent of backend)
 config({ path: join(__dirname, '../../.env') })
@@ -93,6 +94,67 @@ app.use('/api/recipes/scrape', strictLimiter)
 app.use('/api/recipes/parse-text', strictLimiter)
 app.use('/api/recipes/parse-text-gemini', strictLimiter)
 
+// Rate limiting for 404 responses (prevents abuse from unauthorized requests)
+const notFoundLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: process.env.NODE_ENV === 'production' ? 10 : 50, // Very restrictive limits
+  message: 'Too many invalid requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+// Middleware to apply rate limiting only for unauthorized requests
+const conditionalNotFoundLimiter = (req: any, res: any, next: any) => {
+  // Define allowed paths (same as in the route handler below)
+  const allowedPaths = [
+    // React app routes
+    '/',
+    '/login',
+    '/dashboard',
+    '/auth/callback',
+    '/share-target',
+    '/recipe/',           // Covers /recipe/:id and /recipe/:id/edit
+    '/add-recipe',
+    '/settings',
+
+    // Static assets and PWA files
+    '/assets/',           // Bundled JS/CSS files
+    '/manifest.webmanifest',
+    '/sw.js',
+    '/registerSW.js',
+    '/workbox-',          // Workbox files (starts with)
+
+    // Icons and favicons
+    '/favicon-16x16.png',
+    '/favicon-32x32.png',
+    '/icon-192.png',
+    '/icon-512.png',
+    '/icon.svg',
+
+    // Netlify config files
+    '/_headers',
+    '/_redirects'
+  ]
+
+  // Check if path is allowed
+  const isAllowed = allowedPaths.some(allowedPath => {
+    if (allowedPath.endsWith('/')) {
+      // For directory-like paths, allow startsWith (e.g., /recipe/ matches /recipe/123)
+      return req.path.startsWith(allowedPath)
+    }
+    // For specific files, require exact match to prevent path traversal
+    return req.path === allowedPath
+  })
+
+  // Only apply rate limiting for unauthorized requests
+  if (!isAllowed) {
+    return notFoundLimiter(req, res, next)
+  }
+
+  // For allowed requests, continue normally
+  next()
+}
+
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
@@ -122,9 +184,8 @@ app.use(passport.session())
 app.use('/uploads', express.static(join(process.cwd(), 'data', 'uploads')))
 
 // Serve built frontend statically (for production)
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(join(process.cwd(), '../frontend/dist')))
-}
+// NOTE: Removed express.static middleware - frontend serving is now handled by the whitelist check below
+// to prevent serving index.html for unauthorized paths
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -148,11 +209,81 @@ if (process.env.ALLOW_PUBLIC_API === 'true') {
 // Error handling
 app.use(errorHandler)
 
-// Serve React app for all non-API routes (SPA fallback) - must be last
-if (process.env.NODE_ENV === 'production') {
-  app.get(/^\/(?!api|uploads).*/, (req, res) => {
+// Serve React app ONLY for legitimate app routes (whitelist approach)
+// Apply security whitelist in all environments for better security
+if (true) { // Always apply whitelist - was: process.env.NODE_ENV === 'production'
+  app.get(/^\/(?!api|uploads).*/, conditionalNotFoundLimiter, (req, res) => {
+    // Only allow legitimate React app routes and static assets
+    const allowedPaths = [
+      // React app routes
+      '/',
+      '/login',
+      '/dashboard',
+      '/auth/callback',
+      '/share-target',
+      '/recipe/',           // Covers /recipe/:id and /recipe/:id/edit
+      '/add-recipe',
+      '/settings',
+
+      // Static assets and PWA files
+      '/assets/',           // Bundled JS/CSS files
+      '/manifest.webmanifest',
+      '/sw.js',
+      '/registerSW.js',
+      '/workbox-',          // Workbox files (starts with)
+
+      // Icons and favicons
+      '/favicon-16x16.png',
+      '/favicon-32x32.png',
+      '/icon-192.png',
+      '/icon-512.png',
+      '/icon.svg',
+
+      // Netlify config files
+      '/_headers',
+      '/_redirects'
+    ]
+
+    // Check if path matches any allowed pattern
+    const isAllowed = allowedPaths.some(allowedPath => {
+      let matches = false
+
+      // Special case: root path "/" should only match exactly "/"
+      if (allowedPath === '/') {
+        matches = req.path === '/'
+      } else if (allowedPath.endsWith('/')) {
+        // For directory-like paths, allow startsWith (e.g., /recipe/ matches /recipe/123)
+        matches = req.path.startsWith(allowedPath)
+      } else {
+        // For specific files, require exact match to prevent path traversal
+        matches = req.path === allowedPath
+      }
+
+      return matches
+    })
+
+    if (!isAllowed) {
+      console.log('Blocked unauthorized path:', req.path)
+      return res.status(404).send('Not Found')
+    }
+
+    // Check if this is a request for an actual file
+    const distPath = join(process.cwd(), '../frontend/dist')
+    const filePath = join(distPath, req.path)
+    
+    // For security, ensure the resolved path is still within the dist directory
+    const resolvedPath = resolve(filePath)
+    const distResolved = resolve(distPath)
+    
+    if (resolvedPath.startsWith(distResolved) && existsSync(filePath)) {
+      // Serve the actual file
+      console.log('Serving static file:', req.path)
+      return res.sendFile(filePath)
+    }
+
+    // For SPA routes, serve index.html
     console.log('Serving React app for path:', req.path)
-    res.sendFile(join(process.cwd(), '../frontend/dist/index.html'))
+    res.sendFile(join(distPath, 'index.html'))
   })
 
   // Catch any API routes that weren't handled

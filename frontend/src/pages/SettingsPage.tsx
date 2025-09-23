@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { apiService } from '../services/api'
 import { Household } from '../types/user'
+import { generatePKCEPair } from '../utils/pkce'
 import {
   UserIcon,
   Cog6ToothIcon,
@@ -162,23 +163,33 @@ function SettingsPage() {
     }
   }
 
-  const handleChangeGoogleAccount = () => {
-    const url = `${import.meta.env.VITE_API_BASE_URL || `${window.location.origin}/api`}/auth/google?prompt=select_account`
-
-    // For PWA compatibility, ensure proper navigation
+  const handleChangeGoogleAccount = async () => {
     try {
-      // Clear any cached Google session data that might interfere with PWA keyboard
-      if ('serviceWorker' in navigator) {
-        // Force a clean navigation for PWA environments
+      // Generate PKCE pair for enhanced security
+      const { codeVerifier, codeChallenge } = await generatePKCEPair()
+
+      // Build URL with PKCE challenge/verifier and prompt parameter
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || `${window.location.origin}/api`
+      const url = `${baseUrl}/auth/google?prompt=select_account&code_challenge=${encodeURIComponent(codeChallenge)}&code_challenge_method=S256&code_verifier=${encodeURIComponent(codeVerifier)}`
+
+      // For PWA compatibility, ensure proper navigation
+      try {
+        // Clear any cached Google session data that might interfere with PWA keyboard
+        if ('serviceWorker' in navigator) {
+          // Force a clean navigation for PWA environments
+          window.location.href = url
+        } else {
+          // Regular browser navigation
+          window.location.assign(url)
+        }
+      } catch (error) {
+        console.error('Navigation error:', error)
+        // Fallback to simple assignment
         window.location.href = url
-      } else {
-        // Regular browser navigation
-        window.location.assign(url)
       }
     } catch (error) {
-      console.error('Navigation error:', error)
-      // Fallback to simple assignment
-      window.location.href = url
+      console.error('Failed to generate PKCE pair:', error)
+      setError('Failed to initiate Google account change. Please try again.')
     }
   }
 

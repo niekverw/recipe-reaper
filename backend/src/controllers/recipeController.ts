@@ -179,12 +179,25 @@ export const recipeController = {
 
   async updateRecipe(req: Request, res: Response, next: NextFunction) {
     try {
+      const user = req.user as User | undefined
+      if (!user) {
+        throw createError('Authentication required', 401)
+      }
+
       const { id } = req.params
       const updates: UpdateRecipeRequest = req.body
 
       const existingRecipe = await recipeModel.findById(id)
       if (!existingRecipe) {
         throw createError('Recipe not found', 404)
+      }
+
+      // Check authorization: user must own the recipe or it must be in their household
+      const isOwner = existingRecipe.userId === user.id
+      const isInHousehold = existingRecipe.householdId && existingRecipe.householdId === user.householdId
+
+      if (!isOwner && !isInHousehold) {
+        throw createError('You do not have permission to update this recipe', 403)
       }
 
       const updatedRecipe = await recipeModel.update(id, updates)
@@ -196,11 +209,24 @@ export const recipeController = {
 
   async deleteRecipe(req: Request, res: Response, next: NextFunction) {
     try {
+      const user = req.user as User | undefined
+      if (!user) {
+        throw createError('Authentication required', 401)
+      }
+
       const { id } = req.params
 
       const existingRecipe = await recipeModel.findById(id)
       if (!existingRecipe) {
         throw createError('Recipe not found', 404)
+      }
+
+      // Check authorization: user must own the recipe or it must be in their household
+      const isOwner = existingRecipe.userId === user.id
+      const isInHousehold = existingRecipe.householdId && existingRecipe.householdId === user.householdId
+
+      if (!isOwner && !isInHousehold) {
+        throw createError('You do not have permission to delete this recipe', 403)
       }
 
       await recipeModel.delete(id)

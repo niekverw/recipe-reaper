@@ -106,12 +106,9 @@ export const recipeModel = {
 
     // Add tag filter
     if (filters.tags && filters.tags.length > 0) {
-      // Use JSON_EXTRACT to check if any of the provided tags exist in the recipe's tags array
-      const tagConditions = filters.tags.map((_, index) => `JSON_EXTRACT(tags, "$") LIKE $${params.length + index + 1}`).join(' OR ')
-      sql += ` AND (${tagConditions})`
-      filters.tags.forEach(tag => {
-        params.push(`%"${tag}"%`)
-      })
+      // Check if the JSON array contains any of the provided tags
+      sql += ` AND tags::jsonb ?| $${params.length + 1}`
+      params.push(filters.tags)
     }
 
     // Add sorting

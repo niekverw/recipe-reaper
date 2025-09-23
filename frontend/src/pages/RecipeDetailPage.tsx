@@ -18,6 +18,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline'
 import { apiService, Recipe, IngredientCategory } from '../services/api'
+import { useAuth } from '../contexts/AuthContext'
 import { IngredientHelper } from '../utils/ingredientHelper'
 import { TagHelper } from '../utils/tagHelper'
 import { useCallback } from 'react'
@@ -236,6 +237,7 @@ function InstructionStep({ instruction, stepNumber, isCompleted, onToggle }: Ins
 function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -629,14 +631,16 @@ function RecipeDetailPage() {
                           >
                             {tag}
                           </button>
-                          <button
-                            onClick={() => handleRemoveTag(tag)}
-                            disabled={isUpdatingTags}
-                            className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
-                            title="Remove tag"
-                          >
-                            <XMarkIcon className="w-3 h-3" />
-                          </button>
+                          {user && (
+                            <button
+                              onClick={() => handleRemoveTag(tag)}
+                              disabled={isUpdatingTags}
+                              className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
+                              title="Remove tag"
+                            >
+                              <XMarkIcon className="w-3 h-3" />
+                            </button>
+                          )}
                           {index < (recipe.tags?.length || 0) - 1 && ', '}
                         </span>
                       ))
@@ -708,7 +712,7 @@ function RecipeDetailPage() {
                         </div>
                       )}
                     </div>
-                  ) : (
+                  ) : user ? (
                     <button
                       onClick={() => setShowTagInput(true)}
                       disabled={isUpdatingTags}
@@ -717,7 +721,7 @@ function RecipeDetailPage() {
                     >
                       <PlusIcon className="w-3 h-3" />
                     </button>
-                  )}
+                  ) : null}
                 </div>
               </div>
 

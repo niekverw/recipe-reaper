@@ -258,6 +258,63 @@ describe('Recipe Model Tests', () => {
       expect(page2).toHaveLength(1)
       expect(page1[0].id).not.toBe(page2[0].id)
     })
+
+    it('should filter by tags', async () => {
+      // Clear any existing recipes
+      const db = PostgreSQLDatabase.getInstance()
+      await db.run('DELETE FROM recipes')
+      
+      // Create recipes with different tags
+      const italianRecipe = await recipeModel.create({
+        name: 'Italian Recipe',
+        description: 'Pasta dish',
+        ingredients: ['pasta', 'tomato'],
+        instructions: ['cook pasta', 'add sauce'],
+        tags: ['italian', 'pasta'],
+        isPublic: true
+      })
+
+      const mexicanRecipe = await recipeModel.create({
+        name: 'Mexican Recipe',
+        description: 'Taco dish',
+        ingredients: ['tortilla', 'beef'],
+        instructions: ['cook beef', 'assemble taco'],
+        tags: ['mexican', 'beef'],
+        isPublic: true
+      })
+
+      const vegetarianRecipe = await recipeModel.create({
+        name: 'Vegetarian Recipe',
+        description: 'Veggie stir fry',
+        ingredients: ['vegetables'],
+        instructions: ['stir fry'],
+        tags: ['vegetarian', 'healthy'],
+        isPublic: true
+      })
+
+      // Check that recipes were created with tags
+      expect(italianRecipe.tags).toEqual(['Italian', 'Pasta'])
+      expect(mexicanRecipe.tags).toEqual(['Mexican', 'Beef'])
+      expect(vegetarianRecipe.tags).toEqual(['Vegetarian', 'Healthy'])
+
+      // Check that all recipes are visible without filters
+      const allRecipes = await recipeModel.findAll()
+      expect(allRecipes).toHaveLength(3)
+
+      // Filter by single tag
+      const italianRecipes = await recipeModel.findAll({ tags: ['Italian'] })
+      expect(italianRecipes).toHaveLength(1)
+      expect(italianRecipes[0].name).toBe('Italian Recipe')
+
+      // Filter by multiple tags (OR logic - recipe with any of the tags)
+      const pastaOrMexican = await recipeModel.findAll({ tags: ['Pasta', 'Mexican'] })
+      expect(pastaOrMexican).toHaveLength(2)
+      expect(pastaOrMexican.map(r => r.name).sort()).toEqual(['Italian Recipe', 'Mexican Recipe'])
+
+      // Filter by tag that doesn't exist
+      const nonExistent = await recipeModel.findAll({ tags: ['nonexistent'] })
+      expect(nonExistent).toHaveLength(0)
+    })
   })
 
   describe('Auto-inference', () => {

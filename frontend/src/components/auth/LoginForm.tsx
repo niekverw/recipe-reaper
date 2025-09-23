@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { LoginData } from '../../types/user'
+import { generatePKCEPair } from '../../utils/pkce'
 
 interface LoginFormProps {
   onSuccess?: () => void
@@ -114,8 +115,19 @@ function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
           </div>
 
           <button
-            onClick={() => {
-              window.location.href = `${import.meta.env.VITE_API_BASE_URL || '/api'}/auth/google`
+            onClick={async () => {
+              try {
+                // Generate PKCE pair for enhanced security
+                const { codeVerifier, codeChallenge } = await generatePKCEPair()
+
+                // Redirect to backend with PKCE challenge and verifier
+                const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
+                const authUrl = `${baseUrl}/auth/google?code_challenge=${encodeURIComponent(codeChallenge)}&code_challenge_method=S256&code_verifier=${encodeURIComponent(codeVerifier)}`
+                window.location.href = authUrl
+              } catch (error) {
+                console.error('Failed to generate PKCE pair:', error)
+                setError('Failed to initiate Google authentication. Please try again.')
+              }
             }}
             type="button"
             className="w-full mt-4 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center justify-center gap-3"

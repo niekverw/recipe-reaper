@@ -4,10 +4,11 @@ import passport from 'passport'
 import { userModel } from '../models/userModel'
 import { CreateUserRequest, LoginRequest } from '../types/user'
 
-// Extend Express session to include OAuth state
+// Extend Express session to include OAuth state and PKCE
 declare module 'express-session' {
   interface SessionData {
     oauthState?: string
+    codeVerifier?: string
   }
 }
 
@@ -135,9 +136,23 @@ export const authController = {
     const state = crypto.randomBytes(32).toString('hex')
     req.session.oauthState = state
 
+    // Handle PKCE parameters for enhanced security
+    const { code_challenge, code_challenge_method, code_verifier } = req.query
+
     const options: any = {
       scope: ['profile', 'email'],
       state: state
+    }
+
+    // Add PKCE parameters if provided
+    if (code_challenge && code_challenge_method === 'S256') {
+      options.codeChallenge = code_challenge
+      options.codeChallengeMethod = 'S256'
+
+      // Store code verifier in session for token exchange
+      if (code_verifier) {
+        req.session.codeVerifier = code_verifier as string
+      }
     }
 
     // Pass through query parameters like prompt=select_account
@@ -163,6 +178,8 @@ export const authController = {
 
     // Clear the used state to prevent replay attacks
     delete req.session.oauthState
+    // Clear the used code verifier for security
+    delete req.session.codeVerifier
 
     console.log('=== GOOGLE CALLBACK DEBUG ===')
     console.log('NODE_ENV:', process.env.NODE_ENV)

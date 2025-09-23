@@ -1,0 +1,18 @@
+User-agent: *
+Disallow: /api/
+Disallow: /auth/
+Disallow: /login
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /add-recipe
+Disallow: /edit-recipe
+Allow: /recipes/
+Allow: /
+
+# Block crawlers from authenticated areas
+Disallow: /*?token=
+Disallow: /*session*
+
+# Allow public recipe pages
+Allow: /recipes/*
+
