@@ -74,6 +74,28 @@ export interface ParsedIngredient {
   original: string
 }
 
+export interface ShoppingListItem {
+  id: string
+  userId: string
+  householdId?: string
+  ingredient: string
+  description?: string
+  quantity?: string
+  unit?: string
+  recipeId?: string
+  recipeName?: string
+  isCompleted: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AddToShoppingListRequest {
+  ingredients: string[]
+  recipeId?: string
+  recipeName?: string
+  scale?: number
+}
+
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`
@@ -338,6 +360,37 @@ class ApiService {
   async regenerateInviteCode(): Promise<{ household: Household }> {
     return this.request<{ household: Household }>('/households/regenerate-invite', {
       method: 'POST'
+    })
+  }
+
+  // Shopping list methods
+  async getShoppingList(): Promise<ShoppingListItem[]> {
+    return this.request<ShoppingListItem[]>('/shopping-list')
+  }
+
+  async addToShoppingList(data: AddToShoppingListRequest): Promise<{ message: string; items: ShoppingListItem[] }> {
+    return this.request<{ message: string; items: ShoppingListItem[] }>('/shopping-list', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    })
+  }
+
+  async updateShoppingListItem(id: string, data: { isCompleted: boolean }): Promise<ShoppingListItem> {
+    return this.request<ShoppingListItem>(`/shopping-list/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    })
+  }
+
+  async deleteShoppingListItem(id: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/shopping-list/${id}`, {
+      method: 'DELETE'
+    })
+  }
+
+  async clearCompletedShoppingItems(): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/shopping-list/completed', {
+      method: 'DELETE'
     })
   }
 }

@@ -14,6 +14,7 @@ import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import AuthCallbackPage from './pages/AuthCallbackPage'
 import ShareTargetPage from './pages/ShareTargetPage'
+import ShoppingListPage from './pages/ShoppingListPage'
 import { useEffect } from 'react'
 
 function App() {
@@ -57,6 +58,7 @@ function App() {
                 <Route path="/recipe/:id" element={<RecipeDetailPage />} />
                 <Route path="/add-recipe" element={<RecipeFormPage />} />
                 <Route path="/recipe/:id/edit" element={<RecipeFormPage />} />
+                <Route path="/shopping-list" element={<ShoppingListPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
               </Routes>
             </main>

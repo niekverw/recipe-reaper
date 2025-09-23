@@ -103,6 +103,27 @@ export class PostgreSQLDatabase {
         )
       `
 
+      // Shopping Lists table
+      const createShoppingListsTable = `
+        CREATE TABLE IF NOT EXISTS shopping_lists (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          household_id TEXT,
+          ingredient TEXT NOT NULL,
+          description TEXT,
+          quantity TEXT,
+          unit TEXT,
+          recipe_id TEXT,
+          recipe_name TEXT,
+          is_completed BOOLEAN DEFAULT false,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id),
+          FOREIGN KEY (household_id) REFERENCES households(id),
+          FOREIGN KEY (recipe_id) REFERENCES recipes(id)
+        )
+      `
+
       // Create indexes for better performance
       const createIndexes = [
         'CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)',
@@ -110,12 +131,17 @@ export class PostgreSQLDatabase {
         'CREATE INDEX IF NOT EXISTS idx_recipes_user_id ON recipes(user_id)',
         'CREATE INDEX IF NOT EXISTS idx_recipes_household_id ON recipes(household_id)',
         'CREATE INDEX IF NOT EXISTS idx_recipes_is_public ON recipes(is_public)',
+        'CREATE INDEX IF NOT EXISTS idx_shopping_lists_user_id ON shopping_lists(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_shopping_lists_household_id ON shopping_lists(household_id)',
+        'CREATE INDEX IF NOT EXISTS idx_shopping_lists_is_completed ON shopping_lists(is_completed)',
+        'CREATE INDEX IF NOT EXISTS idx_shopping_lists_recipe_id ON shopping_lists(recipe_id)',
       ]
 
       // Execute table creation
       await client.query(createHouseholdsTable)
       await client.query(createUsersTable)
       await client.query(createRecipesTable)
+      await client.query(createShoppingListsTable)
 
       // Create indexes
       for (const indexQuery of createIndexes) {
@@ -126,6 +152,12 @@ export class PostgreSQLDatabase {
       await client.query(`
         ALTER TABLE recipes
         ADD COLUMN IF NOT EXISTS image_sizes TEXT
+      `)
+
+      // Add description column to shopping_lists if it doesn't exist (for migration)
+      await client.query(`
+        ALTER TABLE shopping_lists
+        ADD COLUMN IF NOT EXISTS description TEXT
       `)
 
       await client.query('COMMIT')

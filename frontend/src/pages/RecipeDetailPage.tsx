@@ -15,7 +15,8 @@ import {
   DocumentDuplicateIcon,
   SparklesIcon,
   PlusIcon,
-  XMarkIcon
+  XMarkIcon,
+  ShoppingBagIcon
 } from '@heroicons/react/24/outline'
 import { apiService, Recipe, IngredientCategory } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
@@ -255,6 +256,7 @@ function RecipeDetailPage() {
   const [showTagSuggestions, setShowTagSuggestions] = useState(false)
   const [filteredTagSuggestions, setFilteredTagSuggestions] = useState<string[]>([])
   const [highlightedTagIndex, setHighlightedTagIndex] = useState(0)
+  const [isAddingToShoppingList, setIsAddingToShoppingList] = useState(false)
 
   const openImageModal = useCallback(() => {
     setShowImageModal(true)
@@ -506,6 +508,42 @@ function RecipeDetailPage() {
       setNewTag('')
       setShowTagInput(false)
       setShowTagSuggestions(false)
+    }
+  }
+
+  const handleAddToShoppingList = async () => {
+    if (!recipe || !user) return
+
+    try {
+      setIsAddingToShoppingList(true)
+
+      const allIngredients = IngredientHelper.getAllIngredients(recipe.ingredients)
+
+      // Get selected ingredients or all ingredients if none selected
+      const ingredientsToAdd = checkedIngredients.size > 0
+        ? allIngredients.filter((_, index) => checkedIngredients.has(index))
+        : allIngredients
+
+      if (ingredientsToAdd.length === 0) return
+
+      await apiService.addToShoppingList({
+        ingredients: ingredientsToAdd,
+        recipeId: recipe.id,
+        recipeName: recipe.name,
+        scale: scale
+      })
+
+      // Clear selected ingredients after adding
+      setCheckedIngredients(new Set())
+
+      // Could show a success toast notification here
+      console.log(`Added ${ingredientsToAdd.length} ingredients to shopping list`)
+
+    } catch (err) {
+      console.error('Failed to add ingredients to shopping list:', err)
+      // Could show an error toast notification here
+    } finally {
+      setIsAddingToShoppingList(false)
     }
   }
 
@@ -966,6 +1004,33 @@ function RecipeDetailPage() {
                 ))
               )}
             </div>
+
+            {/* Add to Shopping List Button */}
+            {user && (
+              <div className="mt-4">
+                <button
+                  onClick={handleAddToShoppingList}
+                  disabled={isAddingToShoppingList}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed"
+                  title={checkedIngredients.size > 0 ? `Add ${checkedIngredients.size} selected ingredients to shopping list` : `Add all ${IngredientHelper.getAllIngredients(recipe!.ingredients).length} ingredients to shopping list`}
+                >
+                  {isAddingToShoppingList ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingBagIcon className="w-4 h-4" />
+                      {checkedIngredients.size > 0
+                        ? `Add ${checkedIngredients.size} Selected to Shopping List`
+                        : 'Add All to Shopping List'
+                      }
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
 
             <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">

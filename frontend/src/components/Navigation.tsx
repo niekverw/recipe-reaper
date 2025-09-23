@@ -1,5 +1,5 @@
 import { Link as RouterLink, useLocation } from 'react-router-dom'
-import { SunIcon, MoonIcon, PlusIcon, HomeIcon, UserIcon } from '@heroicons/react/24/outline'
+import { SunIcon, MoonIcon, PlusIcon, HomeIcon, UserIcon, ShoppingBagIcon } from '@heroicons/react/24/outline'
 import { useTheme } from '../contexts/ThemeContext'
 import { useAuth } from '../contexts/AuthContext'
 import Logo from './Logo'
@@ -61,6 +61,19 @@ function Navigation({}: NavigationProps) {
                 >
                   <HomeIcon className="w-4 h-4" />
                   <span className="hidden sm:inline">Recipes</span>
+                </RouterLink>
+
+                {/* Shopping List Button */}
+                <RouterLink
+                  to="/shopping-list"
+                  className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                    location.pathname === '/shopping-list'
+                      ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  <ShoppingBagIcon className="w-4 h-4" />
+                  <span className="hidden sm:inline">Shopping List</span>
                 </RouterLink>
 
                 {/* Add Recipe Button */}

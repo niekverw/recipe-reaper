@@ -14,6 +14,7 @@ import { recipeRoutes } from './routes/recipes'
 import { ingredientRoutes } from './routes/ingredients'
 import { authRoutes } from './routes/auth'
 import { householdRoutes } from './routes/households'
+import { shoppingListRoutes } from './routes/shoppingList'
 import { errorHandler } from './middleware/errorHandler'
 import passport from './config/passport'
 
@@ -198,6 +199,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/recipes', recipeRoutes)
 app.use('/api/ingredients', ingredientRoutes)
 app.use('/api/households', householdRoutes)
+app.use('/api/shopping-list', shoppingListRoutes)
 
 // Only serve public API routes if explicitly enabled
 if (process.env.ALLOW_PUBLIC_API === 'true') {
