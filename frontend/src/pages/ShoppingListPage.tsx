@@ -59,7 +59,7 @@ function ShoppingListItemComponent({ item, onToggle, onDelete }: ShoppingListIte
   const showOriginal = item.displayName && item.displayName !== item.ingredient
 
   return (
-    <div className="flex items-center gap-3 py-3 px-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="flex items-center gap-3 py-2 px-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
       <CustomCheckbox
         isSelected={item.isCompleted}
         onValueChange={() => onToggle(item.id, !item.isCompleted)}
@@ -282,9 +282,9 @@ export default function ShoppingListPage() {
   }
 
   return (
-    <div className="px-4 py-6 max-w-4xl mx-auto">
+    <div className="px-3 py-4 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Shopping List</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -306,7 +306,7 @@ export default function ShoppingListPage() {
       </div>
 
       {/* Add Item Input */}
-      <div className="mb-6">
+      <div className="mb-4">
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex gap-3">
             <input
@@ -356,27 +356,24 @@ export default function ShoppingListPage() {
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {sortedCategoryEntries.map(([categoryId, { category, items }]) => {
             const isCollapsed = collapsedCategories.has(categoryId)
             const completedInCategory = items.filter(item => item.isCompleted).length
             const totalInCategory = items.length
 
             return (
-              <div key={categoryId} className="space-y-3">
+              <div key={categoryId} className="space-y-2">
                 <button
                   onClick={() => toggleCategory(categoryId)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="text-2xl">{category.emoji}</div>
+                    <div className="text-xl">{category.emoji}</div>
                     <div className="text-left">
                       <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {category.name}
+                        {category.name} ({completedInCategory}/{totalInCategory})
                       </h2>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {completedInCategory} of {totalInCategory} completed
-                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -389,10 +386,8 @@ export default function ShoppingListPage() {
                       <ChevronDownIcon className="w-5 h-5 text-gray-400" />
                     )}
                   </div>
-                </button>
-
-                {!isCollapsed && (
-                  <div className="space-y-2 pl-4">
+                </button>                {!isCollapsed && (
+                  <div className="space-y-2 pl-3">
                     {items.map(item => (
                       <ShoppingListItemComponent
                         key={item.id}
