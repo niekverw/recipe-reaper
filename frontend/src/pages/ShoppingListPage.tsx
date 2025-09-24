@@ -5,10 +5,13 @@ import {
   CheckIcon,
   TrashIcon,
   ArrowPathIcon,
-  PlusIcon
+  PlusIcon,
+  ChevronDownIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline'
 import { apiService, ShoppingListItem } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
+import { getCategoryById, IngredientCategory } from '../utils/categories'
 
 interface CustomCheckboxProps {
   size?: 'sm' | 'md' | 'lg'
@@ -49,6 +52,12 @@ interface ShoppingListItemProps {
 }
 
 function ShoppingListItemComponent({ item, onToggle, onDelete }: ShoppingListItemProps) {
+  // Use displayName if available, otherwise fall back to description, then ingredient
+  const displayText = item.displayName || item.description || item.ingredient
+
+  // Show original ingredient in parentheses only if we have a simplified displayName
+  const showOriginal = item.displayName && item.displayName !== item.ingredient
+
   return (
     <div className="flex items-center gap-3 py-3 px-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
       <CustomCheckbox
@@ -60,22 +69,13 @@ function ShoppingListItemComponent({ item, onToggle, onDelete }: ShoppingListIte
         <div className={`text-sm font-medium ${
           item.isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white'
         }`}>
-          {item.quantity || item.unit ? (
-            <>
-              <span className="text-blue-600 dark:text-blue-400 font-semibold mr-2">
-                {item.quantity && item.unit
-                  ? `${item.quantity} ${item.unit}`
-                  : item.quantity
-                    ? item.quantity
-                    : item.unit
-                }
-              </span>
-              <span>
-                {item.description || item.ingredient}
-              </span>
-            </>
-          ) : (
-            <span>{item.ingredient}</span>
+          <span className="font-medium">
+            {displayText}
+          </span>
+          {showOriginal && (
+            <span className="text-gray-500 dark:text-gray-400 ml-1 font-normal">
+              ({item.ingredient})
+            </span>
           )}
         </div>
         {item.recipeName && (
@@ -105,6 +105,7 @@ export default function ShoppingListPage() {
   const [updating, setUpdating] = useState<Set<string>>(new Set())
   const [newItem, setNewItem] = useState('')
   const [isAddingManualItem, setIsAddingManualItem] = useState(false)
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (!user) {
@@ -214,13 +215,34 @@ export default function ShoppingListPage() {
     }
   }
 
-  // Group items by recipe
-  const groupedItems = items.reduce<Record<string, ShoppingListItem[]>>((groups, item) => {
-    const key = item.recipeName || 'Other items'
-    if (!groups[key]) groups[key] = []
-    groups[key].push(item)
+  // Group items by category
+  const groupedItems = items.reduce<Record<string, { category: IngredientCategory; items: ShoppingListItem[] }>>((groups, item) => {
+    const categoryId = item.category || 'OTHER'
+    const category = getCategoryById(categoryId)
+
+    if (!groups[categoryId]) {
+      groups[categoryId] = { category, items: [] }
+    }
+    groups[categoryId].items.push(item)
     return groups
   }, {})
+
+  // Sort categories by their sort order
+  const sortedCategoryEntries = Object.entries(groupedItems).sort(([, a], [, b]) =>
+    a.category.sortOrder - b.category.sortOrder
+  )
+
+  const toggleCategory = (categoryId: string) => {
+    setCollapsedCategories(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId)
+      } else {
+        newSet.add(categoryId)
+      }
+      return newSet
+    })
+  }
 
   const completedCount = items.filter(item => item.isCompleted).length
   const totalCount = items.length
@@ -334,24 +356,56 @@ export default function ShoppingListPage() {
           </button>
         </div>
       ) : (
-        <div className="space-y-6">
-          {Object.entries(groupedItems).map(([recipeName, recipeItems]) => (
-            <div key={recipeName} className="space-y-3">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
-                {recipeName}
-              </h2>
-              <div className="space-y-2">
-                {recipeItems.map(item => (
-                  <ShoppingListItemComponent
-                    key={item.id}
-                    item={item}
-                    onToggle={handleToggleItem}
-                    onDelete={handleDeleteItem}
-                  />
-                ))}
+        <div className="space-y-4">
+          {sortedCategoryEntries.map(([categoryId, { category, items }]) => {
+            const isCollapsed = collapsedCategories.has(categoryId)
+            const completedInCategory = items.filter(item => item.isCompleted).length
+            const totalInCategory = items.length
+
+            return (
+              <div key={categoryId} className="space-y-3">
+                <button
+                  onClick={() => toggleCategory(categoryId)}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">{category.emoji}</div>
+                    <div className="text-left">
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {category.name}
+                      </h2>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {completedInCategory} of {totalInCategory} completed
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded">
+                      {totalInCategory}
+                    </span>
+                    {isCollapsed ? (
+                      <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <ChevronDownIcon className="w-5 h-5 text-gray-400" />
+                    )}
+                  </div>
+                </button>
+
+                {!isCollapsed && (
+                  <div className="space-y-2 pl-4">
+                    {items.map(item => (
+                      <ShoppingListItemComponent
+                        key={item.id}
+                        item={item}
+                        onToggle={handleToggleItem}
+                        onDelete={handleDeleteItem}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

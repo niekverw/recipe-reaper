@@ -115,6 +115,8 @@ export class PostgreSQLDatabase {
           unit TEXT,
           recipe_id TEXT,
           recipe_name TEXT,
+          category TEXT DEFAULT 'OTHER',
+          display_name TEXT,
           is_completed BOOLEAN DEFAULT false,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -135,6 +137,7 @@ export class PostgreSQLDatabase {
         'CREATE INDEX IF NOT EXISTS idx_shopping_lists_household_id ON shopping_lists(household_id)',
         'CREATE INDEX IF NOT EXISTS idx_shopping_lists_is_completed ON shopping_lists(is_completed)',
         'CREATE INDEX IF NOT EXISTS idx_shopping_lists_recipe_id ON shopping_lists(recipe_id)',
+        'CREATE INDEX IF NOT EXISTS idx_shopping_lists_category ON shopping_lists(category)',
       ]
 
       // Execute table creation
@@ -158,6 +161,17 @@ export class PostgreSQLDatabase {
       await client.query(`
         ALTER TABLE shopping_lists
         ADD COLUMN IF NOT EXISTS description TEXT
+      `)
+
+      // Add category and display_name columns to shopping_lists if they don't exist (for migration)
+      await client.query(`
+        ALTER TABLE shopping_lists
+        ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'OTHER'
+      `)
+
+      await client.query(`
+        ALTER TABLE shopping_lists
+        ADD COLUMN IF NOT EXISTS display_name TEXT
       `)
 
       await client.query('COMMIT')

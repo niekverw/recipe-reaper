@@ -82,6 +82,8 @@ export interface ShoppingListItem {
   description?: string
   quantity?: string
   unit?: string
+  category?: string
+  displayName?: string
   recipeId?: string
   recipeName?: string
   isCompleted: boolean

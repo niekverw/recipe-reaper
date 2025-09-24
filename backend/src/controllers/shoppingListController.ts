@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import { PostgreSQLDatabase } from '../models/database-pg'
 import { createError } from '../middleware/errorHandler'
 import { ingredientParser } from '../utils/ingredientParser'
+import { ingredientCategorizer } from '../utils/ingredientCategorizer'
 import { v4 as uuidv4 } from 'uuid'
 import { User } from '../types/user'
 
@@ -13,6 +14,8 @@ interface ShoppingListItem {
   description?: string
   quantity?: string
   unit?: string
+  category?: string
+  displayName?: string
   recipeId?: string
   recipeName?: string
   isCompleted: boolean
@@ -43,9 +46,27 @@ export const shoppingListController = {
         : `SELECT * FROM shopping_lists WHERE user_id = $1 AND household_id IS NULL ORDER BY created_at DESC`
 
       const params = user.householdId ? [user.householdId] : [user.id]
-      const result = await db.all<ShoppingListItem>(query, params)
+      const result = await db.all(query, params)
 
-      res.json(result)
+      // Map database fields to camelCase for frontend
+      const mappedResult = result.map((item: any) => ({
+        id: item.id,
+        userId: item.user_id,
+        householdId: item.household_id,
+        ingredient: item.ingredient,
+        description: item.description,
+        quantity: item.quantity,
+        unit: item.unit,
+        category: item.category,
+        displayName: item.display_name,
+        recipeId: item.recipe_id,
+        recipeName: item.recipe_name,
+        isCompleted: item.is_completed,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at
+      }))
+
+      res.json(mappedResult)
     } catch (error) {
       next(error)
     }
@@ -93,6 +114,9 @@ export const shoppingListController = {
         const parsed = ingredientParser.parseIngredients([scaledIngredient])
         const parsedIngredient = parsed.length > 0 ? parsed[0] : null
 
+        // Categorize the ingredient
+        const categorized = ingredientCategorizer.categorizeIngredient(scaledIngredient)
+
         const itemId = uuidv4()
         const now = new Date().toISOString()
 
@@ -103,6 +127,8 @@ export const shoppingListController = {
           description: parsedIngredient?.description || undefined,
           quantity: parsedIngredient?.quantity?.toString() || undefined,
           unit: parsedIngredient?.unitOfMeasure || undefined,
+          category: categorized.category.id,
+          displayName: categorized.displayName,
           recipeId: recipeId || undefined,
           recipeName: recipeName || undefined,
           isCompleted: false,
@@ -113,16 +139,34 @@ export const shoppingListController = {
         await db.run(
           `INSERT INTO shopping_lists (
             id, user_id, household_id, ingredient, description, quantity, unit,
-            recipe_id, recipe_name, is_completed, created_at, updated_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+            category, display_name, recipe_id, recipe_name, is_completed, created_at, updated_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
           [
             itemId, item.userId, item.householdId, item.ingredient, item.description,
-            item.quantity, item.unit, item.recipeId, item.recipeName,
+            item.quantity, item.unit, item.category, item.displayName, item.recipeId, item.recipeName,
             item.isCompleted, item.createdAt, item.updatedAt
           ]
         )
 
-        addedItems.push({ id: itemId, ...item })
+        // Map the item to camelCase for frontend consistency
+        const mappedItem = {
+          id: itemId,
+          userId: item.userId,
+          householdId: item.householdId,
+          ingredient: item.ingredient,
+          description: item.description,
+          quantity: item.quantity,
+          unit: item.unit,
+          category: item.category,
+          displayName: item.displayName,
+          recipeId: item.recipeId,
+          recipeName: item.recipeName,
+          isCompleted: item.isCompleted,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt
+        }
+
+        addedItems.push(mappedItem)
         // Add to existing set to prevent duplicates within the same request
         existingIngredients.add(scaledIngredient.toLowerCase().trim())
       }
@@ -183,12 +227,30 @@ export const shoppingListController = {
       )
 
       // Return updated item
-      const updatedItem = await db.get<ShoppingListItem>(
+      const updatedItem = await db.get(
         `SELECT * FROM shopping_lists WHERE id = $1`,
         [id]
       )
 
-      res.json(updatedItem)
+      // Map database fields to camelCase for frontend
+      const mappedItem = {
+        id: (updatedItem as any).id,
+        userId: (updatedItem as any).user_id,
+        householdId: (updatedItem as any).household_id,
+        ingredient: (updatedItem as any).ingredient,
+        description: (updatedItem as any).description,
+        quantity: (updatedItem as any).quantity,
+        unit: (updatedItem as any).unit,
+        category: (updatedItem as any).category,
+        displayName: (updatedItem as any).display_name,
+        recipeId: (updatedItem as any).recipe_id,
+        recipeName: (updatedItem as any).recipe_name,
+        isCompleted: (updatedItem as any).is_completed,
+        createdAt: (updatedItem as any).created_at,
+        updatedAt: (updatedItem as any).updated_at
+      }
+
+      res.json(mappedItem)
     } catch (error) {
       next(error)
     }
