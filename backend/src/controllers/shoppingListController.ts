@@ -3,25 +3,9 @@ import { PostgreSQLDatabase } from '../models/database-pg'
 import { createError } from '../middleware/errorHandler'
 import { ingredientParser } from '../utils/ingredientParser'
 import { ingredientCategorizer } from '../utils/ingredientCategorizer'
+import { ShoppingListService, ShoppingListItem } from '../services/shoppingListService'
 import { v4 as uuidv4 } from 'uuid'
 import { User } from '../types/user'
-
-interface ShoppingListItem {
-  id: string
-  userId: string
-  householdId?: string
-  ingredient: string
-  description?: string
-  quantity?: string
-  unit?: string
-  category?: string
-  displayName?: string
-  recipeId?: string
-  recipeName?: string
-  isCompleted: boolean
-  createdAt: string
-  updatedAt: string
-}
 
 interface AddToShoppingListRequest {
   ingredients: string[]
@@ -81,118 +65,43 @@ export const shoppingListController = {
 
       const { ingredients, recipeId, recipeName, scale = 1 }: AddToShoppingListRequest = req.body
 
-      if (!Array.isArray(ingredients) || ingredients.length === 0) {
-        throw createError('ingredients must be a non-empty array', 400)
+      // Validate input
+      const validation = ShoppingListService.validateAddToShoppingListRequest(req.body)
+      if (!validation.isValid) {
+        throw createError(`Validation error: ${validation.errors.join(', ')}`, 400)
       }
 
       const db = PostgreSQLDatabase.getInstance()
 
-      // First, get existing items to check for duplicates and combinations
+      // Get existing items to check for duplicates and combinations
       const existingQuery = user.householdId
         ? `SELECT * FROM shopping_lists WHERE household_id = $1`
         : `SELECT * FROM shopping_lists WHERE user_id = $1 AND household_id IS NULL`
 
       const existingParams = user.householdId ? [user.householdId] : [user.id]
-      const existingItems = await db.all(existingQuery, existingParams) as any[]
+      const existingItems = await db.all(existingQuery, existingParams) as ShoppingListItem[]
 
-      // Group existing items by displayName and category for easier lookup
-      const existingByDisplayName = new Map<string, any>()
-      for (const item of existingItems) {
-        const key = `${item.display_name}_${item.category}`.toLowerCase()
-        existingByDisplayName.set(key, item)
-      }
+      // Process ingredients using the service
+      const result = await ShoppingListService.processIngredientsForAddition(
+        ingredients,
+        existingItems,
+        scale
+      )
 
-      const updatedItems: ShoppingListItem[] = []
       const addedItems: ShoppingListItem[] = []
+      const updatedItems: ShoppingListItem[] = []
 
-      for (const ingredient of ingredients) {
-        if (!ingredient || typeof ingredient !== 'string') continue
-
-        // Scale the ingredient if needed
-        const scaledIngredient = scale !== 1 ?
-          ingredientParser.scaleIngredients([ingredient], scale)[0] :
-          ingredient
-
-        // Parse the ingredient to extract quantity and unit
-        const parsed = ingredientParser.parseIngredients([scaledIngredient])
-        const parsedIngredient = parsed.length > 0 ? parsed[0] : null
-
-        // Categorize the ingredient
-        const categorized = ingredientCategorizer.categorizeIngredient(scaledIngredient)
-
-        // Check if we already have this ingredient (by displayName and category)
-        const existingKey = `${categorized.displayName}_${categorized.category.id}`.toLowerCase()
-        const existingItem = existingByDisplayName.get(existingKey)
-
-        if (existingItem) {
-          // Combine quantities if both have quantities
-          if (parsedIngredient?.quantity && existingItem.quantity) {
-            try {
-              const existingQuantity = parseFloat(existingItem.quantity)
-              const newQuantity = parsedIngredient.quantity
-              const combinedQuantity = existingQuantity + newQuantity
-
-              // Create combined ingredient text
-              const combinedIngredient = `${combinedQuantity} ${parsedIngredient.unitOfMeasure || ''} ${parsedIngredient.description || categorized.displayName}`.trim()
-
-              // Update the existing item
-              const now = new Date().toISOString()
-              await db.run(
-                `UPDATE shopping_lists SET
-                  ingredient = $1,
-                  quantity = $2,
-                  updated_at = $3
-                 WHERE id = $4`,
-                [combinedIngredient, combinedQuantity.toString(), now, existingItem.id]
-              )
-
-              // Get updated item
-              const updatedItemResult = await db.get(`SELECT * FROM shopping_lists WHERE id = $1`, [existingItem.id])
-              const updatedItem = {
-                id: (updatedItemResult as any).id,
-                userId: (updatedItemResult as any).user_id,
-                householdId: (updatedItemResult as any).household_id,
-                ingredient: (updatedItemResult as any).ingredient,
-                description: (updatedItemResult as any).description,
-                quantity: (updatedItemResult as any).quantity,
-                unit: (updatedItemResult as any).unit,
-                category: (updatedItemResult as any).category,
-                displayName: (updatedItemResult as any).display_name,
-                recipeId: (updatedItemResult as any).recipe_id,
-                recipeName: (updatedItemResult as any).recipe_name,
-                isCompleted: (updatedItemResult as any).is_completed,
-                createdAt: (updatedItemResult as any).created_at,
-                updatedAt: (updatedItemResult as any).updated_at
-              }
-
-              updatedItems.push(updatedItem)
-              continue
-            } catch (error) {
-              // If combining fails, add as new item
-              console.warn('Failed to combine quantities, adding as new item:', error)
-            }
-          } else {
-            // If no quantities to combine, skip duplicate
-            continue
-          }
-        }
-
-        // Add as new item
+      // Add new items
+      for (const itemData of result.itemsToAdd) {
         const itemId = uuidv4()
         const now = new Date().toISOString()
 
         const item: Omit<ShoppingListItem, 'id'> = {
+          ...itemData,
           userId: user.id,
           householdId: user.householdId,
-          ingredient: scaledIngredient,
-          description: parsedIngredient?.description || undefined,
-          quantity: parsedIngredient?.quantity?.toString() || undefined,
-          unit: parsedIngredient?.unitOfMeasure || undefined,
-          category: categorized.category.id,
-          displayName: categorized.displayName,
           recipeId: recipeId || undefined,
           recipeName: recipeName || undefined,
-          isCompleted: false,
           createdAt: now,
           updatedAt: now
         }
@@ -228,14 +137,46 @@ export const shoppingListController = {
         }
 
         addedItems.push(mappedItem)
-        // Update the lookup map with the new item
-        existingByDisplayName.set(existingKey, { ...mappedItem, display_name: mappedItem.displayName, category: mappedItem.category })
+      }
+
+      // Update existing items
+      for (const updateData of result.itemsToUpdate) {
+        const now = new Date().toISOString()
+        await db.run(
+          `UPDATE shopping_lists SET
+            ingredient = $1,
+            quantity = $2,
+            updated_at = $3
+           WHERE id = $4`,
+          [updateData.newIngredient, updateData.newQuantity, now, updateData.item.id]
+        )
+
+        // Get updated item
+        const updatedItemResult = await db.get(`SELECT * FROM shopping_lists WHERE id = $1`, [updateData.item.id])
+        const updatedItem = {
+          id: (updatedItemResult as any).id,
+          userId: (updatedItemResult as any).user_id,
+          householdId: (updatedItemResult as any).household_id,
+          ingredient: (updatedItemResult as any).ingredient,
+          description: (updatedItemResult as any).description,
+          quantity: (updatedItemResult as any).quantity,
+          unit: (updatedItemResult as any).unit,
+          category: (updatedItemResult as any).category,
+          displayName: (updatedItemResult as any).display_name,
+          recipeId: (updatedItemResult as any).recipe_id,
+          recipeName: (updatedItemResult as any).recipe_name,
+          isCompleted: (updatedItemResult as any).is_completed,
+          createdAt: (updatedItemResult as any).created_at,
+          updatedAt: (updatedItemResult as any).updated_at
+        }
+
+        updatedItems.push(updatedItem)
       }
 
       const totalRequested = ingredients.length
       const addedCount = addedItems.length
       const updatedCount = updatedItems.length
-      const skippedCount = totalRequested - addedCount - updatedCount
+      const skippedCount = result.skippedCount
 
       let message = `Added ${addedCount} item(s) to shopping list`
       if (updatedCount > 0) {
@@ -365,14 +306,39 @@ export const shoppingListController = {
 
       // Delete completed items for user's household or just the user
       const deleteQuery = user.householdId
-        ? `DELETE FROM shopping_lists WHERE household_id = $1 AND is_completed = true`
-        : `DELETE FROM shopping_lists WHERE user_id = $1 AND household_id IS NULL AND is_completed = true`
+        ? `DELETE FROM shopping_lists WHERE household_id = $1 AND is_completed = 1`
+        : `DELETE FROM shopping_lists WHERE user_id = $1 AND household_id IS NULL AND is_completed = 1`
 
       const deleteParams = user.householdId ? [user.householdId] : [user.id]
       const result = await db.query(deleteQuery, deleteParams)
 
       res.json({
         message: `Cleared ${result.rowCount} completed item(s) from shopping list`
+      })
+    } catch (error) {
+      next(error)
+    }
+  },
+
+  async clearAll(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user as User | undefined
+      if (!user) {
+        throw createError('Authentication required', 401)
+      }
+
+      const db = PostgreSQLDatabase.getInstance()
+
+      // Delete all items for user's household or just the user
+      const deleteQuery = user.householdId
+        ? `DELETE FROM shopping_lists WHERE household_id = $1`
+        : `DELETE FROM shopping_lists WHERE user_id = $1 AND household_id IS NULL`
+
+      const deleteParams = user.householdId ? [user.householdId] : [user.id]
+      const result = await db.query(deleteQuery, deleteParams)
+
+      res.json({
+        message: `Cleared ${result.rowCount} item(s) from shopping list`
       })
     } catch (error) {
       next(error)

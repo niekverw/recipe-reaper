@@ -113,6 +113,7 @@ class ApiService {
 
     const response = await fetch(url, {
       headers,
+      credentials: 'include',
       ...options,
     })
 
@@ -392,6 +393,12 @@ class ApiService {
 
   async clearCompletedShoppingItems(): Promise<{ message: string }> {
     return this.request<{ message: string }>('/shopping-list/completed', {
+      method: 'DELETE'
+    })
+  }
+
+  async clearAllShoppingItems(): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/shopping-list', {
       method: 'DELETE'
     })
   }

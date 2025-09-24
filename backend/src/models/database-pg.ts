@@ -126,6 +126,18 @@ export class PostgreSQLDatabase {
         )
       `
 
+      // Blocked IPs table for security
+      const createBlockedIPsTable = `
+        CREATE TABLE IF NOT EXISTS blocked_ips (
+          id SERIAL PRIMARY KEY,
+          ip_address TEXT NOT NULL UNIQUE,
+          blocked_reason TEXT NOT NULL,
+          blocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          first_attempt_path TEXT,
+          attempt_count INTEGER DEFAULT 1
+        )
+      `
+
       // Create indexes for better performance
       const createIndexes = [
         'CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)',
@@ -138,6 +150,7 @@ export class PostgreSQLDatabase {
         'CREATE INDEX IF NOT EXISTS idx_shopping_lists_is_completed ON shopping_lists(is_completed)',
         'CREATE INDEX IF NOT EXISTS idx_shopping_lists_recipe_id ON shopping_lists(recipe_id)',
         'CREATE INDEX IF NOT EXISTS idx_shopping_lists_category ON shopping_lists(category)',
+        'CREATE INDEX IF NOT EXISTS idx_blocked_ips_ip_address ON blocked_ips(ip_address)',
       ]
 
       // Execute table creation
@@ -145,6 +158,7 @@ export class PostgreSQLDatabase {
       await client.query(createUsersTable)
       await client.query(createRecipesTable)
       await client.query(createShoppingListsTable)
+      await client.query(createBlockedIPsTable)
 
       // Create indexes
       for (const indexQuery of createIndexes) {

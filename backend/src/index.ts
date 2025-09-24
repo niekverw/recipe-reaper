@@ -16,6 +16,7 @@ import { authRoutes } from './routes/auth'
 import { householdRoutes } from './routes/households'
 import { shoppingListRoutes } from './routes/shoppingList'
 import { errorHandler } from './middleware/errorHandler'
+import { ipBlocker } from './middleware/ipBlocker'
 import passport from './config/passport'
 
 // Import connect-pg-simple and create session store
@@ -26,8 +27,15 @@ const app = express()
 const PORT = process.env.PORT || 3001
 
 // Trust proxy for accurate IP detection (important for rate limiting and security)
-// Set to 1 to trust only one proxy hop instead of unlimited hops
-app.set('trust proxy', 1)
+// This tells Express to trust the X-Forwarded-* headers from the specified proxy
+// - 'loopback': Trust requests from localhost/loopback interface
+// - Set to true to trust all proxies (less secure)
+// - Set to IP addresses to trust specific proxies
+// - Set to number (e.g., 1) to trust that many hops of proxies
+app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal'])
+
+// IP blocking middleware (must be first)
+app.use(ipBlocker)
 
 // Middleware
 app.use(cors({

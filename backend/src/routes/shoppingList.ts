@@ -21,3 +21,6 @@ shoppingListRoutes.delete('/:id', shoppingListController.deleteShoppingListItem)
 
 // DELETE /api/shopping-list/completed - Clear completed items
 shoppingListRoutes.delete('/completed', shoppingListController.clearCompleted)
+
+// DELETE /api/shopping-list - Clear all items
+shoppingListRoutes.delete('/', shoppingListController.clearAll)

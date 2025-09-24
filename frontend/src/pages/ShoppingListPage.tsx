@@ -133,14 +133,25 @@ export default function ShoppingListPage() {
   const handleToggleItem = async (id: string, completed: boolean) => {
     if (updating.has(id)) return
 
+    // Optimistic update - immediately update UI
+    const previousItems = [...items]
+    setItems(prev =>
+      prev.map(item =>
+        item.id === id ? { ...item, isCompleted: completed } : item
+      )
+    )
+
     try {
       setUpdating(prev => new Set([...prev, id]))
       const updatedItem = await apiService.updateShoppingListItem(id, { isCompleted: completed })
 
+      // Update with server response to ensure consistency
       setItems(prev =>
         prev.map(item => item.id === id ? updatedItem : item)
       )
     } catch (err) {
+      // Revert optimistic update on error
+      setItems(previousItems)
       console.error('Failed to update shopping list item:', err)
       // Could show a toast notification here
     } finally {
@@ -155,12 +166,19 @@ export default function ShoppingListPage() {
   const handleDeleteItem = async (id: string) => {
     if (updating.has(id)) return
 
+    // Optimistic update - immediately remove from UI
+    const itemToDelete = items.find(item => item.id === id)
+    if (!itemToDelete) return
+
+    const previousItems = [...items]
+    setItems(prev => prev.filter(item => item.id !== id))
+
     try {
       setUpdating(prev => new Set([...prev, id]))
       await apiService.deleteShoppingListItem(id)
-
-      setItems(prev => prev.filter(item => item.id !== id))
     } catch (err) {
+      // Revert optimistic update on error
+      setItems(previousItems)
       console.error('Failed to delete shopping list item:', err)
       // Could show a toast notification here
     } finally {
@@ -172,17 +190,17 @@ export default function ShoppingListPage() {
     }
   }
 
-  const handleClearCompleted = async () => {
-    const completedItems = items.filter(item => item.isCompleted)
-    if (completedItems.length === 0) return
+  const handleClearAll = async () => {
+    if (items.length === 0) return
 
-    if (!window.confirm(`Clear ${completedItems.length} completed item(s)?`)) return
+    if (!window.confirm(`Clear all ${items.length} item(s) from your shopping list? This action cannot be undone.`)) return
 
     try {
-      await apiService.clearCompletedShoppingItems()
-      setItems(prev => prev.filter(item => !item.isCompleted))
+      await apiService.clearAllShoppingItems()
+      // Reload the shopping list to ensure UI is in sync with server
+      await loadShoppingList()
     } catch (err) {
-      console.error('Failed to clear completed items:', err)
+      console.error('Failed to clear all items:', err)
       // Could show a toast notification here
     }
   }
@@ -197,10 +215,9 @@ export default function ShoppingListPage() {
         ingredients: [trimmedItem]
       })
 
-      if (response.items.length > 0) {
-        setItems(prev => [...response.items, ...prev])
-        setNewItem('')
-      }
+      // Add the new items to the list
+      setItems(prev => [...response.items, ...prev])
+      setNewItem('')
     } catch (err) {
       console.error('Failed to add manual item:', err)
       // Could show a toast notification here
@@ -215,8 +232,12 @@ export default function ShoppingListPage() {
     }
   }
 
-  // Group items by category
-  const groupedItems = items.reduce<Record<string, { category: IngredientCategory; items: ShoppingListItem[] }>>((groups, item) => {
+  // Separate completed and incomplete items
+  const incompleteItems = items.filter(item => !item.isCompleted)
+  const completedItems = items.filter(item => item.isCompleted)
+
+  // Group incomplete items by category
+  const groupedItems = incompleteItems.reduce<Record<string, { category: IngredientCategory; items: ShoppingListItem[] }>>((groups, item) => {
     const categoryId = item.category || 'OTHER'
     const category = getCategoryById(categoryId)
 
@@ -295,14 +316,16 @@ export default function ShoppingListPage() {
           </p>
         </div>
 
-        {completedCount > 0 && (
-          <button
-            onClick={handleClearCompleted}
-            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-          >
-            Clear Completed
-          </button>
-        )}
+        <div className="flex gap-3">
+          {totalCount > 0 && (
+            <button
+              onClick={handleClearAll}
+              className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+            >
+              Clear All
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Add Item Input */}
@@ -359,7 +382,6 @@ export default function ShoppingListPage() {
         <div className="space-y-3">
           {sortedCategoryEntries.map(([categoryId, { category, items }]) => {
             const isCollapsed = collapsedCategories.has(categoryId)
-            const completedInCategory = items.filter(item => item.isCompleted).length
             const totalInCategory = items.length
 
             return (
@@ -372,7 +394,7 @@ export default function ShoppingListPage() {
                     <div className="text-xl">{category.emoji}</div>
                     <div className="text-left">
                       <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {category.name} ({completedInCategory}/{totalInCategory})
+                        {category.name} ({totalInCategory})
                       </h2>
                     </div>
                   </div>
@@ -401,6 +423,35 @@ export default function ShoppingListPage() {
               </div>
             )
           })}
+
+          {/* Completed Items Section */}
+          {completedItems.length > 0 && (
+            <div className="space-y-2">
+              <div className="w-full flex items-center justify-between px-3 py-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <div className="flex items-center gap-3">
+                  <div className="text-xl">✅</div>
+                  <div className="text-left">
+                    <h2 className="text-lg font-semibold text-green-800 dark:text-green-200">
+                      Completed ({completedItems.length})
+                    </h2>
+                  </div>
+                </div>
+                <span className="text-sm font-medium text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-800 px-2 py-1 rounded">
+                  {completedItems.length}
+                </span>
+              </div>
+              <div className="space-y-2 pl-3">
+                {completedItems.map(item => (
+                  <ShoppingListItemComponent
+                    key={item.id}
+                    item={item}
+                    onToggle={handleToggleItem}
+                    onDelete={handleDeleteItem}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
