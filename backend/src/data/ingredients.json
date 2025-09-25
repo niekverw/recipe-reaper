@@ -1546,5 +1546,11 @@
     "category": "SNACKS_BEVERAGES",
     "keywords": ["yogurt", "greek yogurt", "plain yogurt", "vanilla yogurt", "strawberry yogurt"],
     "exactMatches": ["greek yogurt", "plain yogurt", "vanilla yogurt", "strawberry yogurt"]
+  },
+  {
+    "displayName": "Water",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": ["water", "bottled water", "spring water", "mineral water","warm water","cold water","ice water"],
+    "exactMatches": ["water", "bottled water", "spring water", "mineral water","warm water","cold water","ice water"]
   }
 ]

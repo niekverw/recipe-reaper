@@ -119,4 +119,65 @@ describe('ImageService Orientation Tests', () => {
     console.log(`Processed file: ${result.filename}`)
     console.log(`Final format: ${metadata.format}`)
   })
+
+  test('should generate correct image sizes for responsive images', async () => {
+    // Create a test image buffer
+    const testImageBuffer = await sharp({
+      create: {
+        width: 1200,
+        height: 800,
+        channels: 3,
+        background: { r: 200, g: 150, b: 100 }
+      }
+    })
+    .jpeg()
+    .toBuffer()
+
+    // Process the image through our service
+    const result = await imageService.storeImage(testImageBuffer, 'test-responsive.jpg')
+
+    // Verify the result has the correct sizes structure
+    expect(result.sizes).toBeDefined()
+    expect(result.sizes.small).toBeDefined()
+    expect(result.sizes.medium).toBeDefined()
+    expect(result.sizes.large).toBeDefined()
+
+    // Verify URLs are correct
+    expect(result.sizes.small.url).toContain('/uploads/')
+    expect(result.sizes.small.url).toContain('_small')
+    expect(result.sizes.medium.url).toContain('/uploads/')
+    expect(result.sizes.medium.url).toContain('_medium')
+    expect(result.sizes.large.url).toContain('/uploads/')
+
+    // Verify widths are correct
+    expect(result.sizes.small.width).toBe(400)
+    expect(result.sizes.medium.width).toBe(800)
+    expect(result.sizes.large.width).toBe(1200)
+
+    // Verify files exist
+    const smallExists = await fs.access(result.sizes.small.url.replace('/uploads/', 'data/uploads/')).then(() => true).catch(() => false)
+    const mediumExists = await fs.access(result.sizes.medium.url.replace('/uploads/', 'data/uploads/')).then(() => true).catch(() => false)
+    const largeExists = await fs.access(result.sizes.large.url.replace('/uploads/', 'data/uploads/')).then(() => true).catch(() => false)
+
+    expect(smallExists).toBe(true)
+    expect(mediumExists).toBe(true)
+    expect(largeExists).toBe(true)
+
+    // Verify dimensions of generated images
+    const smallMetadata = await sharp(result.sizes.small.url.replace('/uploads/', 'data/uploads/')).metadata()
+    const mediumMetadata = await sharp(result.sizes.medium.url.replace('/uploads/', 'data/uploads/')).metadata()
+    const largeMetadata = await sharp(result.sizes.large.url.replace('/uploads/', 'data/uploads/')).metadata()
+
+    // Small should be 400px wide (or less if aspect ratio requires)
+    expect(smallMetadata.width).toBeLessThanOrEqual(400)
+    // Medium should be 800px wide (or less if aspect ratio requires)
+    expect(mediumMetadata.width).toBeLessThanOrEqual(800)
+    // Large should be 1200px wide (or less if aspect ratio requires)
+    expect(largeMetadata.width).toBeLessThanOrEqual(1200)
+
+    console.log('✅ Responsive image sizes test passed!')
+    console.log(`Small: ${smallMetadata.width}x${smallMetadata.height}`)
+    console.log(`Medium: ${mediumMetadata.width}x${mediumMetadata.height}`)
+    console.log(`Large: ${largeMetadata.width}x${largeMetadata.height}`)
+  })
 })

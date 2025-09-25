@@ -66,8 +66,8 @@ export const generateSrcSet = (imageSizes: ImageSizes): string => {
 export const generateSizes = (context: 'grid' | 'list' | 'detail' = 'grid'): string => {
   switch (context) {
     case 'grid':
-      // Grid view: responsive breakpoints
-      return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw'
+      // Grid view: responsive breakpoints matching grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4
+      return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw'
     case 'list':
       // List view: fixed small size
       return '64px'
@@ -75,7 +75,7 @@ export const generateSizes = (context: 'grid' | 'list' | 'detail' = 'grid'): str
       // Detail view: larger responsive
       return '(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 60vw'
     default:
-      return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw'
+      return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw'
   }
 }
 
