@@ -48,7 +48,8 @@ function App() {
           <PageTracker />
           <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200">
             <Navigation />
-            <main>
+            {/* Offset content for fixed mobile header */}
+            <main className="pt-16 sm:pt-0">
               <Routes>
                 <Route path="/" element={<RecipesPage />} />
                 <Route path="/login" element={<LoginPage />} />
