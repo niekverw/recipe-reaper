@@ -43,6 +43,11 @@ export interface CreateRecipeData {
   ingredients: string[] | IngredientCategory[]
   instructions: string[]
   image?: string
+  imageSizes?: {
+    small: { url: string; width: number }
+    medium: { url: string; width: number }
+    large: { url: string; width: number }
+  }
   sourceUrl?: string
   tags?: string[]
   isPublic?: boolean

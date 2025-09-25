@@ -24,6 +24,11 @@ interface RecipeFormData {
   totalTimeMinutes?: number
   servings?: number
   image?: string
+  imageSizes?: {
+    small: { url: string; width: number }
+    medium: { url: string; width: number }
+    large: { url: string; width: number }
+  }
   sourceUrl?: string
   tags: string[]
   isPublic?: boolean
@@ -48,6 +53,7 @@ function RecipeFormPage() {
     totalTimeMinutes: undefined,
     servings: undefined,
     image: '',
+    imageSizes: undefined,
     sourceUrl: undefined,
     tags: [],
     isPublic: true // Default to public
@@ -79,6 +85,7 @@ function RecipeFormPage() {
   const [uploadImageFile, setUploadImageFile] = useState<File | null>(null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [previousImageUrl, setPreviousImageUrl] = useState<string>('')
+  const [formWasSubmitted, setFormWasSubmitted] = useState(false)
 
   useEffect(() => {
     // Load available tags
@@ -98,6 +105,7 @@ function RecipeFormPage() {
         totalTimeMinutes: copiedRecipe.totalTimeMinutes,
         servings: copiedRecipe.servings,
         image: copiedRecipe.image || '',
+        imageSizes: copiedRecipe.imageSizes,
         sourceUrl: copiedRecipe.sourceUrl,
         tags: copiedRecipe.tags || [],
         isPublic: false // Copied recipes default to private
@@ -118,13 +126,11 @@ function RecipeFormPage() {
     }
   }, [isEdit, id, copiedRecipe, location.state])
 
-  // Track image URL changes for cleanup
+  // Track image URL changes for cleanup - only delete on specific actions, not on every change
   useEffect(() => {
     if (formData.image !== previousImageUrl) {
-      // Clean up previous image if it was one of our uploads
-      if (previousImageUrl && isOurUploadedImage(previousImageUrl)) {
-        deleteUploadedImage(previousImageUrl)
-      }
+      // Only update the previous URL tracker - don't automatically delete
+      // Deletion should only happen when explicitly replacing an image or canceling
       setPreviousImageUrl(formData.image || '')
     }
   }, [formData.image, previousImageUrl])
@@ -133,6 +139,17 @@ function RecipeFormPage() {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
+
+  // Cleanup uploaded images when leaving form without saving (only for new recipes)
+  useEffect(() => {
+    return () => {
+      // Only cleanup if this is a new recipe (not editing), we have an uploaded image, and form wasn't submitted
+      if (!isEdit && !formWasSubmitted && formData.image && isOurUploadedImage(formData.image)) {
+        // Delete the orphaned uploaded image
+        deleteUploadedImage(formData.image)
+      }
+    }
+  }, [isEdit, formWasSubmitted, formData.image])
 
   const loadAvailableTags = async () => {
     try {
@@ -156,6 +173,7 @@ function RecipeFormPage() {
         prepTimeMinutes: recipe.prepTimeMinutes,
         servings: recipe.servings,
         image: recipe.image || '',
+        imageSizes: recipe.imageSizes,
         sourceUrl: recipe.sourceUrl,
         tags: recipe.tags || [],
         isPublic: recipe.isPublic
@@ -178,11 +196,19 @@ function RecipeFormPage() {
     if (name === 'image') {
       // If the user enters a full URL that matches our current domain, convert to relative
       const currentUrl = window.location
-      const frontendBaseUrl = `${currentUrl.protocol}//${currentUrl.hostname}:${currentUrl.port || (currentUrl.protocol === 'https:' ? '443' : '80')}`
+      const hostname = currentUrl.hostname
+      const port = currentUrl.port || (currentUrl.protocol === 'https:' ? '443' : '80')
+      const frontendBaseUrl = `${currentUrl.protocol}//${hostname}:${port}`
+      const frontendBaseUrlWithoutPort = `${currentUrl.protocol}//${hostname}`
 
-      if (value.startsWith(`${frontendBaseUrl}/uploads/`)) {
+      // Try both with and without port for better compatibility
+      if (value.startsWith(`${frontendBaseUrl}/uploads/`) || value.startsWith(`${frontendBaseUrlWithoutPort}/uploads/`)) {
         // Convert full URL back to relative path
-        processedValue = value.replace(frontendBaseUrl, '')
+        if (value.startsWith(`${frontendBaseUrl}/uploads/`)) {
+          processedValue = value.replace(frontendBaseUrl, '')
+        } else {
+          processedValue = value.replace(frontendBaseUrlWithoutPort, '')
+        }
       }
       // External URLs are kept as-is
     } else {
@@ -193,7 +219,9 @@ function RecipeFormPage() {
 
     setFormData(prev => ({
       ...prev,
-      [name]: processedValue
+      [name]: processedValue,
+      // Clear imageSizes if user manually changes image URL (unless it's our upload)
+      ...(name === 'image' && !isOurUploadedImage(value) && { imageSizes: undefined })
     }))
 
     // Check name availability for smart privacy defaulting
@@ -296,6 +324,7 @@ function RecipeFormPage() {
         totalTimeMinutes: recipeData.totalTimeMinutes,
         servings: recipeData.servings,
         image: recipeData.image || '',
+        imageSizes: undefined,
         sourceUrl: recipeData.sourceUrl,
         tags: [],
         isPublic: true
@@ -346,6 +375,7 @@ function RecipeFormPage() {
         totalTimeMinutes: recipeData.totalTimeMinutes,
         servings: recipeData.servings,
         image: recipeData.image || '',
+        imageSizes: undefined,
         sourceUrl: recipeData.sourceUrl,
         tags: [],
         isPublic: true
@@ -396,6 +426,7 @@ function RecipeFormPage() {
         totalTimeMinutes: recipeData.totalTimeMinutes,
         servings: recipeData.servings,
         image: recipeData.image || '',
+        imageSizes: undefined,
         sourceUrl: recipeData.sourceUrl,
         tags: [],
         isPublic: true
@@ -456,6 +487,7 @@ function RecipeFormPage() {
         totalTimeMinutes: recipeData.totalTimeMinutes,
         servings: recipeData.servings,
         image: recipeData.image || '',
+        imageSizes: undefined,
         sourceUrl: recipeData.sourceUrl,
         tags: [],
         isPublic: true
@@ -486,10 +518,16 @@ function RecipeFormPage() {
         setIsUploadingImage(true)
         const response = await apiService.uploadImage(file)
 
-        // Set the image URL in the form data
+        // Clean up previous image if it was one of our uploads (since we're replacing it)
+        if (formData.image && isOurUploadedImage(formData.image)) {
+          deleteUploadedImage(formData.image)
+        }
+
+        // Set the image URL and sizes in the form data
         setFormData(prev => ({
           ...prev,
-          image: response.imageUrl
+          image: response.imageUrl,
+          imageSizes: response.imageSizes
         }))
 
         // Clear the selected file
@@ -568,6 +606,7 @@ function RecipeFormPage() {
         totalTimeMinutes: formData.totalTimeMinutes,
         servings: formData.servings,
         image: formData.image?.trim() || '',
+        imageSizes: formData.imageSizes,
         sourceUrl: formData.sourceUrl?.trim() || '',
         tags: formData.tags,
         isPublic: formData.isPublic,
@@ -580,6 +619,9 @@ function RecipeFormPage() {
       } else {
         savedRecipe = await apiService.createRecipe(recipeData)
       }
+
+      // Mark that form was successfully submitted (prevents image cleanup)
+      setFormWasSubmitted(true)
 
       // Navigate to the recipe detail page
       navigate(`/recipe/${savedRecipe.id}`)

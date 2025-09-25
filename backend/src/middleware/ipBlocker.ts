@@ -99,8 +99,7 @@ export async function ipBlocker(req: Request, res: Response, next: NextFunction)
   
   // Check if path is suspicious
   const isSuspicious = SUSPICIOUS_PATHS.some(suspiciousPath => {
-    return req.path.toLowerCase().includes(suspiciousPath.toLowerCase()) ||
-           req.path.toLowerCase().startsWith(suspiciousPath.toLowerCase())
+    return req.path.toLowerCase().startsWith(suspiciousPath.toLowerCase())
   })
 
   // Log additional headers to help diagnose IP detection issues

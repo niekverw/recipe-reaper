@@ -67,3 +67,5 @@ out/
 icons/*-generated.png
 
 # Keep lockfiles in source control
+CLAUDE.md
+DOCUMENTATION/
