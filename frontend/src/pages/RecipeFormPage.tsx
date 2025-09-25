@@ -86,6 +86,8 @@ function RecipeFormPage() {
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [previousImageUrl, setPreviousImageUrl] = useState<string>('')
   const [formWasSubmitted, setFormWasSubmitted] = useState(false)
+  const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [originalImageUrl, setOriginalImageUrl] = useState<string>('')
 
   useEffect(() => {
     // Load available tags
@@ -111,6 +113,7 @@ function RecipeFormPage() {
         isPublic: false // Copied recipes default to private
       })
       setPreviousImageUrl(copiedRecipe.image || '')
+      setOriginalImageUrl(copiedRecipe.image || '')
     } else if (location.state?.importUrl) {
       // Handle shared URL from share target
       setImportUrl(location.state.importUrl)
@@ -126,11 +129,10 @@ function RecipeFormPage() {
     }
   }, [isEdit, id, copiedRecipe, location.state])
 
-  // Track image URL changes for cleanup - only delete on specific actions, not on every change
+  // Track image URL changes - don't delete images during editing
   useEffect(() => {
     if (formData.image !== previousImageUrl) {
-      // Only update the previous URL tracker - don't automatically delete
-      // Deletion should only happen when explicitly replacing an image or canceling
+      // Only update the previous URL tracker - no automatic deletion
       setPreviousImageUrl(formData.image || '')
     }
   }, [formData.image, previousImageUrl])
@@ -140,16 +142,20 @@ function RecipeFormPage() {
     window.scrollTo(0, 0)
   }, [])
 
-  // Cleanup uploaded images when leaving form without saving (only for new recipes)
+  // Conservative cleanup - only delete unused uploaded images when leaving form without saving
   useEffect(() => {
     return () => {
-      // Only cleanup if this is a new recipe (not editing), we have an uploaded image, and form wasn't submitted
-      if (!isEdit && !formWasSubmitted && formData.image && isOurUploadedImage(formData.image)) {
-        // Delete the orphaned uploaded image
-        deleteUploadedImage(formData.image)
+      // Only cleanup uploaded images that are not being used and form wasn't submitted
+      if (!formWasSubmitted) {
+        uploadedImages.forEach(imageUrl => {
+          // Don't delete the current image or the original image
+          if (imageUrl !== formData.image && imageUrl !== originalImageUrl) {
+            deleteUploadedImage(imageUrl)
+          }
+        })
       }
     }
-  }, [isEdit, formWasSubmitted, formData.image])
+  }, [formWasSubmitted, uploadedImages, formData.image, originalImageUrl])
 
   const loadAvailableTags = async () => {
     try {
@@ -179,6 +185,7 @@ function RecipeFormPage() {
         isPublic: recipe.isPublic
       })
       setPreviousImageUrl(recipe.image || '')
+      setOriginalImageUrl(recipe.image || '')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load recipe')
       console.error('Failed to load recipe:', err)
@@ -518,10 +525,9 @@ function RecipeFormPage() {
         setIsUploadingImage(true)
         const response = await apiService.uploadImage(file)
 
-        // Clean up previous image if it was one of our uploads (since we're replacing it)
-        if (formData.image && isOurUploadedImage(formData.image)) {
-          deleteUploadedImage(formData.image)
-        }
+        // Track uploaded images for potential cleanup, but don't delete immediately
+        // Add to our list of uploaded images for this session
+        setUploadedImages(prev => [...prev, response.imageUrl])
 
         // Set the image URL and sizes in the form data
         setFormData(prev => ({
@@ -622,6 +628,14 @@ function RecipeFormPage() {
 
       // Mark that form was successfully submitted (prevents image cleanup)
       setFormWasSubmitted(true)
+
+      // Clean up unused uploaded images after successful save
+      uploadedImages.forEach(imageUrl => {
+        // Delete uploaded images that aren't being used in the saved recipe
+        if (imageUrl !== savedRecipe.image && imageUrl !== originalImageUrl) {
+          deleteUploadedImage(imageUrl)
+        }
+      })
 
       // Navigate to the recipe detail page
       navigate(`/recipe/${savedRecipe.id}`)
