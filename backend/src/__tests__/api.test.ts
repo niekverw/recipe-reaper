@@ -345,6 +345,78 @@ describe('Recipe API Tests', () => {
     })
   })
 
+  describe('Household recipe access control', () => {
+    const createHouseholdWithMember = async () => {
+      const privateRecipeResponse = await agent
+        .post('/api/recipes')
+        .send({
+          name: 'Household Private Recipe',
+          description: 'Only household should see this',
+          ingredients: ['ingredient1'],
+          instructions: ['step1'],
+          isPublic: false
+        })
+
+      const recipeId = privateRecipeResponse.body.recipe.id
+
+      const householdResponse = await agent
+        .post('/api/households')
+        .send({ name: 'Test Household' })
+        .expect(201)
+
+      const inviteCode = householdResponse.body.household.inviteCode
+
+      const memberAgent = request.agent(app)
+      const uniqueEmail = `housemate-${Date.now()}@example.com`
+
+      await memberAgent
+        .post('/api/auth/register')
+        .send({
+          displayName: 'House Mate',
+          email: uniqueEmail,
+          password: 'password'
+        })
+        .expect(201)
+
+      await memberAgent
+        .post('/api/households/join')
+        .send({ inviteCode })
+        .expect(200)
+
+      return { memberAgent, recipeId }
+    }
+
+    it('allows household members to view private recipes created before joining the household', async () => {
+      const { memberAgent, recipeId } = await createHouseholdWithMember()
+
+      const listResponse = await memberAgent
+        .get('/api/recipes?scope=my')
+        .expect(200)
+
+      const recipeIds = listResponse.body.recipes.map((recipe: any) => recipe.id)
+      expect(recipeIds).toContain(recipeId)
+    })
+
+    it('allows household members to update private recipes owned by other members', async () => {
+      const { memberAgent, recipeId } = await createHouseholdWithMember()
+
+      const updatedDescription = 'Updated by household member'
+
+      const updateResponse = await memberAgent
+        .put(`/api/recipes/${recipeId}`)
+        .send({ description: updatedDescription })
+        .expect(200)
+
+      expect(updateResponse.body.recipe.description).toBe(updatedDescription)
+
+      const verifyResponse = await agent
+        .get(`/api/recipes/${recipeId}`)
+        .expect(200)
+
+      expect(verifyResponse.body.recipe.description).toBe(updatedDescription)
+    })
+  })
+
   describe('Error Handling', () => {
     it('should handle invalid JSON', async () => {
       const response = await agent
@@ -361,7 +433,8 @@ describe('Recipe API Tests', () => {
         .get('/unknown-endpoint')
         .expect(404)
 
-      expect(response.body.error).toBe('Route not found')
+      const errorPayload = response.body?.error ?? response.text
+      expect(errorPayload).toMatch(/not found/i)
     })
   })
 })

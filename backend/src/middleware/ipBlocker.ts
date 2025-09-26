@@ -129,16 +129,16 @@ export async function ipBlocker(req: Request, res: Response, next: NextFunction)
     // Check if IP is already blocked
     const blockedIP = await db.get('SELECT * FROM blocked_ips WHERE ip_address = $1', [clientIP]) as any
     if (blockedIP) {
-      console.log(`🚫 BLOCKED REQUEST - IP: ${clientIP}`)
-      console.log(`   └─ Reason: ${blockedIP.blocked_reason}`)
-      console.log(`   └─ Total attempts: ${blockedIP.attempt_count}`)
-      console.log(`   └─ First blocked: ${blockedIP.blocked_at}`)
-      console.log(`   └─ Requested path: ${req.path}`)
-      console.log(`   └─ User-Agent: ${req.get('User-Agent') || 'Unknown'}`)
-      console.log(`   └─ STATUS: PERMANENT BAN ACTIVE`)
+      // console.log(`🚫 BLOCKED REQUEST - IP: ${clientIP}`)
+      // console.log(`   └─ Reason: ${blockedIP.blocked_reason}`)
+      // console.log(`   └─ Total attempts: ${blockedIP.attempt_count}`)
+      // console.log(`   └─ First blocked: ${blockedIP.blocked_at}`)
+      // console.log(`   └─ Requested path: ${req.path}`)
+      // console.log(`   └─ User-Agent: ${req.get('User-Agent') || 'Unknown'}`)
+      // console.log(`   └─ STATUS: PERMANENT BAN ACTIVE`)
       return res.status(403).json({
         error: 'Access denied',
-        message: 'Your IP address has been permanently blocked due to suspicious activity. If you believe this is an error, please contact the administrator.',
+        //message: 'Your IP address has been permanently blocked due to suspicious activity. If you believe this is an error, please contact the administrator.',
         blocked_since: blockedIP.blocked_at,
         reason: blockedIP.blocked_reason
       })

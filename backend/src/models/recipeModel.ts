@@ -64,26 +64,39 @@ export const recipeModel = {
 
     // Simplified 2-level privacy: private (personal + household) vs public
     if (filters.scope === 'my' && filters.userId) {
-      // User's accessible recipes: private recipes (personal + household)
       if (filters.householdId) {
-        // User has household: show personal recipes + household recipes
-        sql += ` AND ((user_id = $${params.length + 1} AND household_id IS NULL) OR household_id = $${params.length + 2})`
+        const userParamIndex = params.length + 1
+        const householdParamIndex = params.length + 2
+        sql += ` AND (
+          user_id = $${userParamIndex}
+          OR household_id = $${householdParamIndex}
+          OR user_id IN (
+            SELECT id FROM users WHERE household_id = $${householdParamIndex}
+          )
+        )`
         params.push(filters.userId, filters.householdId)
       } else {
-        // User has no household: show only personal recipes
-        sql += ` AND (user_id = $${params.length + 1} AND household_id IS NULL)`
+        sql += ` AND user_id = $${params.length + 1}`
         params.push(filters.userId)
       }
     } else if (filters.scope === 'public') {
       // Only public recipes
       sql += ' AND is_public = true'
     } else if (filters.scope === 'all' && filters.userId) {
-      // Everything user can see: private recipes + public recipes
       if (filters.householdId) {
-        sql += ` AND ((user_id = $${params.length + 1} AND household_id IS NULL) OR household_id = $${params.length + 2} OR is_public = true)`
+        const userParamIndex = params.length + 1
+        const householdParamIndex = params.length + 2
+        sql += ` AND (
+          user_id = $${userParamIndex}
+          OR household_id = $${householdParamIndex}
+          OR user_id IN (
+            SELECT id FROM users WHERE household_id = $${householdParamIndex}
+          )
+          OR is_public = true
+        )`
         params.push(filters.userId, filters.householdId)
       } else {
-        sql += ` AND ((user_id = $${params.length + 1} AND household_id IS NULL) OR is_public = true)`
+        sql += ` AND (user_id = $${params.length + 1} OR is_public = true)`
         params.push(filters.userId)
       }
     } else if (!filters.userId) {

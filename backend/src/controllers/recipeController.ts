@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { recipeModel } from '../models/recipeModel'
+import { userModel } from '../models/userModel'
 import { CreateRecipeRequest, UpdateRecipeRequest, RecipeFilters, IngredientCategory } from '../types/recipe'
 import { createError } from '../middleware/errorHandler'
 import { openaiService } from '../services/openaiService'
@@ -94,6 +95,25 @@ function parseImageUrl(image?: any): string | undefined {
   }
 
   return undefined
+}
+
+async function userHasHouseholdAccess(user: User, recipeOwnerId?: string, recipeHouseholdId?: string): Promise<boolean> {
+  if (!user.householdId) {
+    return false
+  }
+
+  if (recipeHouseholdId && recipeHouseholdId === user.householdId) {
+    return true
+  }
+
+  if (recipeOwnerId && recipeOwnerId !== user.id) {
+    const owner = await userModel.findById(recipeOwnerId)
+    if (owner && owner.household_id === user.householdId) {
+      return true
+    }
+  }
+
+  return false
 }
 
 export const recipeController = {
@@ -194,9 +214,9 @@ export const recipeController = {
 
       // Check authorization: user must own the recipe or it must be in their household
       const isOwner = existingRecipe.userId === user.id
-      const isInHousehold = existingRecipe.householdId && existingRecipe.householdId === user.householdId
+      const hasHouseholdAccess = await userHasHouseholdAccess(user, existingRecipe.userId, existingRecipe.householdId)
 
-      if (!isOwner && !isInHousehold) {
+      if (!isOwner && !hasHouseholdAccess) {
         throw createError('You do not have permission to update this recipe', 403)
       }
 
@@ -223,9 +243,9 @@ export const recipeController = {
 
       // Check authorization: user must own the recipe or it must be in their household
       const isOwner = existingRecipe.userId === user.id
-      const isInHousehold = existingRecipe.householdId && existingRecipe.householdId === user.householdId
+      const hasHouseholdAccess = await userHasHouseholdAccess(user, existingRecipe.userId, existingRecipe.householdId)
 
-      if (!isOwner && !isInHousehold) {
+      if (!isOwner && !hasHouseholdAccess) {
         throw createError('You do not have permission to delete this recipe', 403)
       }
 
