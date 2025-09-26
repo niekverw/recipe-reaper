@@ -233,6 +233,7 @@ if (true) { // Always apply whitelist - was: process.env.NODE_ENV === 'productio
       '/share-target',
       '/recipe/',           // Covers /recipe/:id and /recipe/:id/edit
       '/add-recipe',
+      '/shopping-list',
       '/settings',
 
       // Static assets and PWA files

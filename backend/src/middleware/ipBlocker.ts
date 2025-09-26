@@ -18,7 +18,6 @@ const SUSPICIOUS_PATHS = [
   // Common CMS paths
   '/admin',
   '/administrator',
-  '/login',
   '/phpmyadmin',
   '/pma',
   '/mysql',

@@ -499,39 +499,92 @@ class ApiService {
 
   // Shopping list methods
   async getShoppingList(): Promise<ShoppingListItem[]> {
-    return this.request<ShoppingListItem[]>('/shopping-list')
+    await this.ensureInitialized()
+
+    // Try to get from cache first
+    const cachedData = await cacheManager.getCachedShoppingList()
+    if (cachedData) {
+      // If we're offline, return cached data immediately
+      if (!navigator.onLine) {
+        return cachedData
+      }
+
+      // If online, return cached data but also refresh in background
+      this.refreshShoppingListCache()
+      return cachedData
+    }
+
+    // No cache, try network
+    try {
+      const shoppingList = await this.request<ShoppingListItem[]>('/shopping-list')
+
+      // Cache the response
+      await cacheManager.cacheShoppingList(shoppingList)
+
+      return shoppingList
+    } catch (error) {
+      // If network fails and we have no cache, throw error
+      throw error
+    }
+  }
+
+  private async refreshShoppingListCache() {
+    try {
+      const shoppingList = await this.request<ShoppingListItem[]>('/shopping-list')
+
+      // Update cache in background
+      await cacheManager.cacheShoppingList(shoppingList)
+    } catch (error) {
+      // Silently fail background refresh
+      console.warn('Failed to refresh shopping list cache:', error)
+    }
   }
 
   async addToShoppingList(data: AddToShoppingListRequest): Promise<{ message: string; items: ShoppingListItem[] }> {
-    return this.request<{ message: string; items: ShoppingListItem[] }>('/shopping-list', {
+    const result = await this.request<{ message: string; items: ShoppingListItem[] }>('/shopping-list', {
       method: 'POST',
       body: JSON.stringify(data)
     })
+    // Invalidate cache since shopping list has changed
+    await cacheManager.invalidateShoppingListCache()
+    return result
   }
 
   async updateShoppingListItem(id: string, data: { isCompleted: boolean }): Promise<ShoppingListItem> {
-    return this.request<ShoppingListItem>(`/shopping-list/${id}`, {
+    const result = await this.request<ShoppingListItem>(`/shopping-list/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data)
     })
+    // Invalidate cache since shopping list item has changed
+    await cacheManager.invalidateShoppingListCache()
+    return result
   }
 
   async deleteShoppingListItem(id: string): Promise<{ message: string }> {
-    return this.request<{ message: string }>(`/shopping-list/${id}`, {
+    const result = await this.request<{ message: string }>(`/shopping-list/${id}`, {
       method: 'DELETE'
     })
+    // Invalidate cache since shopping list item has been deleted
+    await cacheManager.invalidateShoppingListCache()
+    return result
   }
 
   async clearCompletedShoppingItems(): Promise<{ message: string }> {
-    return this.request<{ message: string }>('/shopping-list/completed', {
+    const result = await this.request<{ message: string }>('/shopping-list/completed', {
       method: 'DELETE'
     })
+    // Invalidate cache since completed items have been cleared
+    await cacheManager.invalidateShoppingListCache()
+    return result
   }
 
   async clearAllShoppingItems(): Promise<{ message: string }> {
-    return this.request<{ message: string }>('/shopping-list', {
+    const result = await this.request<{ message: string }>('/shopping-list', {
       method: 'DELETE'
     })
+    // Invalidate cache since all items have been cleared
+    await cacheManager.invalidateShoppingListCache()
+    return result
   }
 }
 

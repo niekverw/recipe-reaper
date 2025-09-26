@@ -1,4 +1,6 @@
 // IndexedDB-based caching utility for offline functionality
+import packageJson from '../../package.json'
+
 interface CacheEntry<T = any> {
   key: string
   data: T
@@ -60,7 +62,7 @@ class CacheDB {
 
   async set<T>(storeName: string, key: string, data: T, options: CacheOptions = {}): Promise<void> {
     const db = this.ensureDB()
-    const { ttl, version = '1.0' } = options
+    const { ttl, version = packageJson.version } = options
 
     const entry: CacheEntry<T> = {
       key,
@@ -185,7 +187,29 @@ class CacheManager {
   async init(): Promise<void> {
     if (this.initialized) return
     await this.db.init()
+    
+    // Check and invalidate old caches on version change
+    await this.checkAndInvalidateOldCaches()
+    
     this.initialized = true
+  }
+
+  private async checkAndInvalidateOldCaches(): Promise<void> {
+    try {
+      // Check if we have a stored app version
+      const storedVersion = localStorage.getItem('app-cache-version')
+      const currentVersion = packageJson.version
+
+      if (storedVersion && storedVersion !== currentVersion) {
+        console.log(`App version changed from ${storedVersion} to ${currentVersion}, clearing old caches`)
+        await this.clearAll()
+      }
+
+      // Store current version
+      localStorage.setItem('app-cache-version', currentVersion)
+    } catch (error) {
+      console.error('Failed to check cache version:', error)
+    }
   }
 
   // Recipe-specific caching methods
@@ -194,7 +218,7 @@ class CacheManager {
     const cacheKey = `recipes-${scope}`
     await this.db.set(this.db.stores.apiResponses, cacheKey, recipes, {
       ttl: 24 * 60 * 60 * 1000, // 24 hours
-      version: '1.0'
+      version: packageJson.version
     })
   }
 
@@ -209,7 +233,7 @@ class CacheManager {
     const cacheKey = `recipe-${recipe.id}`
     await this.db.set(this.db.stores.recipes, cacheKey, recipe, {
       ttl: 24 * 60 * 60 * 1000, // 24 hours
-      version: '1.0'
+      version: packageJson.version
     })
   }
 
@@ -225,12 +249,34 @@ class CacheManager {
     await this.db.delete(this.db.stores.recipes, cacheKey)
   }
 
+  // Shopping list-specific caching methods
+  async cacheShoppingList(shoppingList: any[]): Promise<void> {
+    await this.init()
+    const cacheKey = 'shopping-list'
+    await this.db.set(this.db.stores.apiResponses, cacheKey, shoppingList, {
+      ttl: 60 * 60 * 1000, // 1 hour - shopping lists change more frequently
+      version: packageJson.version
+    })
+  }
+
+  async getCachedShoppingList(): Promise<any[] | null> {
+    await this.init()
+    const cacheKey = 'shopping-list'
+    return this.db.get(this.db.stores.apiResponses, cacheKey)
+  }
+
+  async invalidateShoppingListCache(): Promise<void> {
+    await this.init()
+    const cacheKey = 'shopping-list'
+    await this.db.delete(this.db.stores.apiResponses, cacheKey)
+  }
+
   // Generic API response caching
   async cacheApiResponse(key: string, data: any, ttl?: number): Promise<void> {
     await this.init()
     await this.db.set(this.db.stores.apiResponses, key, data, {
       ttl: ttl || 60 * 60 * 1000, // 1 hour default
-      version: '1.0'
+      version: packageJson.version
     })
   }
 
