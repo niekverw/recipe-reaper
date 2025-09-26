@@ -1,8 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider } from './contexts/AuthContext'
+import { OfflineProvider } from './contexts/OfflineContext'
 import Navigation from './components/Navigation'
 import PWAInstallPrompt from './components/PWAInstallPrompt'
+import OfflineIndicator from './components/OfflineIndicator'
 import GoogleAnalytics from './components/GoogleAnalytics'
 import PageTracker from './components/PageTracker'
 import PerformanceDashboard from './components/PerformanceDashboard'
@@ -42,32 +44,35 @@ function App() {
 
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <GoogleAnalytics />
-        <Router>
-          <PageTracker />
-          <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200">
-            <Navigation />
-            {/* Offset content for fixed mobile header */}
-            <main className="pt-16 sm:pt-0">
-              <Routes>
-                <Route path="/" element={<RecipesPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/auth/callback" element={<AuthCallbackPage />} />
-                <Route path="/share-target" element={<ShareTargetPage />} />
-                <Route path="/recipe/:id" element={<RecipeDetailPage />} />
-                <Route path="/add-recipe" element={<RecipeFormPage />} />
-                <Route path="/recipe/:id/edit" element={<RecipeFormPage />} />
-                <Route path="/shopping-list" element={<ShoppingListPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-              </Routes>
-            </main>
-            <PWAInstallPrompt />
-          </div>
-          {import.meta.env.DEV && <PerformanceDashboard />}
-        </Router>
-      </AuthProvider>
+      <OfflineProvider>
+        <AuthProvider>
+          <GoogleAnalytics />
+          <Router>
+            <PageTracker />
+            <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200">
+              <OfflineIndicator />
+              <Navigation />
+              {/* Offset content for fixed mobile header */}
+              <main className="pt-16 sm:pt-0">
+                <Routes>
+                  <Route path="/" element={<RecipesPage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/auth/callback" element={<AuthCallbackPage />} />
+                  <Route path="/share-target" element={<ShareTargetPage />} />
+                  <Route path="/recipe/:id" element={<RecipeDetailPage />} />
+                  <Route path="/add-recipe" element={<RecipeFormPage />} />
+                  <Route path="/recipe/:id/edit" element={<RecipeFormPage />} />
+                  <Route path="/shopping-list" element={<ShoppingListPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                </Routes>
+              </main>
+              <PWAInstallPrompt />
+            </div>
+            {import.meta.env.DEV && <PerformanceDashboard />}
+          </Router>
+        </AuthProvider>
+      </OfflineProvider>
     </ThemeProvider>
   )
 }

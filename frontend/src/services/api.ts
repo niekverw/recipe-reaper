@@ -1,4 +1,5 @@
 import { Household } from '../types/user'
+import { cacheManager } from '../utils/cacheManager'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
@@ -104,12 +105,22 @@ export interface AddToShoppingListRequest {
 }
 
 class ApiService {
+  private initialized = false
+
+  private async ensureInitialized() {
+    if (!this.initialized) {
+      await cacheManager.init()
+      this.initialized = true
+    }
+  }
+
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    await this.ensureInitialized()
     const url = `${API_BASE_URL}${endpoint}`
 
     // Don't set Content-Type for FormData, let the browser set it
     const isFormData = options?.body instanceof FormData
-    const headers = isFormData 
+    const headers = isFormData
       ? { ...options?.headers }
       : {
           'Content-Type': 'application/json',
@@ -137,6 +148,7 @@ class ApiService {
 
   // Recipe CRUD operations
   async getRecipes(filters?: RecipeFilters): Promise<Recipe[]> {
+    await this.ensureInitialized()
     const params = new URLSearchParams()
 
     if (filters?.search) params.append('search', filters.search)
@@ -148,36 +160,150 @@ class ApiService {
 
     const queryString = params.toString()
     const endpoint = queryString ? `/recipes?${queryString}` : '/recipes'
+    const cacheKey = `recipes-${filters?.scope || 'all'}-${queryString || 'default'}`
 
-    const response = await this.request<{recipes: Recipe[]}>(endpoint)
-    return response.recipes
+    // Try to get from cache first
+    const cachedData = await cacheManager.getCachedApiResponse(cacheKey)
+    if (cachedData) {
+      // If we're offline, return cached data immediately
+      if (!navigator.onLine) {
+        return cachedData
+      }
+
+      // If online, return cached data but also refresh in background
+      this.refreshRecipesCache(endpoint, cacheKey, filters?.scope || 'all')
+      return cachedData
+    }
+
+    // No cache, try network
+    try {
+      const response = await this.request<{recipes: Recipe[]}>(endpoint)
+      const recipes = response.recipes
+
+      // Cache the response
+      await cacheManager.cacheApiResponse(cacheKey, recipes, 24 * 60 * 60 * 1000) // 24 hours
+      await cacheManager.cacheRecipes(recipes, filters?.scope || 'all')
+
+      return recipes
+    } catch (error) {
+      // If network fails and we have no cache, throw error
+      throw error
+    }
+  }
+
+  private async refreshRecipesCache(endpoint: string, cacheKey: string, scope: string) {
+    try {
+      const response = await this.request<{recipes: Recipe[]}>(endpoint)
+      const recipes = response.recipes
+
+      // Update cache in background
+      await cacheManager.cacheApiResponse(cacheKey, recipes, 24 * 60 * 60 * 1000)
+      await cacheManager.cacheRecipes(recipes, scope)
+    } catch (error) {
+      // Silently fail background refresh
+      console.warn('Failed to refresh recipes cache:', error)
+    }
   }
 
   async getRecipe(id: string): Promise<Recipe> {
+    await this.ensureInitialized()
+
+    // Try cache first
+    const cachedRecipe = await cacheManager.getCachedRecipe(id)
+    if (cachedRecipe) {
+      if (!navigator.onLine) {
+        return cachedRecipe
+      }
+
+      // Background refresh
+      this.refreshRecipeCache(id)
+      return cachedRecipe
+    }
+
+    // Network request
     const response = await this.request<{recipe: Recipe}>(`/recipes/${id}`)
-    return response.recipe
+    const recipe = response.recipe
+
+    // Cache the recipe
+    await cacheManager.cacheRecipe(recipe)
+
+    return recipe
+  }
+
+  private async refreshRecipeCache(id: string) {
+    try {
+      const response = await this.request<{recipe: Recipe}>(`/recipes/${id}`)
+      const recipe = response.recipe
+      await cacheManager.cacheRecipe(recipe)
+    } catch (error) {
+      console.warn('Failed to refresh recipe cache:', error)
+    }
   }
 
   async createRecipe(data: CreateRecipeData): Promise<Recipe> {
+    await this.ensureInitialized()
+
+    if (!navigator.onLine) {
+      throw new Error('You are offline. Please reconnect to create recipes.')
+    }
+
     const response = await this.request<{recipe: Recipe}>('/recipes', {
       method: 'POST',
       body: JSON.stringify(data),
     })
+
+    // Invalidate and refresh cache
+    await this.invalidateRecipesCache()
+
     return response.recipe
   }
 
   async updateRecipe(id: string, data: UpdateRecipeData): Promise<Recipe> {
+    await this.ensureInitialized()
+
+    if (!navigator.onLine) {
+      throw new Error('You are offline. Please reconnect to update recipes.')
+    }
+
     const response = await this.request<{recipe: Recipe}>(`/recipes/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     })
+
+    // Update cache
+    await cacheManager.cacheRecipe(response.recipe)
+    await this.invalidateRecipesCache()
+
     return response.recipe
   }
 
   async deleteRecipe(id: string): Promise<void> {
+    await this.ensureInitialized()
+
+    if (!navigator.onLine) {
+      throw new Error('You are offline. Please reconnect to delete recipes.')
+    }
+
     await this.request<void>(`/recipes/${id}`, {
       method: 'DELETE',
     })
+
+    // Remove from cache
+    const cachedRecipe = await cacheManager.getCachedRecipe(id)
+    if (cachedRecipe) {
+      await cacheManager.removeCachedRecipe(id)
+    }
+
+    await this.invalidateRecipesCache()
+  }
+
+  private async invalidateRecipesCache() {
+    // Clear all recipes caches to force refresh
+    try {
+      await cacheManager.invalidateRecipeListCaches()
+    } catch (error) {
+      console.warn('Failed to invalidate recipes cache:', error)
+    }
   }
 
   // Recipe scraping operation
@@ -296,6 +422,13 @@ class ApiService {
     })
   }
 
+  // Delete uploaded image by filename
+  async deleteImage(filename: string) {
+    return this.request<void>(`/recipes/delete-image/${filename}`, {
+      method: 'DELETE',
+    })
+  }
+
   // Helper to determine the public frontend URL for image URLs
   private getPublicBackendUrl(): string {
     const currentUrl = window.location
@@ -327,13 +460,6 @@ class ApiService {
 
     // Fallback - return as-is
     return imagePath
-  }
-
-  // Delete uploaded image by filename
-  async deleteImage(filename: string) {
-    return this.request<void>(`/recipes/delete-image/${filename}`, {
-      method: 'DELETE',
-    })
   }
 
   // Get all unique tags

@@ -14,11 +14,13 @@ import {
   TagIcon,
   LockClosedIcon,
   GlobeAltIcon,
-  HomeIcon
+  HomeIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
 import { apiService, Recipe } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { generateSrcSet, generateSizes } from '../utils/imageUtils'
+import { useOffline } from '../contexts/OfflineContext'
 
 interface RecipeActionsProps {
   recipe: Recipe
@@ -316,6 +318,7 @@ function RecipesPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { user, household } = useAuth()
+  const { isOnline } = useOffline()
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('recent')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -517,6 +520,13 @@ function RecipesPage() {
               </span>
             </div>
           </div>
+
+          {!isOnline && (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20 px-3 py-2 text-sm text-amber-800 dark:text-amber-300">
+              <ExclamationTriangleIcon className="w-4 h-4" />
+              Offline mode: showing cached recipes. Some actions are unavailable until you reconnect.
+            </div>
+          )}
 
           {/* Scope Navigation */}
           {user && (
