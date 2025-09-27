@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { getRandomLoadingHumor } from '../utils/humor'
 
 function DashboardPage() {
   const navigate = useNavigate()
@@ -19,6 +20,9 @@ function DashboardPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-2 text-gray-600 dark:text-gray-400">Loading...</p>
+          <p className="text-sm text-gray-500 dark:text-gray-500 mt-2" style={{ fontStyle: 'italic' }}>
+            {getRandomLoadingHumor()}
+          </p>
         </div>
       </div>
     )

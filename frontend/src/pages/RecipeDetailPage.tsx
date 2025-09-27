@@ -22,6 +22,7 @@ import { apiService, Recipe, IngredientCategory } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { IngredientHelper } from '../utils/ingredientHelper'
 import { TagHelper } from '../utils/tagHelper'
+import { getRandomLoadingHumor } from '../utils/humor'
 import { useCallback } from 'react'
 import TextWithHeaders from '../components/TextWithHeaders'
 import { TextHeaderParser } from '../utils/textHeaderParser'
@@ -341,6 +342,9 @@ function RecipeDetailPage() {
         <div className="text-center py-20">
           <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Loading recipe...</p>
+          <p className="text-sm text-gray-500 dark:text-gray-500 mt-2" style={{ fontStyle: 'italic' }}>
+            {getRandomLoadingHumor()}
+          </p>
         </div>
       </div>
     )

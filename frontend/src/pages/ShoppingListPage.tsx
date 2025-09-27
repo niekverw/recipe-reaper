@@ -12,6 +12,7 @@ import {
 import { apiService, ShoppingListItem } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { getCategoryById, IngredientCategory } from '../utils/categories'
+import { getRandomLoadingHumor, getRandomShoppingListHumor } from '../utils/humor'
 
 interface CustomCheckboxProps {
   size?: 'sm' | 'md' | 'lg'
@@ -274,6 +275,9 @@ export default function ShoppingListPage() {
         <div className="text-center py-20">
           <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Loading shopping list...</p>
+          <p className="text-sm text-gray-500 dark:text-gray-500 mt-2 italic">
+            {getRandomLoadingHumor()}
+          </p>
         </div>
       </div>
     )
@@ -368,8 +372,8 @@ export default function ShoppingListPage() {
             <ShoppingBagIcon className="w-8 h-8 text-gray-400" />
           </div>
           <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Your shopping list is empty</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Add ingredients from recipes to start building your shopping list.
+          <p className="text-sm text-gray-500 dark:text-gray-500 mb-6 italic">
+            {getRandomShoppingListHumor()}
           </p>
           <button
             onClick={() => navigate('/')}

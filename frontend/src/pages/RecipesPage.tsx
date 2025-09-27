@@ -19,6 +19,7 @@ import {
 import { apiService, Recipe } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { generateSrcSet, generateSizes } from '../utils/imageUtils'
+import { getRandomLoadingHumor } from '../utils/humor'
 
 interface RecipeActionsProps {
   recipe: Recipe
@@ -707,6 +708,9 @@ function RecipesPage() {
           <div className="text-center py-12">
             <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600 dark:text-gray-400">Loading recipes...</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2 italic">
+              {getRandomLoadingHumor()}
+            </p>
           </div>
         ) : filteredAndSortedRecipes.length === 0 ? (
           <div className="text-center py-12">
