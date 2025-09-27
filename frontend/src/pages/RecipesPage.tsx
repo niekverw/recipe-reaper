@@ -507,168 +507,172 @@ function RecipesPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                {getPageTitle(scope, user)}
-              </h1>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+          <h1 className="sr-only">{getPageTitle(scope, user)}</h1>
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            {user ? (
+              <div className="flex flex-1 flex-wrap items-center gap-1 border-b border-gray-200 dark:border-gray-700">
+                <button
+                  type="button"
+                  onClick={() => setSearchParams({ scope: 'my' })}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                    scope === 'my'
+                      ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  }`}
+                >
+                  Recipes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSearchParams({ scope: 'public' })}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                    scope === 'public'
+                      ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  }`}
+                >
+                  Browse Public
+                </button>
+
+                <span className="ml-auto inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                  {filteredAndSortedRecipes.length} {CONTENT.recipesLabel}
+                </span>
+              </div>
+            ) : (
+              <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
                 {filteredAndSortedRecipes.length} {CONTENT.recipesLabel}
               </span>
-            </div>
+            )}
           </div>
 
-          {/* Scope Navigation */}
-          {user && (
-            <div className="flex items-center gap-1 border-b border-gray-200 dark:border-gray-700">
-              <button
-                onClick={() => setSearchParams({ scope: 'my' })}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  scope === 'my'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                }`}
-              >
-                Recipes
-              </button>
-              <button
-                onClick={() => setSearchParams({ scope: 'public' })}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  scope === 'public'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                }`}
-              >
-                Browse Public
-              </button>
-            </div>
-          )}
-
-          {/* Search and Controls */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />
-              </div>
-              <input
-                type="search"
-                placeholder={CONTENT.searchPlaceholder}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                autoComplete="off"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck="false"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              {/* Sort Dropdown */}
-              <div className="relative">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 pr-8 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                >
-                  <option value="name">Name</option>
-                  <option value="time">Time</option>
-                  <option value="servings">Servings</option>
-                  <option value="recent">Recent</option>
-                </select>
-                <FunnelIcon className="w-4 h-4 text-gray-400 absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+          {/* Search & Filters */}
+          <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-700 dark:bg-gray-900/40">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative flex-grow basis-full min-w-[220px] sm:basis-72">
+                <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="search"
+                  placeholder={CONTENT.searchPlaceholder}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm text-gray-900 placeholder-gray-500 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
+                />
               </div>
 
-              {/* View Toggle */}
-              <div className="flex border border-gray-300 dark:border-gray-600 rounded-lg">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-l-lg transition-colors ${
-                    viewMode === 'grid'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
-                  aria-label="Grid view"
-                >
-                  <Squares2X2Icon className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-r-lg border-l border-gray-300 dark:border-gray-600 transition-colors ${
-                    viewMode === 'list'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
-                  aria-label="List view"
-                >
-                  <Bars3BottomLeftIcon className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Tag Filter */}
-          <div className="space-y-3">
-            {/* Tag Filter Toggle */}
-            <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => setShowTagFilter(!showTagFilter)}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                aria-pressed={showTagFilter}
+                className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  showTagFilter
+                    ? 'border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-200'
+                    : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                }`}
               >
-                <TagIcon className="w-4 h-4" />
-                Filter by Tags
+                <TagIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">Tags</span>
                 {selectedTags.length > 0 && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                  <span className="inline-flex min-w-[1.75rem] justify-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
                     {selectedTags.length}
                   </span>
                 )}
               </button>
-              {selectedTags.length > 0 && (
-                <button
-                  onClick={clearTagFilters}
-                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                >
-                  Clear all
-                </button>
-              )}
+
+              <div className="ml-auto flex items-center gap-2">
+                <div className="relative">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="appearance-none rounded-lg border border-gray-200 bg-white px-3 py-2 pr-8 text-sm text-gray-900 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                  >
+                    <option value="name">Name</option>
+                    <option value="time">Time</option>
+                    <option value="servings">Servings</option>
+                    <option value="recent">Recent</option>
+                  </select>
+                  <FunnelIcon className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                </div>
+
+                <div className="flex overflow-hidden rounded-lg border border-gray-200 dark:border-gray-600">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('grid')}
+                    aria-pressed={viewMode === 'grid'}
+                    className={`p-2 transition-colors ${
+                      viewMode === 'grid'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                    }`}
+                    aria-label="Grid view"
+                  >
+                    <Squares2X2Icon className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    aria-pressed={viewMode === 'list'}
+                    className={`border-l border-gray-200 p-2 transition-colors dark:border-gray-600 ${
+                      viewMode === 'list'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                    }`}
+                    aria-label="List view"
+                  >
+                    <Bars3BottomLeftIcon className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Selected Tags */}
             {selectedTags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                <span className="text-sm text-gray-500 dark:text-gray-400">Active filters:</span>
+              <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-blue-200/60 bg-blue-50/70 p-2 dark:border-blue-800/60 dark:bg-blue-900/20">
+                <span className="text-xs font-semibold uppercase tracking-wide text-blue-800 dark:text-blue-100">
+                  Active
+                </span>
                 {selectedTags.map(tag => (
                   <button
                     key={tag}
+                    type="button"
                     onClick={() => removeTagFilter(tag)}
-                    className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-sm rounded-md border border-blue-200 dark:border-blue-800 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+                    className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 text-sm text-blue-700 shadow-sm transition-colors hover:bg-blue-100 dark:bg-blue-900/40 dark:text-blue-100 dark:hover:bg-blue-800/60"
                   >
                     {tag}
-                    <XMarkIcon className="w-3 h-3" />
+                    <XMarkIcon className="h-3 w-3" />
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={clearTagFilters}
+                  className="ml-auto text-sm font-medium text-blue-700 underline-offset-2 transition-colors hover:text-blue-900 dark:text-blue-200 dark:hover:text-blue-100"
+                >
+                  Clear
+                </button>
               </div>
             )}
 
-            {/* Tag Filter Dropdown */}
-            {showTagFilter && availableTags.length > 0 && (
-              <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                  {availableTags
-                    .filter(tag => !selectedTags.includes(tag))
-                    .map(tag => (
-                      <button
-                        key={tag}
-                        onClick={() => addTagFilter(tag)}
-                        className="px-2 py-1 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                </div>
-                {availableTags.filter(tag => !selectedTags.includes(tag)).length === 0 && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
+            {showTagFilter && (
+              <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+                {availableTags.filter(tag => !selectedTags.includes(tag)).length > 0 ? (
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                    {availableTags
+                      .filter(tag => !selectedTags.includes(tag))
+                      .map(tag => (
+                        <button
+                          key={tag}
+                          onClick={() => addTagFilter(tag)}
+                          className="rounded-md border border-gray-200 bg-white px-2 py-1 text-left text-sm text-gray-700 transition-colors hover:border-blue-400 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:bg-blue-900/20"
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="rounded-lg bg-gray-50 py-2 text-center text-sm text-gray-500 dark:bg-gray-800/40 dark:text-gray-400">
                     All tags are already selected
                   </p>
                 )}
