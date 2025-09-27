@@ -19,7 +19,7 @@ import {
 import { apiService, Recipe } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { generateSrcSet, generateSizes } from '../utils/imageUtils'
-import { getRandomLoadingHumor } from '../utils/humor'
+import { getRandomLoadingHumor, getRandomGeneralHumor } from '../utils/humor'
 
 interface RecipeActionsProps {
   recipe: Recipe
@@ -756,6 +756,12 @@ function RecipesPage() {
           </>
         )}
       </div>
+
+      <footer className="text-center mt-8">
+        <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+          {getRandomGeneralHumor()}
+        </p>
+      </footer>
     </div>
   )
 }

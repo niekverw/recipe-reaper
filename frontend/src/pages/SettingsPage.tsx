@@ -16,6 +16,7 @@ import {
   EnvelopeIcon,
   ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline'
+import { getRandomSettingsHumor } from '../utils/humor'
 
 function SettingsPage() {
   const { user, household, createHousehold, joinHousehold, leaveHousehold, logout } = useAuth()
@@ -213,8 +214,8 @@ function SettingsPage() {
             Settings & Profile
           </h1>
         </div>
-        <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Manage your account settings, profile information, and household configuration.
+        <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto italic">
+          {getRandomSettingsHumor()}
         </p>
       </div>
 
