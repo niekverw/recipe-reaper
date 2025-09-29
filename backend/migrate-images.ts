@@ -5,9 +5,9 @@ import { PostgreSQLDatabase } from './src/models/database-pg'
 import { Recipe } from './src/types/recipe'
 
 interface ImageSizes {
-  small: { url: string; width: number }
-  medium: { url: string; width: number }
-  large: { url: string; width: number }
+  small: { url: string; width: number; height: number; webp?: string }
+  medium: { url: string; width: number; height: number; webp?: string }
+  large: { url: string; width: number; height: number; webp?: string }
 }
 
 async function migrateExistingImages() {

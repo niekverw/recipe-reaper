@@ -12,6 +12,11 @@ interface OfflineProviderProps {
   children: ReactNode
 }
 
+// Helper function to get connection object with fallbacks
+const getConnection = () => {
+  return (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection
+}
+
 export function OfflineProvider({ children }: OfflineProviderProps) {
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [wasOffline, setWasOffline] = useState(false)
@@ -32,7 +37,7 @@ export function OfflineProvider({ children }: OfflineProviderProps) {
 
     // Update connection type if available
     const updateConnectionType = () => {
-      const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection
+      const connection = getConnection()
       if (connection) {
         setConnectionType(connection.effectiveType || connection.type)
       }
@@ -42,7 +47,7 @@ export function OfflineProvider({ children }: OfflineProviderProps) {
     updateConnectionType()
 
     // Listen for connection changes
-    const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection
+    const connection = getConnection()
     if (connection) {
       connection.addEventListener('change', updateConnectionType)
     }
@@ -72,4 +77,8 @@ export function useOffline() {
     throw new Error('useOffline must be used within an OfflineProvider')
   }
   return context
+}
+
+export function useOptionalOffline() {
+  return useContext(OfflineContext)
 }

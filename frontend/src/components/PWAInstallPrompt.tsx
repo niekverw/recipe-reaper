@@ -39,11 +39,13 @@ function PWAInstallPrompt() {
       // Check if PWA was previously installed (stored in localStorage)
       const wasPreviouslyInstalled = localStorage.getItem('pwa-installed') === 'true'
 
-      // Check if installation was attempted recently (within last 20 days)
-      const installAttempted = localStorage.getItem('pwa-install-attempted')
-      const wasRecentlyAttempted = installAttempted && (Date.now() - parseInt(installAttempted)) < (20 * 24 * 60 * 60 * 1000)
+      return isIOSStandalone || isInStandaloneMode || wasPreviouslyInstalled
+    }
 
-      return isIOSStandalone || isInStandaloneMode || wasPreviouslyInstalled || wasRecentlyAttempted
+    // Check if installation was attempted recently (within last 20 days)
+    const checkRecentlyAttempted = () => {
+      const installAttempted = localStorage.getItem('pwa-install-attempted')
+      return installAttempted && (Date.now() - parseInt(installAttempted)) < (20 * 24 * 60 * 60 * 1000)
     }
 
     // Initial check
@@ -67,34 +69,16 @@ function PWAInstallPrompt() {
       localStorage.setItem('pwa-installed', 'true')
     }
 
-    // Periodic check for installation status (useful if user installs while using the app)
-    const checkInstallationStatus = () => {
-      const currentlyInstalled = checkIfInstalled()
-      if (currentlyInstalled) {
-        setShowPrompt(false)
-        setShowManualPrompt(false)
-        setDeferredPrompt(null)
-        // If we're now in standalone mode, remember it for future visits
-        const isIOSStandaloneNow = isIOS && (window.navigator as any).standalone === true
-        const isInStandaloneModeNow = window.matchMedia('(display-mode: standalone)').matches
-        if (isIOSStandaloneNow || isInStandaloneModeNow) {
-          localStorage.setItem('pwa-installed', 'true')
-          // Clear the attempt flag since we confirmed installation
-          localStorage.removeItem('pwa-install-attempted')
-        }
-      }
+    // Listen for display mode changes (when user installs PWA)
+    const handleDisplayModeChange = () => {
+      setShowPrompt(false)
+      setShowManualPrompt(false)
+      setDeferredPrompt(null)
+      localStorage.setItem('pwa-installed', 'true')
+      localStorage.removeItem('pwa-install-attempted')
     }
 
-    // Check every 1 second for the first 10 seconds (more aggressive for iOS)
-    const intervalId = setInterval(() => {
-      checkInstallationStatus()
-    }, 1000)
-
-    const timeoutId = setTimeout(() => {
-      clearInterval(intervalId)
-      // Continue checking less frequently
-      setInterval(checkInstallationStatus, 5000)
-    }, 10000)
+    window.matchMedia('(display-mode: standalone)').addEventListener('change', handleDisplayModeChange)
 
     if (!initialInstalled && isMobile) {
       // Check if browser supports beforeinstallprompt (mainly Chrome/Edge on desktop/Android)
@@ -105,21 +89,20 @@ function PWAInstallPrompt() {
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener)
         window.addEventListener('appinstalled', handleAppInstalled)
       } else {
-                // For browsers that need manual installation (iOS, Firefox, etc.)
+        // For browsers that need manual installation (iOS, Firefox, etc.)
         const timer = setTimeout(() => {
           const wasDismissed = localStorage.getItem('pwa-install-dismissed') === 'true'
-          const installAttempted = localStorage.getItem('pwa-install-attempted')
-          const wasRecentlyAttempted = installAttempted && (Date.now() - parseInt(installAttempted)) < (20 * 24 * 60 * 60 * 1000)
 
-          if (!wasDismissed && !checkIfInstalled() && !wasRecentlyAttempted) {
+          if (!wasDismissed && !checkIfInstalled() && !checkRecentlyAttempted()) {
             setShowManualPrompt(true)
           }
         }, 3000) // Show after 3 seconds
 
         return () => {
           clearTimeout(timer)
-          clearInterval(intervalId)
-          clearTimeout(timeoutId)
+          window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener)
+          window.removeEventListener('appinstalled', handleAppInstalled)
+          window.matchMedia('(display-mode: standalone)').removeEventListener('change', handleDisplayModeChange)
         }
       }
     }
@@ -127,8 +110,7 @@ function PWAInstallPrompt() {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener)
       window.removeEventListener('appinstalled', handleAppInstalled)
-      clearInterval(intervalId)
-      clearTimeout(timeoutId)
+      window.matchMedia('(display-mode: standalone)').removeEventListener('change', handleDisplayModeChange)
     }
   }, [])
 

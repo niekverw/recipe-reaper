@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import type { KeyboardEvent, MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ShoppingBagIcon,
@@ -15,34 +16,37 @@ import { getCategoryById, IngredientCategory } from '../utils/categories'
 import { getRandomLoadingHumor, getRandomShoppingListHumor } from '../utils/humor'
 
 interface CustomCheckboxProps {
+  id: string
   size?: 'sm' | 'md' | 'lg'
   isSelected: boolean
   onValueChange: () => void
 }
 
-function CustomCheckbox({ size = 'md', isSelected, onValueChange }: CustomCheckboxProps) {
+function CustomCheckbox({ id, size = 'md', isSelected, onValueChange }: CustomCheckboxProps) {
   const sizeClass = size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-5 h-5' : 'w-6 h-6'
 
   return (
-    <button
-      type="button"
-      role="checkbox"
-      aria-checked={isSelected}
-      onClick={onValueChange}
-      className={`flex items-center justify-center ${sizeClass} rounded transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500`}
-    >
-      <div
-        className={`w-full h-full rounded border flex items-center justify-center transition-colors ${
+    <span className="inline-flex items-center justify-center flex-shrink-0">
+      <input
+        id={id}
+        type="checkbox"
+        checked={isSelected}
+        onChange={() => onValueChange()}
+        className="sr-only peer"
+      />
+      <span
+        aria-hidden="true"
+        className={`flex items-center justify-center ${sizeClass} rounded border transition-colors ${
           isSelected
             ? 'bg-green-500 border-green-500 text-white'
             : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400'
-        }`}
+        } peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-blue-500`}
       >
         {isSelected ? (
           <CheckIcon className="w-3 h-3" />
         ) : null}
-      </div>
-    </button>
+      </span>
+    </span>
   )
 }
 
@@ -58,33 +62,55 @@ function ShoppingListItemComponent({ item, onToggle, onDelete }: ShoppingListIte
 
   // Show original ingredient in parentheses only if we have a simplified displayName
   const showOriginal = item.displayName && item.displayName !== item.ingredient
+  const checkboxId = useMemo(() => `shopping-item-${item.id}`, [item.id])
+
+  const handleToggle = useCallback(() => {
+    onToggle(item.id, !item.isCompleted)
+  }, [item.id, item.isCompleted, onToggle])
+
+  const handleContainerClick = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement
+    if (target.closest('button')) {
+      return
+    }
+    handleToggle()
+  }, [handleToggle])
 
   return (
-    <div className="flex items-center gap-3 py-2 px-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-      <CustomCheckbox
-        isSelected={item.isCompleted}
-        onValueChange={() => onToggle(item.id, !item.isCompleted)}
-      />
+    <div
+      className="flex items-center gap-3 py-2 px-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+      onClick={handleContainerClick}
+    >
+      <label
+        htmlFor={checkboxId}
+        className="flex items-center gap-3 flex-1 cursor-pointer"
+      >
+        <CustomCheckbox
+          id={checkboxId}
+          isSelected={item.isCompleted}
+          onValueChange={handleToggle}
+        />
 
-      <div className="flex-1 min-w-0">
-        <div className={`text-sm font-medium ${
-          item.isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white'
-        }`}>
-          <span className="font-medium">
-            {displayText}
-          </span>
-          {showOriginal && (
-            <span className="text-gray-500 dark:text-gray-400 ml-1 font-normal">
-              ({item.ingredient})
+        <div className="flex-1 min-w-0">
+          <div className={`text-sm font-medium ${
+            item.isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white'
+          }`}>
+            <span className="font-medium">
+              {displayText}
             </span>
+            {showOriginal && (
+              <span className="text-gray-500 dark:text-gray-400 ml-1 font-normal">
+                ({item.ingredient})
+              </span>
+            )}
+          </div>
+          {item.recipeName && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              From: {item.recipeName}
+            </p>
           )}
         </div>
-        {item.recipeName && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            From: {item.recipeName}
-          </p>
-        )}
-      </div>
+      </label>
 
       <button
         onClick={() => onDelete(item.id)}
@@ -108,16 +134,7 @@ export default function ShoppingListPage() {
   const [isAddingManualItem, setIsAddingManualItem] = useState(false)
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/login')
-      return
-    }
-
-    loadShoppingList()
-  }, [user, navigate])
-
-  const loadShoppingList = async () => {
+  const loadShoppingList = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -129,9 +146,18 @@ export default function ShoppingListPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const handleToggleItem = async (id: string, completed: boolean) => {
+  useEffect(() => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+
+    loadShoppingList()
+  }, [user, navigate, loadShoppingList])
+
+  const handleToggleItem = useCallback(async (id: string, completed: boolean) => {
     if (updating.has(id)) return
 
     // Optimistic update - immediately update UI
@@ -162,9 +188,9 @@ export default function ShoppingListPage() {
         return newSet
       })
     }
-  }
+  }, [items, updating])
 
-  const handleDeleteItem = async (id: string) => {
+  const handleDeleteItem = useCallback(async (id: string) => {
     if (updating.has(id)) return
 
     // Optimistic update - immediately remove from UI
@@ -189,9 +215,9 @@ export default function ShoppingListPage() {
         return newSet
       })
     }
-  }
+  }, [items, updating])
 
-  const handleClearAll = async () => {
+  const handleClearAll = useCallback(async () => {
     if (items.length === 0) return
 
     if (!window.confirm(`Clear all ${items.length} item(s) from your shopping list? This action cannot be undone.`)) return
@@ -204,9 +230,9 @@ export default function ShoppingListPage() {
       console.error('Failed to clear all items:', err)
       // Could show a toast notification here
     }
-  }
+  }, [items, loadShoppingList])
 
-  const handleAddManualItem = async () => {
+  const handleAddManualItem = useCallback(async () => {
     const trimmedItem = newItem.trim()
     if (!trimmedItem || isAddingManualItem) return
 
@@ -216,8 +242,20 @@ export default function ShoppingListPage() {
         ingredients: [trimmedItem]
       })
 
-      // Add the new items to the list
-      setItems(prev => [...response.items, ...prev])
+      setItems(prevItems => {
+        if (!response.items.length) {
+          return prevItems
+        }
+
+        const existingIds = new Set(prevItems.map(item => item.id))
+        const updatesById = new Map(response.items.map(item => [item.id, item]))
+
+        const mergedItems = prevItems.map(item => updatesById.get(item.id) || item)
+        const newItems = response.items.filter(item => !existingIds.has(item.id))
+
+        return [...newItems, ...mergedItems]
+      })
+
       setNewItem('')
     } catch (err) {
       console.error('Failed to add manual item:', err)
@@ -225,36 +263,48 @@ export default function ShoppingListPage() {
     } finally {
       setIsAddingManualItem(false)
     }
-  }
+  }, [isAddingManualItem, newItem])
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+  const handleManualItemKeyDown = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault()
       handleAddManualItem()
     }
-  }
+  }, [handleAddManualItem])
 
-  // Separate completed and incomplete items
-  const incompleteItems = items.filter(item => !item.isCompleted)
-  const completedItems = items.filter(item => item.isCompleted)
+  const { completedItems, sortedCategoryEntries } = useMemo(() => {
+    const completed: ShoppingListItem[] = []
+    const grouped: Record<string, { category: IngredientCategory; items: ShoppingListItem[] }> = {}
 
-  // Group incomplete items by category
-  const groupedItems = incompleteItems.reduce<Record<string, { category: IngredientCategory; items: ShoppingListItem[] }>>((groups, item) => {
-    const categoryId = item.category || 'OTHER'
-    const category = getCategoryById(categoryId)
+    items.forEach(item => {
+      if (item.isCompleted) {
+        completed.push(item)
+        return
+      }
 
-    if (!groups[categoryId]) {
-      groups[categoryId] = { category, items: [] }
+      const categoryId = item.category || 'OTHER'
+      const category = getCategoryById(categoryId)
+
+      if (!grouped[categoryId]) {
+        grouped[categoryId] = { category, items: [] }
+      }
+      grouped[categoryId].items.push(item)
+    })
+
+    const sortedEntries = Object.entries(grouped).sort(([, a], [, b]) =>
+      a.category.sortOrder - b.category.sortOrder
+    )
+
+    return {
+      completedItems: completed,
+      sortedCategoryEntries: sortedEntries
     }
-    groups[categoryId].items.push(item)
-    return groups
-  }, {})
+  }, [items])
 
-  // Sort categories by their sort order
-  const sortedCategoryEntries = Object.entries(groupedItems).sort(([, a], [, b]) =>
-    a.category.sortOrder - b.category.sortOrder
-  )
+  const totalCount = items.length
+  const completedCount = completedItems.length
 
-  const toggleCategory = (categoryId: string) => {
+  const toggleCategory = useCallback((categoryId: string) => {
     setCollapsedCategories(prev => {
       const newSet = new Set(prev)
       if (newSet.has(categoryId)) {
@@ -264,10 +314,7 @@ export default function ShoppingListPage() {
       }
       return newSet
     })
-  }
-
-  const completedCount = items.filter(item => item.isCompleted).length
-  const totalCount = items.length
+  }, [])
 
   if (loading) {
     return (
@@ -340,7 +387,7 @@ export default function ShoppingListPage() {
               type="text"
               value={newItem}
               onChange={(e) => setNewItem(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleManualItemKeyDown}
               placeholder="Add item to shopping list..."
               disabled={isAddingManualItem}
               className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
@@ -384,9 +431,9 @@ export default function ShoppingListPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {sortedCategoryEntries.map(([categoryId, { category, items }]) => {
+          {sortedCategoryEntries.map(([categoryId, { category, items: categoryItems }]) => {
             const isCollapsed = collapsedCategories.has(categoryId)
-            const totalInCategory = items.length
+            const totalInCategory = categoryItems.length
 
             return (
               <div key={categoryId} className="space-y-2">
@@ -412,9 +459,10 @@ export default function ShoppingListPage() {
                       <ChevronDownIcon className="w-5 h-5 text-gray-400" />
                     )}
                   </div>
-                </button>                {!isCollapsed && (
+                </button>
+                {!isCollapsed && (
                   <div className="space-y-2 pl-3">
-                    {items.map(item => (
+                    {categoryItems.map(item => (
                       <ShoppingListItemComponent
                         key={item.id}
                         item={item}

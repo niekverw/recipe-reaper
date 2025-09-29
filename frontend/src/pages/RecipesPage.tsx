@@ -18,8 +18,11 @@ import {
 } from '@heroicons/react/24/outline'
 import { apiService, Recipe } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
-import { generateSrcSet, generateSizes } from '../utils/imageUtils'
 import { getRandomLoadingHumor, getRandomGeneralHumor } from '../utils/humor'
+import ResponsiveImage from '../components/ResponsiveImage'
+import { buildRecipeImageSources, buildHeroImagePreloadData } from '../utils/recipeImages'
+
+const PRIORITIZED_IMAGE_COUNT = 6
 
 interface RecipeActionsProps {
   recipe: Recipe
@@ -98,38 +101,27 @@ interface RecipeGridCardProps {
   onCopy: (id: string, e: React.MouseEvent) => void
   onTagClick: (tag: string) => void
   currentUserId?: string
+  prioritize?: boolean
 }
 
-function RecipeGridCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentUserId }: RecipeGridCardProps) {
+function RecipeGridCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentUserId, prioritize }: RecipeGridCardProps) {
+  const { src, imageSizes } = buildRecipeImageSources(recipe)
   return (
     <Link to={`/recipe/${recipe.id}`} className="block group">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 overflow-hidden">
         <div className="h-24 sm:h-36 md:h-48 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 relative overflow-hidden">
           {/* If recipe.image exists render it, otherwise keep gradient */}
-          {recipe.image ? (
-            recipe.imageSizes ? (
-              <img
-                src={apiService.constructImageUrl(recipe.imageSizes.large.url)}
-                srcSet={generateSrcSet({
-                  small: { url: apiService.constructImageUrl(recipe.imageSizes.small.url), width: recipe.imageSizes.small.width },
-                  medium: { url: apiService.constructImageUrl(recipe.imageSizes.medium.url), width: recipe.imageSizes.medium.width },
-                  large: { url: apiService.constructImageUrl(recipe.imageSizes.large.url), width: recipe.imageSizes.large.width }
-                })}
-                sizes={generateSizes('grid')}
-                alt={`${recipe.name} image`}
-                loading="lazy"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                className="absolute inset-0 w-full h-full object-cover block"
-              />
-            ) : (
-              <img
-                src={apiService.constructImageUrl(recipe.image)}
-                alt={`${recipe.name} image`}
-                loading="lazy"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                className="absolute inset-0 w-full h-full object-cover block"
-              />
-            )
+          {src ? (
+            <ResponsiveImage
+              src={src}
+              alt={`${recipe.name} image`}
+              imageSizes={imageSizes}
+              blurDataUrl={recipe.blurDataUrl}
+              context="grid"
+              className="absolute inset-0 w-full h-full"
+              fetchPriority={prioritize ? 'high' : 'auto'}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+            />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
           )}
@@ -214,38 +206,27 @@ interface RecipeListCardProps {
   onCopy: (id: string, e: React.MouseEvent) => void
   onTagClick: (tag: string) => void
   currentUserId?: string
+  prioritize?: boolean
 }
 
-function RecipeListCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentUserId }: RecipeListCardProps) {
+function RecipeListCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentUserId, prioritize }: RecipeListCardProps) {
+  const { src, imageSizes } = buildRecipeImageSources(recipe)
   return (
     <Link to={`/recipe/${recipe.id}`} className="block group">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 p-2 sm:p-3 md:p-4">
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
           <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-lg flex-shrink-0 overflow-hidden">
-            {recipe.image ? (
-              recipe.imageSizes ? (
-                <img
-                  src={apiService.constructImageUrl(recipe.imageSizes.small.url)}
-                  srcSet={generateSrcSet({
-                    small: { url: apiService.constructImageUrl(recipe.imageSizes.small.url), width: recipe.imageSizes.small.width },
-                    medium: { url: apiService.constructImageUrl(recipe.imageSizes.medium.url), width: recipe.imageSizes.medium.width },
-                    large: { url: apiService.constructImageUrl(recipe.imageSizes.large.url), width: recipe.imageSizes.large.width }
-                  })}
-                  sizes={generateSizes('list')}
-                  alt={`${recipe.name} thumbnail`}
-                  loading="lazy"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                  className="w-full h-full object-cover block"
-                />
-              ) : (
-                <img
-                  src={apiService.constructImageUrl(recipe.image)}
-                  alt={`${recipe.name} thumbnail`}
-                  loading="lazy"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                  className="w-full h-full object-cover block"
-                />
-              )
+            {src ? (
+              <ResponsiveImage
+                src={src}
+                alt={`${recipe.name} thumbnail`}
+                imageSizes={imageSizes}
+                blurDataUrl={recipe.blurDataUrl}
+                context="list"
+                className="w-full h-full"
+                fetchPriority={prioritize ? 'high' : 'auto'}
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
             ) : null}
           </div>
           <div className="flex-1 min-w-0">
@@ -359,6 +340,74 @@ function RecipesPage() {
       }
     })
   }, [recipes, searchQuery, sortBy, selectedTags])
+
+  // Hero image preload optimization - stable dependencies to prevent churn
+  const firstRecipe = filteredAndSortedRecipes[0]
+  const heroImageSignature = firstRecipe
+    ? [
+        firstRecipe.id,
+        firstRecipe.updatedAt,
+        firstRecipe.image,
+        firstRecipe.imageSizes?.small?.url,
+        firstRecipe.imageSizes?.medium?.url,
+        firstRecipe.imageSizes?.large?.url
+      ].join('|')
+    : null
+
+  const heroImageData = useMemo(
+    () => buildHeroImagePreloadData(firstRecipe ?? null),
+    [heroImageSignature]
+  )
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+
+    const head = document.head
+    if (!head) return
+
+    const preloadId = 'preload-first-recipe-image'
+    const existingLink = head.querySelector<HTMLLinkElement>(`link[data-preload-id="${preloadId}"]`)
+
+    if (!heroImageData.src) {
+      if (existingLink) {
+        head.removeChild(existingLink)
+      }
+      return
+    }
+
+    // Check if existing link matches current data (href + srcset)
+    if (existingLink?.href === heroImageData.src &&
+        existingLink.getAttribute('imagesrcset') === (heroImageData.srcset || '')) {
+      return
+    }
+
+    if (existingLink) {
+      head.removeChild(existingLink)
+    }
+
+    const link = document.createElement('link')
+    link.rel = 'preload'
+    link.as = 'image'
+    link.href = heroImageData.src
+    link.setAttribute('fetchpriority', 'high')
+    link.setAttribute('data-preload-id', preloadId)
+
+    // Set responsive preload attributes for better LCP alignment
+    if (heroImageData.srcset) {
+      link.setAttribute('imagesrcset', heroImageData.srcset)
+    }
+    if (heroImageData.sizes) {
+      link.setAttribute('imagesizes', heroImageData.sizes)
+    }
+
+    head.appendChild(link)
+
+    return () => {
+      if (head.contains(link)) {
+        head.removeChild(link)
+      }
+    }
+  }, [heroImageData.src, heroImageData.srcset, heroImageData.sizes])
 
   useEffect(() => {
     loadRecipes()
@@ -726,7 +775,7 @@ function RecipesPage() {
           <>
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
-                {filteredAndSortedRecipes.map((recipe) => (
+                {filteredAndSortedRecipes.map((recipe, index) => (
                   <RecipeGridCard
                     key={recipe.id}
                     recipe={recipe}
@@ -735,12 +784,13 @@ function RecipesPage() {
                     onCopy={handleCopy}
                     onTagClick={addTagFilter}
                     currentUserId={user?.id}
+                    prioritize={index < PRIORITIZED_IMAGE_COUNT}
                   />
                 ))}
               </div>
             ) : (
               <div className="space-y-2 sm:space-y-3">
-                {filteredAndSortedRecipes.map((recipe) => (
+                {filteredAndSortedRecipes.map((recipe, index) => (
                   <RecipeListCard
                     key={recipe.id}
                     recipe={recipe}
@@ -749,6 +799,7 @@ function RecipesPage() {
                     onCopy={handleCopy}
                     onTagClick={addTagFilter}
                     currentUserId={user?.id}
+                    prioritize={index < PRIORITIZED_IMAGE_COUNT}
                   />
                 ))}
               </div>

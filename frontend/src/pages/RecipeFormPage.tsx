@@ -25,9 +25,9 @@ interface RecipeFormData {
   servings?: number
   image?: string
   imageSizes?: {
-    small: { url: string; width: number }
-    medium: { url: string; width: number }
-    large: { url: string; width: number }
+    small: { url: string; width: number; height?: number }
+    medium: { url: string; width: number; height?: number }
+    large: { url: string; width: number; height?: number }
   }
   sourceUrl?: string
   tags: string[]
@@ -37,7 +37,9 @@ interface RecipeFormData {
 
 function RecipeFormPage() {
   const navigate = useNavigate()
-  const { id } = useParams<{ id: string }>()
+  const params = useParams<{ id?: string }>()
+  const rawId = params.id?.trim()
+  const id = rawId && rawId !== 'undefined' && rawId !== 'null' ? rawId : undefined
   const location = useLocation()
   const { user, household } = useAuth()
   const isEdit = Boolean(id)
@@ -61,7 +63,7 @@ function RecipeFormPage() {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isLoadingRecipe, setIsLoadingRecipe] = useState(isEdit)
+  const [isLoadingRecipe, setIsLoadingRecipe] = useState(false)
   const [availableTags, setAvailableTags] = useState<string[]>([])
 
   // Privacy state
@@ -80,6 +82,7 @@ function RecipeFormPage() {
   const [isImportingGemini, setIsImportingGemini] = useState(false)
   const [isImportingImage, setIsImportingImage] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
+  const canImportFromUrl = Boolean(importUrl.trim())
 
   // Image upload state (for upload button next to Image URL)
   const [uploadImageFile, setUploadImageFile] = useState<File | null>(null)
@@ -139,7 +142,13 @@ function RecipeFormPage() {
 
   // Scroll to top when component mounts
   useEffect(() => {
-    window.scrollTo(0, 0)
+    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+      try {
+        window.scrollTo(0, 0)
+      } catch {
+        // ignore environments that don't implement scrollTo
+      }
+    }
   }, [])
 
   // Conservative cleanup - only delete unused uploaded images when leaving form without saving
@@ -297,7 +306,9 @@ function RecipeFormPage() {
   }
 
   const handleImportFromUrl = async () => {
-    if (!importUrl.trim()) {
+    const targetUrl = importUrl.trim()
+
+    if (!targetUrl) {
       setImportError('Please enter a URL')
       return
     }
@@ -306,8 +317,15 @@ function RecipeFormPage() {
       setIsImporting(true)
       setImportError(null)
 
-      const response = await apiService.scrapeRecipeFromUrl(importUrl.trim())
+      const response = await apiService.scrapeRecipeFromUrl(targetUrl)
       const recipeData = response.recipeData
+
+      const normalizedIngredients = recipeData.ingredients
+        ? IngredientHelper.toTextareaFormat(recipeData.ingredients)
+        : ''
+      const normalizedInstructions = recipeData.instructions
+        ? recipeData.instructions.join('\n')
+        : ''
 
       // Check if form has existing data and confirm overwrite
       const hasExistingData = formData.name.trim() || formData.description.trim() ||
@@ -321,21 +339,22 @@ function RecipeFormPage() {
       }
 
       // Update form with imported data
-      setFormData({
-        name: recipeData.name,
-        description: recipeData.description,
-        ingredients: recipeData.ingredients.join('\n'),
-        instructions: recipeData.instructions.join('\n'),
-        prepTimeMinutes: recipeData.prepTimeMinutes,
-        cookTimeMinutes: recipeData.cookTimeMinutes,
-        totalTimeMinutes: recipeData.totalTimeMinutes,
-        servings: recipeData.servings,
-        image: recipeData.image || '',
-        imageSizes: undefined,
-        sourceUrl: recipeData.sourceUrl,
-        tags: [],
-        isPublic: true
-      })
+  setFormData(prev => ({
+    ...prev,
+    name: recipeData.name ?? '',
+    description: recipeData.description ?? '',
+    ingredients: normalizedIngredients,
+    instructions: normalizedInstructions,
+    prepTimeMinutes: recipeData.prepTimeMinutes,
+    cookTimeMinutes: recipeData.cookTimeMinutes,
+    totalTimeMinutes: recipeData.totalTimeMinutes,
+    servings: recipeData.servings,
+    image: recipeData.image || '',
+    imageSizes: undefined,
+    sourceUrl: recipeData.sourceUrl ?? targetUrl,
+    tags: prev.tags,
+    isPublic: prev.isPublic
+  }))
 
       // Clear import URL
       setImportUrl('')
@@ -706,7 +725,7 @@ function RecipeFormPage() {
     navigate(isEdit && id ? `/recipe/${id}` : '/')
   }
 
-  if (isLoadingRecipe) {
+  if (isEdit && isLoadingRecipe) {
     return (
       <div className="px-4 py-8 max-w-3xl mx-auto">
         <div className="text-center py-20">
@@ -800,6 +819,9 @@ function RecipeFormPage() {
           {/* Import Content */}
           {importType === 'url' ? (
             <>
+              <h3 className="text-base font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                Import from URL
+              </h3>
               <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
                 Paste a recipe URL to automatically fill in the form with recipe data from supported websites.
               </p>
@@ -821,9 +843,15 @@ function RecipeFormPage() {
                 />
                 <button
                   type="button"
-                  onClick={handleImport}
-                  disabled={isImporting || !importUrl.trim()}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                  onClick={() => {
+                    if (isImporting) return
+                    handleImport()
+                  }}
+                  aria-disabled={!canImportFromUrl}
+                  disabled={isImporting}
+                  className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors duration-200 ${
+                    canImportFromUrl ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-400 cursor-not-allowed'
+                  } ${isImporting ? 'opacity-80 cursor-not-allowed' : ''}`}
                 >
                   {isImporting ? (
                     <>
@@ -1090,9 +1118,12 @@ Serves: 24 cookies`}
         {/* Ingredients and Instructions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+            <label
+              htmlFor="ingredients"
+              className="block text-lg font-semibold mb-4 text-gray-900 dark:text-white"
+            >
               Ingredients *
-            </h3>
+            </label>
             <div className="relative">
               <textarea
                 id="ingredients"
@@ -1119,9 +1150,12 @@ Serves: 24 cookies`}
           </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+            <label
+              htmlFor="instructions"
+              className="block text-lg font-semibold mb-4 text-gray-900 dark:text-white"
+            >
               Instructions *
-            </h3>
+            </label>
             <div className="relative">
               <textarea
                 id="instructions"

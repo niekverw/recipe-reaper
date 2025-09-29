@@ -20,10 +20,11 @@ export interface Recipe {
   instructions: string[]
   image?: string
   imageSizes?: {
-    small: { url: string; width: number }
-    medium: { url: string; width: number }
-    large: { url: string; width: number }
+    small: { url: string; width: number; height?: number; webp?: string }
+    medium: { url: string; width: number; height?: number; webp?: string }
+    large: { url: string; width: number; height?: number; webp?: string }
   }
+  blurDataUrl?: string
   sourceUrl?: string
   aiEnhancedNotes?: string
   tags?: string[]
@@ -45,10 +46,11 @@ export interface CreateRecipeData {
   instructions: string[]
   image?: string
   imageSizes?: {
-    small: { url: string; width: number }
-    medium: { url: string; width: number }
-    large: { url: string; width: number }
+    small: { url: string; width: number; height?: number; webp?: string }
+    medium: { url: string; width: number; height?: number; webp?: string }
+    large: { url: string; width: number; height?: number; webp?: string }
   }
+  blurDataUrl?: string
   sourceUrl?: string
   tags?: string[]
   isPublic?: boolean
@@ -412,9 +414,9 @@ class ApiService {
     return this.request<{
       imageUrl: string
       imageSizes: {
-        small: { url: string; width: number }
-        medium: { url: string; width: number }
-        large: { url: string; width: number }
+        small: { url: string; width: number; height?: number }
+        medium: { url: string; width: number; height?: number }
+        large: { url: string; width: number; height?: number }
       }
     }>('/recipes/upload-image', {
       method: 'POST',

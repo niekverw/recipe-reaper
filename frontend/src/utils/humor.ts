@@ -11,16 +11,19 @@ const GENERAL_HUMOR = [
 ] as const
 
 const LOADING_HUMOR = [
+  '"Raising your recipes from the dead..."',
   '"Summoning recipes from the digital ether..."',
   '"Consulting the culinary spirits..."',
+  '🎵 Don’t fear the recipe reaper 🎵',
   '"Waking the kitchen ghosts..."',
   '"Just a moment, the cauldron is bubbling..."'
 ] as const
 
 const SHOPPING_LIST_HUMOR = [
+  '"Cooking with a side of existential dread."',
   '"Gathering souls... I mean, ingredients."',
   '"Your shopping list is looking grim. Let\'s fill it up!"',
-  '"Time to harvest some fresh ingredients."'
+  '"Are you feeding an army or just summoning something?"'
 ] as const
 
 const SETTINGS_HUMOR = [

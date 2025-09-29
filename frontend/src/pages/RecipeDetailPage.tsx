@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeftIcon,
@@ -23,9 +23,94 @@ import { useAuth } from '../contexts/AuthContext'
 import { IngredientHelper } from '../utils/ingredientHelper'
 import { TagHelper } from '../utils/tagHelper'
 import { getRandomLoadingHumor } from '../utils/humor'
-import { useCallback } from 'react'
 import TextWithHeaders from '../components/TextWithHeaders'
 import { TextHeaderParser } from '../utils/textHeaderParser'
+import ResponsiveImage from '../components/ResponsiveImage'
+
+function getSourceHostname(sourceUrl?: string | null): string {
+  if (!sourceUrl) {
+    return ''
+  }
+
+  try {
+    return new URL(sourceUrl).host
+  } catch {
+    const sanitized = sourceUrl.replace(/^https?:\/\//, '').split('/')[0]
+    return sanitized || sourceUrl
+  }
+}
+
+interface ShoppingListButtonState {
+  isLoading: boolean
+  justAdded: boolean
+}
+
+function useShoppingListButtonState() {
+  const [state, setState] = useState<ShoppingListButtonState>({
+    isLoading: false,
+    justAdded: false
+  })
+
+  const setLoading = useCallback((loading: boolean) => {
+    setState(prev => ({ ...prev, isLoading: loading }))
+  }, [])
+
+  const setSuccess = useCallback(() => {
+    setState({ isLoading: false, justAdded: true })
+  }, [])
+
+  const setError = useCallback(() => {
+    setState({ isLoading: false, justAdded: false })
+  }, [])
+
+  const reset = useCallback(() => {
+    setState(prev => (prev.justAdded ? { ...prev, justAdded: false } : prev))
+  }, [])
+
+  return {
+    ...state,
+    setLoading,
+    setSuccess,
+    setError,
+    reset
+  }
+}
+
+function getShoppingListButtonContent(
+  isLoading: boolean,
+  justAdded: boolean,
+  checkedIngredients: Set<number>
+) {
+  if (isLoading) {
+    return (
+      <>
+        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        Adding...
+      </>
+    )
+  }
+
+  if (justAdded) {
+    return (
+      <>
+        <CheckIcon className="w-4 h-4" />
+        Added to Shopping List
+      </>
+    )
+  }
+
+  const selectedCount = checkedIngredients.size
+  const buttonText = selectedCount > 0
+    ? `Add ${selectedCount} Selected to Shopping List`
+    : 'Add All to Shopping List'
+
+  return (
+    <>
+      <ShoppingBagIcon className="w-4 h-4" />
+      {buttonText}
+    </>
+  )
+}
 
 interface IngredientItemProps {
   ingredient: string
@@ -257,7 +342,7 @@ function RecipeDetailPage() {
   const [showTagSuggestions, setShowTagSuggestions] = useState(false)
   const [filteredTagSuggestions, setFilteredTagSuggestions] = useState<string[]>([])
   const [highlightedTagIndex, setHighlightedTagIndex] = useState(0)
-  const [isAddingToShoppingList, setIsAddingToShoppingList] = useState(false)
+  const shoppingListButton = useShoppingListButtonState()
 
   const openImageModal = useCallback(() => {
     setShowImageModal(true)
@@ -383,6 +468,7 @@ function RecipeDetailPage() {
       newChecked.add(index)
     }
     setCheckedIngredients(newChecked)
+    shoppingListButton.reset()
   }
 
   const toggleStep = (index: number) => {
@@ -519,7 +605,7 @@ function RecipeDetailPage() {
     if (!recipe || !user) return
 
     try {
-      setIsAddingToShoppingList(true)
+      shoppingListButton.setLoading(true)
 
       const allIngredients = IngredientHelper.getAllIngredients(recipe.ingredients)
 
@@ -540,14 +626,16 @@ function RecipeDetailPage() {
       // Clear selected ingredients after adding
       setCheckedIngredients(new Set())
 
+      // Show success state
+      shoppingListButton.setSuccess()
+
       // Could show a success toast notification here
       console.log(`Added ${ingredientsToAdd.length} ingredients to shopping list`)
 
     } catch (err) {
+      shoppingListButton.setError()
       console.error('Failed to add ingredients to shopping list:', err)
       // Could show an error toast notification here
-    } finally {
-      setIsAddingToShoppingList(false)
     }
   }
 
@@ -643,19 +731,17 @@ function RecipeDetailPage() {
 
               {/* Source URL Attribution */}
               {recipe.sourceUrl && (
-                <div className="mb-4">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Recipe adapted from{' '}
-                    <a
-                      href={recipe.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline transition-colors"
-                    >
-                      {new URL(recipe.sourceUrl).hostname}
-                    </a>
-                  </p>
-                </div>
+                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                  <span>Recipe adapted from </span>
+                  <a
+                    href={recipe.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline transition-colors"
+                  >
+                    {getSourceHostname(recipe.sourceUrl)}
+                  </a>
+                </p>
               )}
 
               {/* Tags */}
@@ -772,18 +858,27 @@ function RecipeDetailPage() {
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                     <ClockIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">Prep: {recipe.prepTimeMinutes} min</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      <span aria-hidden="true">Prep: </span>
+                      {recipe.prepTimeMinutes} min
+                    </span>
                   </div>
                   {recipe.cookTimeMinutes && (
                     <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                       <ClockIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">Cook: {recipe.cookTimeMinutes} min</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        <span aria-hidden="true">Cook: </span>
+                        {recipe.cookTimeMinutes} min
+                      </span>
                     </div>
                   )}
                   {recipe.totalTimeMinutes && (
                     <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                       <ClockIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">Total: {recipe.totalTimeMinutes} min</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        <span aria-hidden="true">Total: </span>
+                        {recipe.totalTimeMinutes} min
+                      </span>
                     </div>
                   )}
                   <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -798,30 +893,62 @@ function RecipeDetailPage() {
             {recipe.image && (
               <>
                 <div className="mt-4 md:mt-0 md:shrink-0 md:w-56 lg:w-72 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 relative">
-                  <img
-                    src={apiService.constructImageUrl(recipe.image)}
+                  <ResponsiveImage
+                    src={apiService.constructImageUrl(recipe.imageSizes?.small.url || recipe.image)}
                     alt={`${recipe.name} image`}
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                    className="w-full h-36 md:h-44 lg:h-56 object-cover block cursor-pointer"
+                    imageSizes={recipe.imageSizes ? {
+                      small: {
+                        url: apiService.constructImageUrl(recipe.imageSizes.small.url),
+                        width: recipe.imageSizes.small.width,
+                        height: recipe.imageSizes.small.height ?? Math.round(recipe.imageSizes.small.width * 0.75),
+                        webp: recipe.imageSizes.small.webp ? apiService.constructImageUrl(recipe.imageSizes.small.webp) : undefined
+                      },
+                      medium: {
+                        url: apiService.constructImageUrl(recipe.imageSizes.medium.url),
+                        width: recipe.imageSizes.medium.width,
+                        height: recipe.imageSizes.medium.height ?? Math.round(recipe.imageSizes.medium.width * 0.75),
+                        webp: recipe.imageSizes.medium.webp ? apiService.constructImageUrl(recipe.imageSizes.medium.webp) : undefined
+                      },
+                      large: {
+                        url: apiService.constructImageUrl(recipe.imageSizes.large.url),
+                        width: recipe.imageSizes.large.width,
+                        height: recipe.imageSizes.large.height ?? Math.round(recipe.imageSizes.large.width * 0.75),
+                        webp: recipe.imageSizes.large.webp ? apiService.constructImageUrl(recipe.imageSizes.large.webp) : undefined
+                      }
+                    } : undefined}
+                    blurDataUrl={recipe.blurDataUrl}
+                    context="detail"
+                    className="w-full h-36 md:h-44 lg:h-56 cursor-pointer"
+                    fetchPriority="high"
                     onClick={openImageModal}
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                   />
 
                   {/* Overlay badges */}
                   <div className="absolute left-3 bottom-3 flex flex-col gap-2">
                     <div className="flex items-center gap-2 px-2 py-1 bg-black/60 text-white rounded-lg backdrop-blur-sm text-sm">
                       <ClockIcon className="w-4 h-4 text-white opacity-90" />
-                      <span className="font-medium">Prep: {recipe.prepTimeMinutes} min</span>
+                      <span className="font-medium">
+                        <span aria-hidden="true">Prep: </span>
+                        {recipe.prepTimeMinutes} min
+                      </span>
                     </div>
                     {recipe.cookTimeMinutes && (
                       <div className="flex items-center gap-2 px-2 py-1 bg-black/60 text-white rounded-lg backdrop-blur-sm text-sm">
                         <ClockIcon className="w-4 h-4 text-white opacity-90" />
-                        <span className="font-medium">Cook: {recipe.cookTimeMinutes} min</span>
+                        <span className="font-medium">
+                          <span aria-hidden="true">Cook: </span>
+                          {recipe.cookTimeMinutes} min
+                        </span>
                       </div>
                     )}
                     {recipe.totalTimeMinutes && (
                       <div className="flex items-center gap-2 px-2 py-1 bg-black/60 text-white rounded-lg backdrop-blur-sm text-sm">
                         <ClockIcon className="w-4 h-4 text-white opacity-90" />
-                        <span className="font-medium">Total: {recipe.totalTimeMinutes} min</span>
+                        <span className="font-medium">
+                          <span aria-hidden="true">Total: </span>
+                          {recipe.totalTimeMinutes} min
+                        </span>
                       </div>
                     )}
                     <div className="flex items-center gap-2 px-2 py-1 bg-black/60 text-white rounded-lg backdrop-blur-sm text-sm">
@@ -833,22 +960,48 @@ function RecipeDetailPage() {
 
                 {/* Image Modal */}
                 {showImageModal && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={closeImageModal} />
-                    <div className="relative max-w-5xl w-full max-h-[90vh] overflow-hidden rounded-lg z-50">
+                    <div className="relative z-50 flex items-center justify-center">
                       <button
                         type="button"
                         onClick={closeImageModal}
-                        className="absolute right-2 top-2 z-50 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
+                        className="absolute right-4 top-4 z-50 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 shadow"
                         aria-label="Close image"
                       >
                         ×
                       </button>
-                      <img
+                      <ResponsiveImage
                         src={apiService.constructImageUrl(recipe.image)}
                         alt={`${recipe.name} full size`}
-                        className="w-full h-auto max-h-[90vh] object-contain block bg-black"
-                        onClick={(e) => e.stopPropagation()}
+                        imageSizes={recipe.imageSizes ? {
+                          small: {
+                            url: apiService.constructImageUrl(recipe.imageSizes.small.url),
+                            width: recipe.imageSizes.small.width,
+                            height: recipe.imageSizes.small.height ?? Math.round(recipe.imageSizes.small.width * 0.75),
+                            webp: recipe.imageSizes.small.webp ? apiService.constructImageUrl(recipe.imageSizes.small.webp) : undefined
+                          },
+                          medium: {
+                            url: apiService.constructImageUrl(recipe.imageSizes.medium.url),
+                            width: recipe.imageSizes.medium.width,
+                            height: recipe.imageSizes.medium.height ?? Math.round(recipe.imageSizes.medium.width * 0.75),
+                            webp: recipe.imageSizes.medium.webp ? apiService.constructImageUrl(recipe.imageSizes.medium.webp) : undefined
+                          },
+                          large: {
+                            url: apiService.constructImageUrl(recipe.imageSizes.large.url),
+                            width: recipe.imageSizes.large.width,
+                            height: recipe.imageSizes.large.height ?? Math.round(recipe.imageSizes.large.width * 0.75),
+                            webp: recipe.imageSizes.large.webp ? apiService.constructImageUrl(recipe.imageSizes.large.webp) : undefined
+                          }
+                        } : undefined}
+                        blurDataUrl={recipe.blurDataUrl}
+                        context="detail"
+                        loading="eager"
+                        className="flex items-center justify-center max-h-[90vh] max-w-[90vw] rounded-xl bg-black/95 shadow-2xl overflow-hidden"
+                        imageClassName="!w-auto !h-auto max-h-[90vh] max-w-[90vw] object-contain"
+                        objectFit="contain"
+                        disableAspectRatio
+                        onClick={(e) => e?.stopPropagation()}
                       />
                     </div>
                   </div>
@@ -919,10 +1072,10 @@ function RecipeDetailPage() {
                 <button
                   onClick={() => {
                     const allIngredients = IngredientHelper.getAllIngredients(recipe.ingredients);
-                    const allIndices = new Set(allIngredients.map((_, index) => index));
-                    setCheckedIngredients(
-                      checkedIngredients.size === allIngredients.length ? new Set() : allIndices
-                    );
+                    const allIndices = new Set<number>(allIngredients.map((_, index) => index));
+                    const nextChecked = checkedIngredients.size === allIngredients.length ? new Set<number>() : allIndices
+                    setCheckedIngredients(nextChecked);
+                    shoppingListButton.reset()
                   }}
                   className="px-3 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
@@ -1014,23 +1167,14 @@ function RecipeDetailPage() {
               <div className="mt-4">
                 <button
                   onClick={handleAddToShoppingList}
-                  disabled={isAddingToShoppingList}
+                  disabled={shoppingListButton.isLoading}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed"
                   title={checkedIngredients.size > 0 ? `Add ${checkedIngredients.size} selected ingredients to shopping list` : `Add all ${IngredientHelper.getAllIngredients(recipe!.ingredients).length} ingredients to shopping list`}
                 >
-                  {isAddingToShoppingList ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingBagIcon className="w-4 h-4" />
-                      {checkedIngredients.size > 0
-                        ? `Add ${checkedIngredients.size} Selected to Shopping List`
-                        : 'Add All to Shopping List'
-                      }
-                    </>
+                  {getShoppingListButtonContent(
+                    shoppingListButton.isLoading,
+                    shoppingListButton.justAdded,
+                    checkedIngredients
                   )}
                 </button>
               </div>

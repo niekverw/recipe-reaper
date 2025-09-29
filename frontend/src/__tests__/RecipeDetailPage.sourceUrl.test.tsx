@@ -4,13 +4,33 @@ import { vi, beforeEach, describe, it, expect } from 'vitest'
 import RecipeDetailPage from '../pages/RecipeDetailPage'
 import { Recipe } from '../services/api'
 
+const { mockGetRecipe } = vi.hoisted(() => ({
+  mockGetRecipe: vi.fn()
+}))
+
 // Mock the apiService
-const mockGetRecipe = vi.fn()
 vi.mock('../services/api', () => ({
   apiService: {
     getRecipe: mockGetRecipe,
-    deleteRecipe: vi.fn()
+    deleteRecipe: vi.fn(),
+    constructImageUrl: (url: string) => url
   }
+}))
+
+// Mock authentication context to prevent provider requirements
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: { id: 'test-user' },
+    household: null,
+    isLoading: false,
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+    createHousehold: vi.fn(),
+    joinHousehold: vi.fn(),
+    leaveHousehold: vi.fn(),
+    refreshUser: vi.fn()
+  })
 }))
 
 // Mock react-router-dom

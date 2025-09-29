@@ -4,23 +4,148 @@ import { BrowserRouter } from 'react-router-dom'
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest'
 import RecipeFormPage from '../pages/RecipeFormPage'
 
+// Shared mocks for apiService methods used by the form (must be hoisted for vi.mock)
+const {
+  mockCreateRecipe,
+  mockUpdateRecipe,
+  mockGetRecipe,
+  mockCheckRecipeName,
+  mockScrapeRecipeFromUrl,
+  mockParseRecipeFromText,
+  mockParseRecipeFromTextGemini,
+  mockParseRecipeFromImage,
+  mockGetAllTags,
+  mockUploadImage,
+  mockInvalidateRecipesCache
+} = vi.hoisted(() => {
+  const createRecipe = vi.fn()
+  const updateRecipe = vi.fn()
+  const getRecipe = vi.fn()
+  const checkRecipeName = vi.fn().mockResolvedValue({ exists: false })
+  const parseRecipeFromText = vi.fn()
+  const parseRecipeFromTextGemini = vi.fn()
+  const parseRecipeFromImage = vi.fn()
+  const getAllTags = vi.fn().mockResolvedValue([])
+  const uploadImage = vi.fn()
+  const invalidateRecipesCache = vi.fn()
+
+  const scrapeRecipeFromUrl = vi.fn(async (url: string) => {
+    try {
+      const response = await (globalThis as any).fetch('/api/recipes/scrape', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ url })
+      })
+
+      if (!response.ok) {
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: { message: 'Failed to import recipe from URL' } }))
+        throw new Error(errorData.error?.message || 'Failed to import recipe from URL')
+      }
+
+      return response.json()
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error('Failed to import recipe from URL')
+    }
+  })
+
+  return {
+    mockCreateRecipe: createRecipe,
+    mockUpdateRecipe: updateRecipe,
+    mockGetRecipe: getRecipe,
+    mockCheckRecipeName: checkRecipeName,
+    mockScrapeRecipeFromUrl: scrapeRecipeFromUrl,
+    mockParseRecipeFromText: parseRecipeFromText,
+    mockParseRecipeFromTextGemini: parseRecipeFromTextGemini,
+    mockParseRecipeFromImage: parseRecipeFromImage,
+    mockGetAllTags: getAllTags,
+    mockUploadImage: uploadImage,
+    mockInvalidateRecipesCache: invalidateRecipesCache
+  }
+})
+
+const {
+  setRouterParams,
+  setRouterPathname,
+  resetRouterMocks,
+  getUseNavigate,
+  getUseParams,
+  getUseLocation
+} = vi.hoisted(() => {
+  const navigate = vi.fn()
+  let params: Record<string, string | undefined> = {}
+  let location = { pathname: '/' }
+
+  return {
+    mockNavigate: navigate,
+    setRouterParams: (next: Record<string, string | undefined>) => {
+      params = next
+    },
+    setRouterPathname: (pathname: string) => {
+      location = { ...location, pathname }
+    },
+    resetRouterMocks: () => {
+      params = {}
+      location = { pathname: '/' }
+      navigate.mockReset()
+    },
+    getUseNavigate: () => () => navigate,
+    getUseParams: () => () => params,
+    getUseLocation: () => () => location,
+    useNavigate: () => navigate,
+    useParams: () => params,
+    useLocation: () => location
+  }
+})
+
 // Mock the apiService
 vi.mock('../services/api', () => ({
   apiService: {
-    createRecipe: vi.fn(),
-    updateRecipe: vi.fn(),
-    getRecipe: vi.fn()
+    createRecipe: mockCreateRecipe,
+    updateRecipe: mockUpdateRecipe,
+    getRecipe: mockGetRecipe,
+    checkRecipeName: mockCheckRecipeName,
+    constructImageUrl: (url: string) => url,
+    getAllTags: mockGetAllTags,
+    scrapeRecipeFromUrl: mockScrapeRecipeFromUrl,
+    parseRecipeFromText: mockParseRecipeFromText,
+    parseRecipeFromTextGemini: mockParseRecipeFromTextGemini,
+    parseRecipeFromImage: mockParseRecipeFromImage,
+    uploadImage: mockUploadImage,
+    invalidateRecipesCache: mockInvalidateRecipesCache
   }
 }))
 
+// Mock authentication context to prevent provider errors
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: { id: 'test-user' },
+    household: null,
+    isLoading: false,
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+    createHousehold: vi.fn(),
+    joinHousehold: vi.fn(),
+    leaveHousehold: vi.fn(),
+    refreshUser: vi.fn()
+  })
+}))
+
 // Mock react-router-dom
-const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom')
   return {
     ...actual,
-    useNavigate: () => mockNavigate,
-    useParams: () => ({})
+    useNavigate: getUseNavigate(),
+    useParams: getUseParams(),
+    useLocation: getUseLocation()
   }
 })
 
@@ -33,8 +158,25 @@ const renderRecipeFormPage = () => {
 }
 
 describe('RecipeFormPage - URL Import Feature', () => {
+  let user: ReturnType<typeof userEvent.setup>
+
   beforeEach(() => {
     vi.clearAllMocks()
+    resetRouterMocks()
+    setRouterParams({})
+    setRouterPathname('/')
+    mockCreateRecipe.mockReset()
+    mockUpdateRecipe.mockReset()
+    mockGetRecipe.mockReset()
+    mockScrapeRecipeFromUrl.mockClear()
+    mockParseRecipeFromText.mockReset()
+    mockParseRecipeFromTextGemini.mockReset()
+    mockParseRecipeFromImage.mockReset()
+    mockGetAllTags.mockClear()
+    mockCheckRecipeName.mockClear()
+    mockGetAllTags.mockResolvedValue([])
+    mockCheckRecipeName.mockResolvedValue({ exists: false })
+    user = userEvent.setup()
     // Reset fetch mock
     ;(globalThis as any).fetch = vi.fn()
     // Reset window.confirm mock
@@ -55,15 +197,8 @@ describe('RecipeFormPage - URL Import Feature', () => {
     })
 
     it('should not show URL import section when editing recipe', () => {
-      // Mock useParams to return an ID (indicating edit mode)
-      vi.mock('react-router-dom', async () => {
-        const actual = await vi.importActual('react-router-dom')
-        return {
-          ...actual,
-          useNavigate: () => mockNavigate,
-          useParams: () => ({ id: 'test-id' })
-        }
-      })
+      setRouterParams({ id: 'test-id' })
+      setRouterPathname('/recipe/test-id')
 
       renderRecipeFormPage()
 
@@ -72,7 +207,6 @@ describe('RecipeFormPage - URL Import Feature', () => {
   })
 
   describe('URL Import Functionality', () => {
-    const user = userEvent.setup()
     const mockRecipeData = {
       name: 'Imported Recipe',
       description: 'A delicious imported recipe',
@@ -97,11 +231,11 @@ describe('RecipeFormPage - URL Import Feature', () => {
       const importButton = screen.getByRole('button', { name: /import recipe/i })
 
       // Enter URL
-      await user.type(urlInput, 'https://example.com/recipe')
+  await user.type(urlInput, 'https://example.com/recipe')
       expect(urlInput).toHaveValue('https://example.com/recipe')
 
       // Click import button
-      await user.click(importButton)
+  await user.click(importButton)
 
       // Verify fetch was called correctly
       await waitFor(() => {
@@ -118,8 +252,8 @@ describe('RecipeFormPage - URL Import Feature', () => {
       await waitFor(() => {
         expect(screen.getByDisplayValue('Imported Recipe')).toBeInTheDocument()
         expect(screen.getByDisplayValue('A delicious imported recipe')).toBeInTheDocument()
-        expect(screen.getByDisplayValue('2 cups flour\n1 tsp salt')).toBeInTheDocument()
-        expect(screen.getByDisplayValue('Mix ingredients\nBake for 30 minutes')).toBeInTheDocument()
+  expect(screen.getByLabelText(/ingredients/i)).toHaveValue('2 cups flour\n1 tsp salt')
+  expect(screen.getByLabelText(/instructions/i)).toHaveValue('Mix ingredients\nBake for 30 minutes')
         expect(screen.getByDisplayValue('https://example.com/image.jpg')).toBeInTheDocument()
       })
 
@@ -141,8 +275,8 @@ describe('RecipeFormPage - URL Import Feature', () => {
       const urlInput = screen.getByPlaceholderText('https://example.com/recipe')
       const importButton = screen.getByRole('button', { name: /import recipe/i })
 
-      await user.type(urlInput, 'https://example.com/recipe')
-      await user.click(importButton)
+  await user.type(urlInput, 'https://example.com/recipe')
+  await user.click(importButton)
 
       // Check loading state
       expect(screen.getByText('Importing...')).toBeInTheDocument()
@@ -167,7 +301,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
       const importButton = screen.getByRole('button', { name: /import recipe/i })
 
       // Try to import without URL
-      await user.click(importButton)
+  await user.click(importButton)
 
       expect(screen.getByText('Please enter a URL')).toBeInTheDocument()
       expect((globalThis as any).fetch).not.toHaveBeenCalled()
@@ -187,8 +321,8 @@ describe('RecipeFormPage - URL Import Feature', () => {
       const urlInput = screen.getByPlaceholderText('https://example.com/recipe')
       const importButton = screen.getByRole('button', { name: /import recipe/i })
 
-      await user.type(urlInput, 'https://invalid-url.com/recipe')
-      await user.click(importButton)
+  await user.type(urlInput, 'https://invalid-url.com/recipe')
+  await user.click(importButton)
 
       await waitFor(() => {
         expect(screen.getByText('Recipe not found at the provided URL')).toBeInTheDocument()
@@ -265,11 +399,12 @@ describe('RecipeFormPage - URL Import Feature', () => {
       expect(screen.queryByDisplayValue('Imported Recipe')).not.toBeInTheDocument()
     })
 
-    it('should disable import button when URL is empty', () => {
+    it('should indicate import button is inactive when URL is empty', () => {
       renderRecipeFormPage()
 
       const importButton = screen.getByRole('button', { name: /import recipe/i })
-      expect(importButton).toBeDisabled()
+      expect(importButton).not.toBeDisabled()
+      expect(importButton).toHaveAttribute('aria-disabled', 'true')
     })
 
     it('should enable import button when URL is entered', async () => {
@@ -280,22 +415,16 @@ describe('RecipeFormPage - URL Import Feature', () => {
 
       await user.type(urlInput, 'https://example.com/recipe')
       expect(importButton).not.toBeDisabled()
+      expect(importButton).toHaveAttribute('aria-disabled', 'false')
     })
   })
 
   describe('Form Submission with Source URL', () => {
     it('should include source URL when submitting imported recipe', async () => {
-      const mockCreateRecipe = vi.fn().mockResolvedValue({
+      mockCreateRecipe.mockResolvedValue({
         id: 'test-id',
         name: 'Test Recipe'
       })
-
-      // Mock the API service
-      vi.doMock('../services/api', () => ({
-        apiService: {
-          createRecipe: mockCreateRecipe
-        }
-      }))
 
       renderRecipeFormPage()
 

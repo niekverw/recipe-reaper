@@ -44,13 +44,13 @@ export const deleteUploadedImage = async (url: string): Promise<void> => {
  * Generate responsive image attributes for uploaded images
  */
 export interface ImageSizes {
-  small: { url: string; width: number }
-  medium: { url: string; width: number }
-  large: { url: string; width: number }
+  small: { url: string; width: number; height?: number; webp?: string }
+  medium: { url: string; width: number; height?: number; webp?: string }
+  large: { url: string; width: number; height?: number; webp?: string }
 }
 
 /**
- * Generate srcset attribute for responsive images
+ * Generate srcset attribute for responsive images (JPEG/fallback)
  */
 export const generateSrcSet = (imageSizes: ImageSizes): string => {
   return [
@@ -61,13 +61,27 @@ export const generateSrcSet = (imageSizes: ImageSizes): string => {
 }
 
 /**
+ * Generate srcset attribute for WebP images
+ */
+export const generateWebPSrcSet = (imageSizes: ImageSizes): string | null => {
+  const webpUrls = [
+    imageSizes.small.webp ? `${imageSizes.small.webp} ${imageSizes.small.width}w` : null,
+    imageSizes.medium.webp ? `${imageSizes.medium.webp} ${imageSizes.medium.width}w` : null,
+    imageSizes.large.webp ? `${imageSizes.large.webp} ${imageSizes.large.width}w` : null
+  ].filter(Boolean)
+
+  return webpUrls.length > 0 ? webpUrls.join(', ') : null
+}
+
+/**
  * Generate sizes attribute based on display context
  */
 export const generateSizes = (context: 'grid' | 'list' | 'detail' = 'grid'): string => {
   switch (context) {
     case 'grid':
-      // Grid view: responsive breakpoints matching grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4
-      return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw'
+      // Grid view: fixed height containers with object-cover, so sizes based on height constraints
+      // h-24 (96px) → ~128px, h-36 (144px) → ~192px, h-48 (192px) → ~256px
+      return '(max-width: 640px) 128px, (max-width: 768px) 192px, 256px'
     case 'list':
       // List view: fixed small size
       return '64px'
@@ -75,7 +89,7 @@ export const generateSizes = (context: 'grid' | 'list' | 'detail' = 'grid'): str
       // Detail view: larger responsive
       return '(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 60vw'
     default:
-      return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw'
+      return '(max-width: 640px) 128px, (max-width: 768px) 192px, 256px'
   }
 }
 
@@ -90,4 +104,18 @@ export const getOptimalImageUrl = (imageSizes: ImageSizes, maxWidth: number): st
   } else {
     return imageSizes.large.url
   }
+}
+
+/**
+ * Get the best WebP image URL for a specific max width
+ */
+export const getOptimalWebPUrl = (imageSizes: ImageSizes, maxWidth: number): string | null => {
+  if (maxWidth <= imageSizes.small.width && imageSizes.small.webp) {
+    return imageSizes.small.webp
+  } else if (maxWidth <= imageSizes.medium.width && imageSizes.medium.webp) {
+    return imageSizes.medium.webp
+  } else if (imageSizes.large.webp) {
+    return imageSizes.large.webp
+  }
+  return null
 }

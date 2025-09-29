@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -8,13 +8,13 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
+      injectRegister: null,
       includeAssets: ['favicon-16x16.png', 'favicon-32x32.png', 'icon-192.png', 'icon-512.png', 'icon.svg'],
       manifest: {
         name: 'Recipe Reaper',
         short_name: 'Recipe Reaper',
         description: 'Your personal recipe reaper with cooking tips and variations',
-        version: '1.1.0',
         theme_color: '#1a1a1a',
         background_color: '#ffffff',
         display: 'standalone',
@@ -117,7 +117,10 @@ export default defineConfig({
               cacheName: 'images-cache',
               expiration: {
                 maxEntries: 200,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year (matches CDN headers)
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
               }
             }
           }
@@ -127,6 +130,11 @@ export default defineConfig({
       }
     })
   ],
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    globals: true
+  },
   server: {
     host: '0.0.0.0', // Bind to all network interfaces for phone access
     port: 5173,      // Default Vite port

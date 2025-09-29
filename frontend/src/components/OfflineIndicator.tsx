@@ -1,8 +1,14 @@
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
-import { useOffline } from '../contexts/OfflineContext'
+import { useOptionalOffline } from '../contexts/OfflineContext'
 
 function OfflineIndicator() {
-  const { isOnline } = useOffline()
+  const offlineContext = useOptionalOffline()
+
+  if (!offlineContext) {
+    return null
+  }
+
+  const { isOnline } = offlineContext
 
   if (isOnline) {
     return null

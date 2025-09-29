@@ -13,8 +13,52 @@ if ('ontouchstart' in window) {
   }, { passive: true })
 }
 
-createRoot(document.getElementById('root')!).render(
+const rootElement = document.getElementById('root')
+
+if (!rootElement) {
+  throw new Error('Failed to find root element')
+}
+
+createRoot(rootElement).render(
   <StrictMode>
     <App />
   </StrictMode>
 )
+
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  // Temporarily disable service worker to test if it's causing reloads
+  /*
+  const registerServiceWorker = async () => {
+    try {
+      const { registerSW } = await import('virtual:pwa-register')
+      registerSW({
+        immediate: false,
+        onNeedRefresh() {
+          console.info('[PWA] New content is available; refresh the page when ready.')
+        },
+        onOfflineReady() {
+          console.info('[PWA] App ready for offline use.')
+        }
+      })
+    } catch (error) {
+      console.error('Service worker registration failed:', error)
+    }
+  }
+
+  const scheduleRegistration = () => {
+    const idleCallback = (window as typeof window & { requestIdleCallback?: (callback: IdleRequestCallback) => number }).requestIdleCallback
+
+    if (typeof idleCallback === 'function') {
+      idleCallback(() => {
+        void registerServiceWorker()
+      })
+    } else {
+      window.setTimeout(() => {
+        void registerServiceWorker()
+      }, 1500)
+    }
+  }
+
+  window.addEventListener('load', scheduleRegistration, { once: true })
+  */
+}

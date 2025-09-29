@@ -4,8 +4,13 @@ import { recipeController } from '../controllers/recipeController'
 import { requireAuth, optionalAuth } from '../middleware/auth'
 
 // Helper function to conditionally apply auth based on environment
-const conditionalAuth = (middleware: any) => 
-  process.env.NODE_ENV === 'test' ? optionalAuth : middleware
+// Ensures NODE_ENV set at runtime takes precedence over .env file
+const isTestEnvironment = () => {
+  return process.env.NODE_ENV === 'test'
+}
+
+const conditionalAuth = (middleware: any) =>
+  isTestEnvironment() ? optionalAuth : middleware
 
 // Configure multer for handling file uploads in memory
 const upload = multer({

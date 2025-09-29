@@ -12,7 +12,7 @@
     "start:prod": "NODE_ENV=production npm run start",
     "serve": "npm run build:all && npm run start:prod",
     "serve:tunnel": "npm run build:all && concurrently \"npm run start:prod\" \"cloudflared tunnel run recipe-reaper\"",
-    "dev:local": "npm run build:frontend && npm run dev",
+    "dev:local": "npm run build :frontend && npm run dev",
     "tunnel": "cloudflared tunnel run recipe-reaper",
     "test": "jest",
     "test:watch": "jest --watch",

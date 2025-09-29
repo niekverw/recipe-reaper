@@ -15,10 +15,11 @@ export interface Recipe {
   instructions: string[]
   image?: string
   imageSizes?: {
-    small: { url: string; width: number }
-    medium: { url: string; width: number }
-    large: { url: string; width: number }
+    small: { url: string; width: number; height: number; webp?: string }
+    medium: { url: string; width: number; height: number; webp?: string }
+    large: { url: string; width: number; height: number; webp?: string }
   }
+  blurDataUrl?: string
   sourceUrl?: string
   isPublic: boolean
   aiEnhancedNotes?: string | null
@@ -41,10 +42,11 @@ export interface CreateRecipeRequest {
   instructions: string[]
   image?: string
   imageSizes?: {
-    small: { url: string; width: number }
-    medium: { url: string; width: number }
-    large: { url: string; width: number }
+    small: { url: string; width: number; height: number; webp?: string }
+    medium: { url: string; width: number; height: number; webp?: string }
+    large: { url: string; width: number; height: number; webp?: string }
   }
+  blurDataUrl?: string
   sourceUrl?: string
   isPublic?: boolean
   tags?: string[]
@@ -65,10 +67,11 @@ export interface UpdateRecipeRequest {
   instructions?: string[]
   image?: string
   imageSizes?: {
-    small: { url: string; width: number }
-    medium: { url: string; width: number }
-    large: { url: string; width: number }
+    small: { url: string; width: number; height: number; webp?: string }
+    medium: { url: string; width: number; height: number; webp?: string }
+    large: { url: string; width: number; height: number; webp?: string }
   }
+  blurDataUrl?: string
   sourceUrl?: string
   isPublic?: boolean
   tags?: string[]
