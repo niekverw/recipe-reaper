@@ -1,5 +1,4 @@
 import { Household } from '../types/user'
-import { cacheManager } from '../utils/cacheManager'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
@@ -107,17 +106,7 @@ export interface AddToShoppingListRequest {
 }
 
 class ApiService {
-  private initialized = false
-
-  private async ensureInitialized() {
-    if (!this.initialized) {
-      await cacheManager.init()
-      this.initialized = true
-    }
-  }
-
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    await this.ensureInitialized()
     const url = `${API_BASE_URL}${endpoint}`
 
     // Don't set Content-Type for FormData, let the browser set it
@@ -150,7 +139,6 @@ class ApiService {
 
   // Recipe CRUD operations
   async getRecipes(filters?: RecipeFilters): Promise<Recipe[]> {
-    await this.ensureInitialized()
     const params = new URLSearchParams()
 
     if (filters?.search) params.append('search', filters.search)
@@ -162,70 +150,17 @@ class ApiService {
 
     const queryString = params.toString()
     const endpoint = queryString ? `/recipes?${queryString}` : '/recipes'
-    const cacheKey = `recipes-${filters?.scope || 'all'}-${queryString || 'default'}`
 
-    console.log(`[API] getRecipes() called with cache key: ${cacheKey}`)
-
-    // Try to get from cache first
-    const cachedData = await cacheManager.getCachedApiResponse(cacheKey)
-    if (cachedData) {
-      console.log(`[API] ✓ Found ${cachedData.length} recipes in cache for key: ${cacheKey}`)
-      // If we're offline, return cached data immediately
-      if (!navigator.onLine) {
-        return cachedData
-      }
-
-      // Return cached data immediately (no background refresh)
-      // Cache will be updated directly when recipes are modified
-      return cachedData
-    }
-
-    // No cache, fetch from network
-    console.log(`[API] ⊗ No cache found, fetching from network for key: ${cacheKey}`)
-    try {
-      const response = await this.request<{recipes: Recipe[]}>(endpoint)
-      const recipes = response.recipes
-
-      console.log(`[API] ✓ Fetched ${recipes.length} recipes from network, caching...`)
-
-      // Cache the response
-      await cacheManager.cacheApiResponse(cacheKey, recipes, 24 * 60 * 60 * 1000) // 24 hours
-
-      return recipes
-    } catch (error) {
-      // If network fails and we have no cache, throw error
-      throw error
-    }
+    const response = await this.request<{recipes: Recipe[]}>(endpoint)
+    return response.recipes
   }
 
   async getRecipe(id: string): Promise<Recipe> {
-    await this.ensureInitialized()
-
-    // Try cache first
-    const cachedRecipe = await cacheManager.getCachedRecipe(id)
-    if (cachedRecipe) {
-      if (!navigator.onLine) {
-        return cachedRecipe
-      }
-
-      // Return cached recipe immediately (no background refresh)
-      // Cache will be updated directly when recipe is modified
-      return cachedRecipe
-    }
-
-    // No cache, fetch from network
     const response = await this.request<{recipe: Recipe}>(`/recipes/${id}`)
-    const recipe = response.recipe
-
-    // Cache the recipe
-    await cacheManager.cacheRecipe(recipe)
-
-    return recipe
+    return response.recipe
   }
 
   async createRecipe(data: CreateRecipeData): Promise<Recipe> {
-    await this.ensureInitialized()
-
     if (!navigator.onLine) {
       throw new Error('You are offline. Please reconnect to create recipes.')
     }
@@ -235,16 +170,10 @@ class ApiService {
       body: JSON.stringify(data),
     })
 
-    // Add to cache directly instead of invalidating
-    const scope = data.isPublic ? 'public' : 'my'
-    await cacheManager.addRecipeToCaches(response.recipe, scope)
-
     return response.recipe
   }
 
   async updateRecipe(id: string, data: UpdateRecipeData): Promise<Recipe> {
-    await this.ensureInitialized()
-
     if (!navigator.onLine) {
       throw new Error('You are offline. Please reconnect to update recipes.')
     }
@@ -254,15 +183,10 @@ class ApiService {
       body: JSON.stringify(data),
     })
 
-    // Update recipe in all caches directly
-    await cacheManager.updateRecipeInCaches(response.recipe)
-
     return response.recipe
   }
 
   async deleteRecipe(id: string): Promise<void> {
-    await this.ensureInitialized()
-
     if (!navigator.onLine) {
       throw new Error('You are offline. Please reconnect to delete recipes.')
     }
@@ -270,9 +194,6 @@ class ApiService {
     await this.request<void>(`/recipes/${id}`, {
       method: 'DELETE',
     })
-
-    // Remove from all caches directly
-    await cacheManager.removeRecipeFromCaches(id)
   }
 
 
@@ -373,9 +294,6 @@ class ApiService {
       method: 'POST',
     })
 
-    // Update recipe in caches after enhancement
-    await cacheManager.updateRecipeInCaches(response.recipe)
-
     return response
   }
 
@@ -450,9 +368,6 @@ class ApiService {
       body: JSON.stringify(data),
     })
 
-    // Add copied recipe to cache (it's a new recipe in user's collection)
-    await cacheManager.addRecipeToCaches(response.recipe, 'my')
-
     return response.recipe
   }
 
@@ -478,45 +393,7 @@ class ApiService {
 
   // Shopping list methods
   async getShoppingList(): Promise<ShoppingListItem[]> {
-    await this.ensureInitialized()
-
-    // Try to get from cache first
-    const cachedData = await cacheManager.getCachedShoppingList()
-    if (cachedData) {
-      // If we're offline, return cached data immediately
-      if (!navigator.onLine) {
-        return cachedData
-      }
-
-      // If online, return cached data but also refresh in background
-      this.refreshShoppingListCache()
-      return cachedData
-    }
-
-    // No cache, try network
-    try {
-      const shoppingList = await this.request<ShoppingListItem[]>('/shopping-list')
-
-      // Cache the response
-      await cacheManager.cacheShoppingList(shoppingList)
-
-      return shoppingList
-    } catch (error) {
-      // If network fails and we have no cache, throw error
-      throw error
-    }
-  }
-
-  private async refreshShoppingListCache() {
-    try {
-      const shoppingList = await this.request<ShoppingListItem[]>('/shopping-list')
-
-      // Update cache in background
-      await cacheManager.cacheShoppingList(shoppingList)
-    } catch (error) {
-      // Silently fail background refresh
-      console.warn('Failed to refresh shopping list cache:', error)
-    }
+    return this.request<ShoppingListItem[]>('/shopping-list')
   }
 
   async addToShoppingList(data: AddToShoppingListRequest): Promise<{ message: string; items: ShoppingListItem[] }> {
@@ -524,8 +401,6 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify(data)
     })
-    // Invalidate cache since shopping list has changed
-    await cacheManager.invalidateShoppingListCache()
     return result
   }
 
@@ -534,8 +409,6 @@ class ApiService {
       method: 'PUT',
       body: JSON.stringify(data)
     })
-    // Invalidate cache since shopping list item has changed
-    await cacheManager.invalidateShoppingListCache()
     return result
   }
 
@@ -543,8 +416,6 @@ class ApiService {
     const result = await this.request<{ message: string }>(`/shopping-list/${id}`, {
       method: 'DELETE'
     })
-    // Invalidate cache since shopping list item has been deleted
-    await cacheManager.invalidateShoppingListCache()
     return result
   }
 
@@ -552,8 +423,6 @@ class ApiService {
     const result = await this.request<{ message: string }>('/shopping-list/completed', {
       method: 'DELETE'
     })
-    // Invalidate cache since completed items have been cleared
-    await cacheManager.invalidateShoppingListCache()
     return result
   }
 
@@ -561,8 +430,6 @@ class ApiService {
     const result = await this.request<{ message: string }>('/shopping-list', {
       method: 'DELETE'
     })
-    // Invalidate cache since all items have been cleared
-    await cacheManager.invalidateShoppingListCache()
     return result
   }
 }
