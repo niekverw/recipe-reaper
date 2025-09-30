@@ -26,6 +26,7 @@ import { getRandomLoadingHumor } from '../utils/humor'
 import TextWithHeaders from '../components/TextWithHeaders'
 import { TextHeaderParser } from '../utils/textHeaderParser'
 import ResponsiveImage from '../components/ResponsiveImage'
+import { scaleIngredient } from '../utils/scaleIngredient'
 
 function getSourceHostname(sourceUrl?: string | null): string {
   if (!sourceUrl) {
@@ -152,131 +153,6 @@ function CustomCheckbox({ size = 'sm', isSelected, onValueChange }: CustomCheckb
 }
 
 function IngredientItem({ ingredient, isChecked, onToggle, scale }: IngredientItemProps) {
-  const scaleIngredient = (ingredient: string, scale: number) => {
-    if (scale === 1) return ingredient
-
-    // Map of Unicode fractions to their decimal values
-    const fractionMap: Record<string, number> = {
-      '¼': 0.25,
-      '½': 0.5,
-      '¾': 0.75,
-      '⅓': 1/3,
-      '⅔': 2/3,
-      '⅛': 1/8,
-      '⅜': 3/8,
-      '⅝': 5/8,
-      '⅞': 7/8,
-    }
-
-    // Common fraction values and their Unicode representations
-    const commonFractions = [
-      { value: 1/8, unicode: '⅛' },
-      { value: 1/6, unicode: '⅙' }, // Approximation
-      { value: 1/4, unicode: '¼' },
-      { value: 1/3, unicode: '⅓' },
-      { value: 3/8, unicode: '⅜' },
-      { value: 1/2, unicode: '½' },
-      { value: 2/3, unicode: '⅔' },
-      { value: 5/8, unicode: '⅝' },
-      { value: 3/4, unicode: '¾' },
-      { value: 5/6, unicode: '⅚' }, // Approximation
-      { value: 7/8, unicode: '⅞' },
-    ].sort((a, b) => a.value - b.value)
-
-    // Function to find the closest Unicode fraction
-    const findClosestFraction = (value: number): string | null => {
-      // For very small values, return decimal
-      if (value < 0.05) return null
-      
-      // Try to find an exact match first (with small tolerance)
-      for (const fraction of commonFractions) {
-        if (Math.abs(value - fraction.value) < 0.01) {
-          return fraction.unicode
-        }
-      }
-      
-      // If no exact match, find the closest match if within reasonable range
-      let closest = commonFractions[0]
-      let minDiff = Math.abs(value - closest.value)
-      
-      for (let i = 1; i < commonFractions.length; i++) {
-        const diff = Math.abs(value - commonFractions[i].value)
-        if (diff < minDiff) {
-          minDiff = diff
-          closest = commonFractions[i]
-        }
-      }
-      
-      // Only return if it's a reasonable approximation (within 0.03)
-      return minDiff <= 0.03 ? closest.unicode : null
-    }
-
-    // Step 1: Convert fractions like "3/4" to decimal
-    let processedIngredient = ingredient.replace(/(\d+)\/(\d+)/g, (_, numerator, denominator) => {
-      return (parseInt(numerator) / parseInt(denominator)).toString()
-    })
-
-    // Step 2: Handle Unicode fractions like ¼, ½, ¾
-    processedIngredient = processedIngredient.replace(/([¼½¾⅓⅔⅛⅜⅝⅞])/g, (match) => {
-      return fractionMap[match].toString()
-    })
-
-    // Step 3: Handle mixed numbers like "1 ½" or "2½"
-    processedIngredient = processedIngredient.replace(/(\d+)\s*([¼½¾⅓⅔⅛⅜⅝⅞])/g, (_, whole, fraction) => {
-      return (parseInt(whole) + fractionMap[fraction]).toString()
-    })
-
-    // Step 4: Scale all decimal numbers, but skip size measurements
-    const scaled = processedIngredient.replace(/(\d+(?:\.\d+)?)/g, (match, ...args) => {
-      // Extract the offset and fullString from the replace callback args
-      const offset = args[args.length - 2]
-      const fullString = args[args.length - 1]
-      // Check if this number is followed by a size unit that shouldn't be scaled
-      const afterNumber = fullString.slice(offset + match.length)
-      const sizeUnits = [
-        /^\s*"/, // inch symbol
-        /^\s*'/, // foot symbol
-        /^\s*inch(?:es)?(?:\s|$|,|\.|;)/i,
-        /^\s*cm(?:\s|$|,|\.|;)/i,
-        /^\s*mm(?:\s|$|,|\.|;)/i,
-        /^\s*millimeter(?:s)?(?:\s|$|,|\.|;)/i,
-        /^\s*centimeter(?:s)?(?:\s|$|,|\.|;)/i,
-        /^\s*-inch(?:\s|$|,|\.|;)/i, // hyphenated like "1/4-inch"
-        /^\s*-cm(?:\s|$|,|\.|;)/i,
-        /^\s*-mm(?:\s|$|,|\.|;)/i
-      ]
-
-      // If this number is followed by a size unit, don't scale it
-      if (sizeUnits.some(regex => regex.test(afterNumber))) {
-        return match // Return original number unchanged
-      }
-
-      const num = parseFloat(match)
-      const result = num * scale
-
-      // If it's a whole number, return as integer
-      if (Math.abs(result % 1) < 0.001) return Math.round(result).toString()
-
-      // Handle the fractional part
-      const wholePart = Math.floor(result)
-      const fractionPart = result - wholePart
-
-      // Try to find a matching Unicode fraction
-      const fractionChar = findClosestFraction(fractionPart)
-
-      if (fractionChar) {
-        return wholePart > 0
-          ? `${wholePart}${fractionChar}`
-          : fractionChar
-      }
-
-      // Otherwise return with 1 or 2 decimal places depending on the value
-      return result < 0.1 ? result.toFixed(2) : result.toFixed(1)
-    })
-
-    return scaled
-  }
-
   return (
     <div className="flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
       <CustomCheckbox
@@ -494,6 +370,8 @@ function RecipeDetailPage() {
   }
 
   const handlePrint = () => {
+    if (!recipe) return
+
     window.print()
   }
 

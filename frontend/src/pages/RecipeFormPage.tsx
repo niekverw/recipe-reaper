@@ -140,17 +140,6 @@ function RecipeFormPage() {
     }
   }, [formData.image, previousImageUrl])
 
-  // Scroll to top when component mounts
-  useEffect(() => {
-    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
-      try {
-        window.scrollTo(0, 0)
-      } catch {
-        // ignore environments that don't implement scrollTo
-      }
-    }
-  }, [])
-
   // Conservative cleanup - only delete unused uploaded images when leaving form without saving
   useEffect(() => {
     return () => {

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import {
   MagnifyingGlassIcon,
   ClockIcon,
@@ -126,7 +126,7 @@ function RecipeGridCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentU
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-          <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
+          <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 hidden sm:block">
             <RecipeActions
               recipe={recipe}
               onEdit={onEdit}
@@ -135,7 +135,7 @@ function RecipeGridCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentU
               currentUserId={currentUserId}
             />
           </div>
-          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10 hidden sm:block">
             <div className="p-1.5 rounded-full bg-black/30 backdrop-blur-sm">
               {recipe.isPublic ? (
                 <GlobeAltIcon className="w-4 h-4 text-white" title="Public recipe" />
@@ -146,7 +146,7 @@ function RecipeGridCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentU
               )}
             </div>
           </div>
-          <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3">
+          <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 hidden sm:flex">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 bg-black/30 text-white backdrop-blur-sm text-xs rounded-full">
                 {formatDateShort(recipe.createdAt)}
@@ -296,6 +296,7 @@ function RecipeListCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentU
 
 function RecipesPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const { user, household } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
@@ -409,10 +410,11 @@ function RecipesPage() {
     }
   }, [heroImageData.src, heroImageData.srcset, heroImageData.sizes])
 
+  // Load recipes on mount and when scope changes
   useEffect(() => {
     loadRecipes()
     loadAvailableTags()
-  }, [scope])
+  }, [scope, location.key]) // Also reload when location.key changes (navigation)
 
   // Handle URL parameters for tag filtering
   useEffect(() => {
@@ -582,7 +584,7 @@ function RecipesPage() {
                       : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                   }`}
                 >
-                  Browse Public
+                  Public
                 </button>
 
                 <span className="ml-auto inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">

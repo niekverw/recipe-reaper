@@ -10,6 +10,7 @@ import GoogleAnalytics from './components/GoogleAnalytics'
 import PageTracker from './components/PageTracker'
 import PerformanceDashboard from './components/PerformanceDashboard'
 import LoadingScreen from './components/LoadingScreen'
+import ScrollToTop from './components/ScrollToTop'
 // Critical routes - loaded eagerly
 import RecipesPage from './pages/RecipesPage'
 import LoginPage from './pages/LoginPage'
@@ -66,6 +67,7 @@ function App() {
         <AuthProvider>
           <GoogleAnalytics />
           <Router>
+            <ScrollToTop />
             <PageTracker />
             <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200">
               <OfflineIndicator />

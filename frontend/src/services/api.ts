@@ -164,46 +164,37 @@ class ApiService {
     const endpoint = queryString ? `/recipes?${queryString}` : '/recipes'
     const cacheKey = `recipes-${filters?.scope || 'all'}-${queryString || 'default'}`
 
+    console.log(`[API] getRecipes() called with cache key: ${cacheKey}`)
+
     // Try to get from cache first
     const cachedData = await cacheManager.getCachedApiResponse(cacheKey)
     if (cachedData) {
+      console.log(`[API] ✓ Found ${cachedData.length} recipes in cache for key: ${cacheKey}`)
       // If we're offline, return cached data immediately
       if (!navigator.onLine) {
         return cachedData
       }
 
-      // If online, return cached data but also refresh in background
-      this.refreshRecipesCache(endpoint, cacheKey, filters?.scope || 'all')
+      // Return cached data immediately (no background refresh)
+      // Cache will be updated directly when recipes are modified
       return cachedData
     }
 
-    // No cache, try network
+    // No cache, fetch from network
+    console.log(`[API] ⊗ No cache found, fetching from network for key: ${cacheKey}`)
     try {
       const response = await this.request<{recipes: Recipe[]}>(endpoint)
       const recipes = response.recipes
 
+      console.log(`[API] ✓ Fetched ${recipes.length} recipes from network, caching...`)
+
       // Cache the response
       await cacheManager.cacheApiResponse(cacheKey, recipes, 24 * 60 * 60 * 1000) // 24 hours
-      await cacheManager.cacheRecipes(recipes, filters?.scope || 'all')
 
       return recipes
     } catch (error) {
       // If network fails and we have no cache, throw error
       throw error
-    }
-  }
-
-  private async refreshRecipesCache(endpoint: string, cacheKey: string, scope: string) {
-    try {
-      const response = await this.request<{recipes: Recipe[]}>(endpoint)
-      const recipes = response.recipes
-
-      // Update cache in background
-      await cacheManager.cacheApiResponse(cacheKey, recipes, 24 * 60 * 60 * 1000)
-      await cacheManager.cacheRecipes(recipes, scope)
-    } catch (error) {
-      // Silently fail background refresh
-      console.warn('Failed to refresh recipes cache:', error)
     }
   }
 
@@ -217,12 +208,12 @@ class ApiService {
         return cachedRecipe
       }
 
-      // Background refresh
-      this.refreshRecipeCache(id)
+      // Return cached recipe immediately (no background refresh)
+      // Cache will be updated directly when recipe is modified
       return cachedRecipe
     }
 
-    // Network request
+    // No cache, fetch from network
     const response = await this.request<{recipe: Recipe}>(`/recipes/${id}`)
     const recipe = response.recipe
 
@@ -230,16 +221,6 @@ class ApiService {
     await cacheManager.cacheRecipe(recipe)
 
     return recipe
-  }
-
-  private async refreshRecipeCache(id: string) {
-    try {
-      const response = await this.request<{recipe: Recipe}>(`/recipes/${id}`)
-      const recipe = response.recipe
-      await cacheManager.cacheRecipe(recipe)
-    } catch (error) {
-      console.warn('Failed to refresh recipe cache:', error)
-    }
   }
 
   async createRecipe(data: CreateRecipeData): Promise<Recipe> {
@@ -254,8 +235,9 @@ class ApiService {
       body: JSON.stringify(data),
     })
 
-    // Invalidate and refresh cache
-    await this.invalidateRecipesCache()
+    // Add to cache directly instead of invalidating
+    const scope = data.isPublic ? 'public' : 'my'
+    await cacheManager.addRecipeToCaches(response.recipe, scope)
 
     return response.recipe
   }
@@ -272,9 +254,8 @@ class ApiService {
       body: JSON.stringify(data),
     })
 
-    // Update cache
-    await cacheManager.cacheRecipe(response.recipe)
-    await this.invalidateRecipesCache()
+    // Update recipe in all caches directly
+    await cacheManager.updateRecipeInCaches(response.recipe)
 
     return response.recipe
   }
@@ -290,23 +271,10 @@ class ApiService {
       method: 'DELETE',
     })
 
-    // Remove from cache
-    const cachedRecipe = await cacheManager.getCachedRecipe(id)
-    if (cachedRecipe) {
-      await cacheManager.removeCachedRecipe(id)
-    }
-
-    await this.invalidateRecipesCache()
+    // Remove from all caches directly
+    await cacheManager.removeRecipeFromCaches(id)
   }
 
-  private async invalidateRecipesCache() {
-    // Clear all recipes caches to force refresh
-    try {
-      await cacheManager.invalidateRecipeListCaches()
-    } catch (error) {
-      console.warn('Failed to invalidate recipes cache:', error)
-    }
-  }
 
   // Recipe scraping operation
   async scrapeRecipeFromUrl(url: string) {
@@ -398,12 +366,17 @@ class ApiService {
 
   // Recipe enhancement operation using AI
   async enhanceRecipe(id: string) {
-    return this.request<{
+    const response = await this.request<{
       message: string
       recipe: Recipe
     }>(`/recipes/${id}/enhance`, {
       method: 'POST',
     })
+
+    // Update recipe in caches after enhancement
+    await cacheManager.updateRecipeInCaches(response.recipe)
+
+    return response
   }
 
   // Upload image and get URL (no recipe parsing)
@@ -476,6 +449,10 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify(data),
     })
+
+    // Add copied recipe to cache (it's a new recipe in user's collection)
+    await cacheManager.addRecipeToCaches(response.recipe, 'my')
+
     return response.recipe
   }
 
