@@ -57,6 +57,10 @@ python scraper.py "https://cooking.nytimes.com/recipes/1027165-eggplant-chickpea
 - Filtering and search capabilities
 - Public/private recipe visibility
 
+### Performance & Delivery
+- Gzip/deflate compression for API responses and static assets
+- Optimized image handling with Sharp for recipe uploads
+
 ### Web Scraping
 - Scrape recipes from 530+ cooking websites
 - Uses Python `recipe-scrapers` library

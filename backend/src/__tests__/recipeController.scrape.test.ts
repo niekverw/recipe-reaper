@@ -1,3 +1,4 @@
+// @ts-nocheck
 import request from 'supertest'
 import express from 'express'
 import { recipeRoutes } from '../routes/recipes'
@@ -9,7 +10,9 @@ jest.mock('../services/openaiService', () => ({
 }))
 
 jest.mock('../services/geminiService', () => ({
-  geminiService: {}
+  geminiService: {
+    parseRecipeText: jest.fn()
+  }
 }))
 
 jest.mock('../services/recipeEnhancementService', () => ({
@@ -22,7 +25,7 @@ jest.mock('../services/imageService', () => ({
 
 // Mock the scrapeWithPython function
 jest.mock('../controllers/recipeController', () => {
-  const originalModule = jest.requireActual('../controllers/recipeController')
+  const originalModule = jest.requireActual('../controllers/recipeController') as Record<string, unknown>
   return {
     ...originalModule,
     scrapeWithPython: jest.fn()
@@ -30,6 +33,9 @@ jest.mock('../controllers/recipeController', () => {
 })
 
 const { scrapeWithPython } = require('../controllers/recipeController')
+const { geminiService } = require('../services/geminiService')
+
+const parseRecipeTextMock = geminiService.parseRecipeText as jest.Mock
 
 // Create test app
 const app = express()
@@ -57,6 +63,8 @@ describe('Recipe Scraper API', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    parseRecipeTextMock.mockReset()
+    parseRecipeTextMock.mockResolvedValue({})
   })
 
   describe('POST /api/recipes/scrape', () => {
@@ -74,6 +82,15 @@ describe('Recipe Scraper API', () => {
 
     it('should successfully scrape and return recipe data', async () => {
       ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockResolvedValue(mockScrapedData)
+      parseRecipeTextMock.mockResolvedValue({
+        name: 'AI Recipe',
+        description: 'AI enhanced description',
+        ingredients: ['AI flour', 'AI salt'],
+        instructions: ['AI step 1', 'AI step 2'],
+        prepTimeMinutes: 20,
+        totalTimeMinutes: 50,
+        servings: 5
+      })
 
       const response = await request(app)
         .post('/api/recipes/scrape')
@@ -82,17 +99,18 @@ describe('Recipe Scraper API', () => {
 
       expect(response.body).toHaveProperty('recipeData')
       expect(response.body.recipeData).toMatchObject({
-        name: 'Test Recipe',
-        description: 'A delicious test recipe',
-        ingredients: ['2 cups flour', '1 tsp salt'],
-        instructions: ['Mix ingredients', 'Bake for 30 minutes'],
-        image: 'https://example.com/image.jpg',
+        name: 'AI Recipe',
+        description: 'AI enhanced description',
+        ingredients: ['AI flour', 'AI salt'],
+        instructions: ['AI step 1', 'AI step 2'],
         sourceUrl: validUrl,
-        prepTimeMinutes: 15,
-        servings: 4
+        prepTimeMinutes: 20,
+        totalTimeMinutes: 50,
+        servings: 5
       })
 
       expect(scrapeWithPython).toHaveBeenCalledWith(validUrl)
+      expect(parseRecipeTextMock).toHaveBeenCalledTimes(1)
     })
 
     it('should handle missing optional fields gracefully', async () => {
@@ -102,6 +120,7 @@ describe('Recipe Scraper API', () => {
         instructions: '1 instruction'
       }
       ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockResolvedValue(minimalData)
+      parseRecipeTextMock.mockResolvedValue({})
 
       const response = await request(app)
         .post('/api/recipes/scrape')
@@ -129,6 +148,10 @@ describe('Recipe Scraper API', () => {
           ...mockScrapedData,
           ...testCase
         })
+        parseRecipeTextMock.mockResolvedValue({
+          ingredients: ['AI flour'],
+          instructions: ['AI step']
+        })
 
         const response = await request(app)
           .post('/api/recipes/scrape')
@@ -151,6 +174,11 @@ describe('Recipe Scraper API', () => {
           ...mockScrapedData,
           yields: testCase.yields
         })
+        parseRecipeTextMock.mockResolvedValue({
+          servings: testCase.expected,
+          ingredients: ['AI flour'],
+          instructions: ['AI step']
+        })
 
         const response = await request(app)
           .post('/api/recipes/scrape')
@@ -172,6 +200,10 @@ describe('Recipe Scraper API', () => {
         ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockResolvedValue({
           ...mockScrapedData,
           image: testCase.image
+        })
+        parseRecipeTextMock.mockResolvedValue({
+          ingredients: ['AI flour'],
+          instructions: ['AI step']
         })
 
         const response = await request(app)
@@ -212,6 +244,7 @@ describe('Recipe Scraper API', () => {
 
     it('should handle scraper returning null/empty data', async () => {
       ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockResolvedValue(null)
+      parseRecipeTextMock.mockResolvedValue({})
 
       const response = await request(app)
         .post('/api/recipes/scrape')
@@ -223,6 +256,7 @@ describe('Recipe Scraper API', () => {
 
     it('should handle 404 errors from scraper', async () => {
       ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockRejectedValue(new Error('404 not found'))
+      parseRecipeTextMock.mockResolvedValue({})
 
       const response = await request(app)
         .post('/api/recipes/scrape')
@@ -234,6 +268,7 @@ describe('Recipe Scraper API', () => {
 
     it('should handle network timeout errors', async () => {
       ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockRejectedValue(new Error('network timeout'))
+      parseRecipeTextMock.mockResolvedValue({})
 
       const response = await request(app)
         .post('/api/recipes/scrape')
@@ -245,6 +280,7 @@ describe('Recipe Scraper API', () => {
 
     it('should handle general scraper errors', async () => {
       ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockRejectedValue(new Error('Scraper failed'))
+      parseRecipeTextMock.mockResolvedValue({})
 
       const response = await request(app)
         .post('/api/recipes/scrape')
@@ -256,6 +292,7 @@ describe('Recipe Scraper API', () => {
 
     it('should use default values when scraper returns minimal data', async () => {
       ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockResolvedValue({})
+      parseRecipeTextMock.mockResolvedValue({})
 
       const response = await request(app)
         .post('/api/recipes/scrape')
@@ -268,6 +305,22 @@ describe('Recipe Scraper API', () => {
         ingredients: [],
         instructions: [],
         sourceUrl: validUrl
+      })
+    })
+
+    it('should fall back to scraped data when Gemini parsing fails', async () => {
+      ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockResolvedValue(mockScrapedData)
+      parseRecipeTextMock.mockRejectedValue(new Error('API unavailable'))
+
+      const response = await request(app)
+        .post('/api/recipes/scrape')
+        .send({ url: validUrl })
+        .expect(200)
+
+      expect(response.body.recipeData).toMatchObject({
+        name: 'Test Recipe',
+        ingredients: ['2 cups flour', '1 tsp salt'],
+        instructions: ['Mix ingredients', 'Bake for 30 minutes']
       })
     })
   })

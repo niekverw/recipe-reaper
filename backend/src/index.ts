@@ -5,10 +5,11 @@ import { existsSync } from 'fs'
 // Load .env from the root directory (parent of backend)
 config({ path: join(__dirname, '../../.env') })
 
-import express, { Response } from 'express'
+import express from 'express'
 import cors from 'cors'
 import session from 'express-session'
 import rateLimit from 'express-rate-limit'
+import compression from 'compression'
 import { PostgreSQLDatabase } from './models/database-pg'
 import { recipeRoutes } from './routes/recipes'
 import { ingredientRoutes } from './routes/ingredients'
@@ -38,6 +39,18 @@ app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal'])
 app.use(ipBlocker)
 
 // Middleware
+const compressionMiddleware = compression({
+  threshold: 1024, // Only compress responses over 1KB
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false
+    }
+
+    return compression.filter(req, res)
+  }
+})
+app.use(compressionMiddleware)
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps, curl requests, Postman)
@@ -190,61 +203,7 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 // Serve uploaded images statically
-const setCacheControlHeader = (res: Response, cacheControl: string) => {
-  res.setHeader('Cache-Control', cacheControl)
-  res.setHeader('Surrogate-Control', cacheControl)
-}
-
-const longTermCacheControl = 'public, max-age=31536000, immutable'
-const midTermCacheControl = 'public, max-age=15552000, immutable'
-const shortTermCacheControl = 'public, max-age=86400'
-
-const applyFrontendCacheHeaders = (path: string, res: Response) => {
-  if (path === '/sw.js' || path === '/registerSW.js' || path === '/manifest.webmanifest') {
-    setCacheControlHeader(res, midTermCacheControl)
-    return
-  }
-
-  if (path.startsWith('/assets/') || path.startsWith('/icon') || path.startsWith('/favicon') || path.endsWith('.webp') || path.endsWith('.png') || path.endsWith('.jpg') || path.endsWith('.svg') || path.endsWith('.css') || path.endsWith('.js')) {
-    setCacheControlHeader(res, longTermCacheControl)
-    return
-  }
-
-  setCacheControlHeader(res, shortTermCacheControl)
-}
-
-app.use('/uploads', express.static(join(process.cwd(), 'data', 'uploads'), {
-  setHeaders: (res) => setCacheControlHeader(res, longTermCacheControl)
-}))
-
-const addApiCacheHeaders = (res: Response) => {
-  res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=1800')
-  res.setHeader('Surrogate-Control', 'public, max-age=300, stale-while-revalidate=1800')
-}
-
-const skipCache = (res: Response) => {
-  res.setHeader('Cache-Control', 'no-store, max-age=0')
-  res.setHeader('Surrogate-Control', 'no-store, max-age=0')
-}
-
-app.use('/api/recipes/tags', (req, res, next) => {
-  addApiCacheHeaders(res)
-  next()
-})
-
-app.use('/api/recipes', (req, res, next) => {
-  if (req.method === 'GET' && req.path !== '/tags') {
-    addApiCacheHeaders(res)
-  } else {
-    skipCache(res)
-  }
-  next()
-})
-
-app.use('/api/auth', (req, res, next) => {
-  skipCache(res)
-  next()
-})
+app.use('/uploads', express.static(join(process.cwd(), 'data', 'uploads')))
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -339,13 +298,11 @@ if (true) { // Always apply whitelist - was: process.env.NODE_ENV === 'productio
     if (resolvedPath.startsWith(distResolved) && existsSync(filePath)) {
       // Serve the actual file
       console.log('Serving static file:', req.path)
-      applyFrontendCacheHeaders(req.path, res)
       return res.sendFile(filePath)
     }
 
-    // For SPA routes, serve index.html
+    // For SPA routes, serve index.html without additional cache headers
     console.log('Serving React app for path:', req.path)
-    skipCache(res)
     res.sendFile(join(distPath, 'index.html'))
   })
 

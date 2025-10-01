@@ -27,6 +27,77 @@ function parseServings(servings?: string): number | undefined {
   return match ? parseInt(match[1]) : undefined
 }
 
+function normalizeArray(value: unknown): string[] {
+  if (!value) return []
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (typeof item === 'string' ? item.trim() : String(item)))
+      .filter((item) => item.length > 0)
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split('\n')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0)
+  }
+
+  return [String(value)].filter((item) => item.length > 0)
+}
+
+function buildRecipeTextFromScrape(data: any, ingredients: string[], instructions: string[]): string {
+  const lines: string[] = []
+
+  if (data?.name) {
+    lines.push(`Recipe Name: ${data.name}`)
+  }
+
+  if (data?.description) {
+    lines.push(`Description: ${data.description}`)
+  }
+
+  if (ingredients.length) {
+    lines.push('Ingredients:')
+    for (const ingredient of ingredients) {
+      lines.push(`- ${ingredient}`)
+    }
+  }
+
+  if (instructions.length) {
+    lines.push('Instructions:')
+    instructions.forEach((step, index) => {
+      lines.push(`${index + 1}. ${step}`)
+    })
+  }
+
+  if (data?.prepTimeMinutes) {
+    lines.push(`Prep Time: ${data.prepTimeMinutes} minutes`)
+  }
+
+  if (data?.cookTimeMinutes) {
+    lines.push(`Cook Time: ${data.cookTimeMinutes} minutes`)
+  }
+
+  if (data?.totalTimeMinutes) {
+    lines.push(`Total Time: ${data.totalTimeMinutes} minutes`)
+  }
+
+  if (data?.yields) {
+    lines.push(`Servings: ${data.yields}`)
+  }
+
+  if (data?.category) {
+    lines.push(`Category: ${data.category}`)
+  }
+
+  if (data?.cuisine) {
+    lines.push(`Cuisine: ${data.cuisine}`)
+  }
+
+  return lines.join('\n')
+}
+
 async function scrapeWithPython(url: string): Promise<any> {
   return new Promise((resolve, reject) => {
     const pythonExecutable = join(__dirname, '../../venv/bin/python')
@@ -311,15 +382,17 @@ export const recipeController = {
       // Scrape recipe data using Python scraper
       const scrapedData = await scrapeWithPython(url)
 
+      console.log('Scraper raw data:', JSON.stringify(scrapedData, null, 2))
+
       if (!scrapedData) {
         throw createError('No recipe data found at the provided URL', 404)
       }
 
+      const ingredients = normalizeArray(scrapedData.ingredients)
+
       // Transform scraped data to our format
-      // Instructions come as a string with \n separators, split into array
-      const instructions = scrapedData.instructions
-        ? scrapedData.instructions.split('\n').filter((step: string) => step.trim())
-        : []
+      // Instructions may come as string or array; normalize to array of steps
+      const instructions = normalizeArray(scrapedData.instructions)
 
       // Process external image URL - download and optimize it locally
       let imageData: any = {}
@@ -339,17 +412,51 @@ export const recipeController = {
         }
       }
 
+      let parsedDataFromGemini: {
+        name?: string
+        description?: string
+        ingredients?: string[]
+        instructions?: string[]
+        prepTimeMinutes?: number
+        cookTimeMinutes?: number
+        totalTimeMinutes?: number
+        servings?: number
+        image?: string
+      } | null = null
+
+      const rawRecipeText = buildRecipeTextFromScrape(scrapedData, ingredients, instructions)
+
+      if (rawRecipeText.trim().length > 0) {
+        try {
+          parsedDataFromGemini = await geminiService.parseRecipeText(rawRecipeText)
+          console.log('Gemini parsed recipe data:', JSON.stringify(parsedDataFromGemini, null, 2))
+        } catch (error) {
+          console.warn('Gemini enhancement for scraped recipe failed:', error)
+        }
+      }
+
       const transformedData = {
-        name: scrapedData.name || 'Imported Recipe',
-        description: scrapedData.description || 'Recipe imported from web',
-        ingredients: scrapedData.ingredients || [],
-        instructions: instructions,
+        name: parsedDataFromGemini?.name?.trim() || scrapedData.name || 'Imported Recipe',
+        description:
+          parsedDataFromGemini?.description?.trim() || scrapedData.description || 'Recipe imported from web',
+        ingredients:
+          parsedDataFromGemini?.ingredients?.length
+            ? parsedDataFromGemini.ingredients
+            : ingredients,
+        instructions:
+          parsedDataFromGemini?.instructions?.length
+            ? parsedDataFromGemini.instructions
+            : instructions,
         ...imageData,
         sourceUrl: url,
-        prepTimeMinutes: scrapedData.prepTimeMinutes,
-        cookTimeMinutes: scrapedData.cookTimeMinutes,
-        totalTimeMinutes: scrapedData.totalTimeMinutes,
-        servings: parseServings(scrapedData.yields)
+        prepTimeMinutes:
+          parsedDataFromGemini?.prepTimeMinutes ?? scrapedData.prepTimeMinutes ?? undefined,
+        cookTimeMinutes:
+          parsedDataFromGemini?.cookTimeMinutes ?? scrapedData.cookTimeMinutes ?? undefined,
+        totalTimeMinutes:
+          parsedDataFromGemini?.totalTimeMinutes ?? scrapedData.totalTimeMinutes ?? undefined,
+        servings:
+          parsedDataFromGemini?.servings ?? parseServings(scrapedData.yields)
       }
 
       res.json({ recipeData: transformedData })
@@ -680,3 +787,5 @@ export const recipeController = {
     }
   }
 }
+
+export { scrapeWithPython }

@@ -517,6 +517,10 @@ function RecipeDetailPage() {
     }
   }
 
+  const numberedStepPattern = /^\s*\d+[.)]?\s*/
+  const nonHeaderInstructions = recipe?.instructions.filter(instruction => !TextHeaderParser.isPureHeader(instruction)) ?? []
+  const shouldStripInstructionNumbers = nonHeaderInstructions.length > 0 && nonHeaderInstructions.every(instruction => numberedStepPattern.test(instruction))
+
   return (
     <div className="px-4 py-6 max-w-6xl mx-auto">
       {/* Navigation */}
@@ -928,10 +932,14 @@ function RecipeDetailPage() {
                 .filter(inst => !TextHeaderParser.isPureHeader(inst))
                 .length + 1
 
+              const displayInstruction = shouldStripInstructionNumbers
+                ? instruction.replace(numberedStepPattern, '').trimStart()
+                : instruction
+
               return (
                 <InstructionStep
                   key={index}
-                  instruction={instruction}
+                  instruction={displayInstruction}
                   stepNumber={stepNumber}
                   isCompleted={completedSteps.has(index)}
                   onToggle={() => toggleStep(index)}
