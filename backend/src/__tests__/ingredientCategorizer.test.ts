@@ -15,7 +15,7 @@ describe('ingredientCategorizer', () => {
 
 		expect(result.displayName).toBe('Tomatoes')
 		expect(result.category).toEqual(INGREDIENT_CATEGORIES.PRODUCE)
-		expect(result.confidence).toBeCloseTo(0.8)
+		expect(result.confidence).toBeCloseTo(0.85)
 	})
 
 	it('respects exclude keywords and falls back when excluded terms are present', () => {
@@ -23,7 +23,7 @@ describe('ingredientCategorizer', () => {
 
 		expect(result.displayName).toBe('Canned Tuna')
 		expect(result.category).toEqual(INGREDIENT_CATEGORIES.CANNED_JARRED)
-		expect(result.confidence).toBeCloseTo(0.8)
+		expect(result.confidence).toBeCloseTo(0.85)
 	})
 
 	it('prefers the most specific multi-word match when multiple mappings apply', () => {
