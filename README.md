@@ -22,7 +22,7 @@
 </div>
 
 ## Why Recipe Reaper?
-I created this app because I felt that other apps (that I tried, there are so many....) were bogged down with too much features, not user friendly (e.g. too many clicking to add recipes), they usually weren't very good at parsing the descriptions. PLUS I just wanted to have fun creating an app that did exactly what I wanted (but feel free to contribute...).
+I made this app because most recipe apps I tried were overloaded with features, lacked user-friendliness (too many clicks just to add a recipe), and struggled with parsing recipe descriptions. I wanted something simple, intuitive, and fun—an app that works the way I want. Of course, contributions are always welcome!
 
 Features:
 - ** Smart Import ** - From photo's, raw-text, urls (using recipe-scraper,which omits some descriptsions sometimes btw)
