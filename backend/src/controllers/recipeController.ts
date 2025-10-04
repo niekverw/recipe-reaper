@@ -351,7 +351,7 @@ export const recipeController = {
 
   async scrapeRecipe(req: Request, res: Response, next: NextFunction) {
     try {
-      const { url }: ScrapeRecipeRequest = req.body
+      const { url, targetLanguage }: ScrapeRecipeRequest & { targetLanguage?: string } = req.body
 
       if (!url?.trim()) {
         throw createError('URL is required', 400)
@@ -428,7 +428,7 @@ export const recipeController = {
 
       if (rawRecipeText.trim().length > 0) {
         try {
-          parsedDataFromGemini = await geminiService.parseRecipeText(rawRecipeText)
+          parsedDataFromGemini = await geminiService.parseRecipeText(rawRecipeText, targetLanguage)
           console.log('Gemini parsed recipe data:', JSON.stringify(parsedDataFromGemini, null, 2))
         } catch (error) {
           console.warn('Gemini enhancement for scraped recipe failed:', error)
@@ -476,14 +476,14 @@ export const recipeController = {
 
   async parseTextRecipe(req: Request, res: Response, next: NextFunction) {
     try {
-      const { text }: ParseTextRecipeRequest = req.body
+      const { text, targetLanguage }: ParseTextRecipeRequest & { targetLanguage?: string } = req.body
 
       if (!text?.trim()) {
         throw createError('Recipe text is required', 400)
       }
 
       // Parse the text using OpenAI
-      const parsedData = await openaiService.parseRecipeText(text)
+      const parsedData = await openaiService.parseRecipeText(text, targetLanguage)
 
       // Transform to match scraper response format
       const transformedData = {
@@ -519,14 +519,14 @@ export const recipeController = {
 
   async parseTextRecipeGemini(req: Request, res: Response, next: NextFunction) {
     try {
-      const { text }: ParseTextRecipeRequest = req.body
+      const { text, targetLanguage }: ParseTextRecipeRequest & { targetLanguage?: string } = req.body
 
       if (!text?.trim()) {
         throw createError('Recipe text is required', 400)
       }
 
       // Parse the text using Gemini
-      const parsedData = await geminiService.parseRecipeText(text)
+      const parsedData = await geminiService.parseRecipeText(text, targetLanguage)
 
       // Transform to match scraper response format
       const transformedData = {
@@ -633,10 +633,12 @@ export const recipeController = {
         throw createError('Image file is required', 400)
       }
 
+      const { targetLanguage } = req.body
+
       const storedImage = await imageService.storeImage(req.file.buffer, req.file.originalname)
 
       // Parse the image directly using Gemini Vision to create a recipe
-      const parsedData = await geminiService.parseRecipeFromImage(req.file.buffer)
+      const parsedData = await geminiService.parseRecipeFromImage(req.file.buffer, targetLanguage)
 
       // Transform to match expected response format
       const transformedData = {

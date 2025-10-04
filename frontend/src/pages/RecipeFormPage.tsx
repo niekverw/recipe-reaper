@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { apiService, Recipe, CreateRecipeData } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { IngredientHelper } from '../utils/ingredientHelper'
 import { isOurUploadedImage, deleteUploadedImage } from '../utils/imageUtils'
+import { SUPPORTED_LANGUAGES, getLanguageName } from '../constants/languages'
 import TagInput from '../components/TagInput'
 import {
   ArrowLeftIcon,
@@ -11,7 +12,9 @@ import {
   LockClosedIcon,
   GlobeAltIcon,
   HomeIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  Cog6ToothIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 
 interface RecipeFormData {
@@ -82,6 +85,9 @@ function RecipeFormPage() {
   const [isImportingGemini, setIsImportingGemini] = useState(false)
   const [isImportingImage, setIsImportingImage] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
+  const [importLanguage, setImportLanguage] = useState<string | undefined>(user?.defaultTranslationLanguage)
+  const [hasManualImportLanguage, setHasManualImportLanguage] = useState(false)
+  const [isImportSettingsOpen, setIsImportSettingsOpen] = useState(false)
   const canImportFromUrl = Boolean(importUrl.trim())
 
   // Image upload state (for upload button next to Image URL)
@@ -91,6 +97,7 @@ function RecipeFormPage() {
   const [formWasSubmitted, setFormWasSubmitted] = useState(false)
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [originalImageUrl, setOriginalImageUrl] = useState<string>('')
+  const importSettingsRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     // Load available tags
@@ -155,6 +162,43 @@ function RecipeFormPage() {
     }
   }, [formWasSubmitted, uploadedImages, formData.image, originalImageUrl])
 
+  useEffect(() => {
+    const normalizedDefault = user?.defaultTranslationLanguage || undefined
+
+    if (hasManualImportLanguage) {
+      if (importLanguage === normalizedDefault) {
+        setHasManualImportLanguage(false)
+      }
+      return
+    }
+
+    setImportLanguage(normalizedDefault)
+  }, [user?.defaultTranslationLanguage, hasManualImportLanguage, importLanguage])
+
+  useEffect(() => {
+    if (!isImportSettingsOpen) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (importSettingsRef.current && !importSettingsRef.current.contains(event.target as Node)) {
+        setIsImportSettingsOpen(false)
+      }
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsImportSettingsOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscape)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isImportSettingsOpen])
+
   const loadAvailableTags = async () => {
     try {
       const tags = await apiService.getAllTags()
@@ -163,6 +207,7 @@ function RecipeFormPage() {
       console.error('Failed to load available tags:', err)
     }
   }
+
 
   const loadRecipe = async (recipeId: string) => {
     try {
@@ -306,7 +351,7 @@ function RecipeFormPage() {
       setIsImporting(true)
       setImportError(null)
 
-      const response = await apiService.scrapeRecipeFromUrl(targetUrl)
+      const response = await apiService.scrapeRecipeFromUrl(targetUrl, importLanguage || undefined)
       const recipeData = response.recipeData
 
       const normalizedIngredients = recipeData.ingredients
@@ -365,7 +410,7 @@ function RecipeFormPage() {
       setIsImporting(true)
       setImportError(null)
 
-      const response = await apiService.parseRecipeFromText(importText.trim())
+      const response = await apiService.parseRecipeFromText(importText.trim(), importLanguage || undefined)
       const recipeData = response.recipeData
 
       // Check if form has existing data and confirm overwrite
@@ -416,7 +461,7 @@ function RecipeFormPage() {
       setIsImportingGemini(true)
       setImportError(null)
 
-      const response = await apiService.parseRecipeFromTextGemini(importText.trim())
+      const response = await apiService.parseRecipeFromTextGemini(importText.trim(), importLanguage || undefined)
       const recipeData = response.recipeData
 
       // Check if form has existing data and confirm overwrite
@@ -477,7 +522,7 @@ function RecipeFormPage() {
       setIsImportingImage(true)
       setImportError(null)
 
-      const response = await apiService.parseRecipeFromImage(importImage)
+      const response = await apiService.parseRecipeFromImage(importImage, importLanguage || undefined)
       const recipeData = response.recipeData
 
       // Check if form has existing data and confirm overwrite
@@ -763,10 +808,82 @@ function RecipeFormPage() {
 
       {/* Import Section */}
       {!isEdit && !copiedRecipe && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
-          <h2 className="text-lg font-semibold mb-4 text-blue-900 dark:text-blue-100">
-            Import Recipe
-          </h2>
+        <div className="relative bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+                Import Recipe
+              </h2>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                Quickly fill in the form by importing recipes from different sources.
+              </p>
+            </div>
+            <div className="relative" ref={importSettingsRef}>
+              <button
+                type="button"
+                onClick={() => setIsImportSettingsOpen(prev => !prev)}
+                aria-label="Import settings"
+                aria-haspopup="dialog"
+                aria-expanded={isImportSettingsOpen}
+                className={`p-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-300 ${
+                  isImportSettingsOpen
+                    ? 'bg-white dark:bg-blue-900 text-blue-900 dark:text-blue-100 border border-blue-200 dark:border-blue-700 shadow-sm'
+                    : 'text-blue-800 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-800/40'
+                }`}
+              >
+                <Cog6ToothIcon className="w-5 h-5" />
+              </button>
+
+              {isImportSettingsOpen && (
+                <div className="absolute right-0 mt-2 w-72 rounded-lg border border-blue-200 dark:border-blue-700 bg-white dark:bg-blue-900/95 shadow-xl z-20 p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                        Import Settings
+                      </p>
+                      <p className="text-xs text-blue-600 dark:text-blue-300">
+                        Note: You can change the defaults in your user profile.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsImportSettingsOpen(false)}
+                      aria-label="Close import settings"
+                      className="text-blue-500 hover:text-blue-700 dark:text-blue-200 dark:hover:text-blue-100"
+                    >
+                      <XMarkIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-xs font-medium text-blue-700 dark:text-blue-300">
+                      Translation Language
+                    </label>
+                    <select
+                      value={importLanguage || ''}
+                      onChange={(e) => {
+                        setHasManualImportLanguage(true)
+                        setImportLanguage(e.target.value || undefined)
+                      }}
+                      className="w-full rounded-md border border-blue-200/60 bg-blue-50/40 px-3 py-2 text-sm text-blue-900 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none dark:border-blue-500/30 dark:bg-blue-900/60 dark:text-blue-100 dark:focus:border-blue-300"
+                    >
+                      <option value="">Original Language (No Translation)</option>
+                      {SUPPORTED_LANGUAGES.map((lang) => (
+                        <option key={lang.code} value={lang.code}>
+                          {lang.name} ({lang.nativeName})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">
+                      {importLanguage
+                        ? `Recipe will be translated to ${getLanguageName(importLanguage)}`
+                        : 'Recipe will be kept in its original language'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Import Type Tabs */}
           <div className="flex mb-4 bg-blue-100 dark:bg-blue-800/30 rounded-lg p-1">

@@ -83,12 +83,27 @@ interface IngredientMapping {
   displayName: string
   category: string
   keywords: string[]
-  exactMatches?: string[]
   excludeKeywords?: string[]
+}
+
+type NormalizedMapping = IngredientMapping & {
+  normalizedKeywords: string[]
+  variantSet: Set<string>
+  keywordRegexes: RegExp[]
+  excludeRegexes: RegExp[]
+  categorySortOrder: number
+}
+
+type MatchCandidate = {
+  mapping: NormalizedMapping
+  score: number
+  matchedLength: number
+  matchIndex: number
 }
 
 class IngredientCategorizer {
   private ingredientMappings: IngredientMapping[] = ingredientMappingsData
+  private normalizedMappings: NormalizedMapping[] = []
   // Basic term patterns for quick matching
   private basicPatterns = [
     { keywords: ['can ', 'canned ', 'tinned '], category: 'CANNED_JARRED', confidence: 0.8 },
@@ -104,6 +119,43 @@ class IngredientCategorizer {
   categorizeIngredient(ingredientText: string): CategorizedIngredient {
     const originalText = ingredientText.trim()
     const lowerText = originalText.toLowerCase()
+
+    if (this.normalizedMappings.length === 0) {
+      this.normalizedMappings = this.ingredientMappings.map(mapping => {
+        const normalizedKeywords = this.normalizeKeywords(mapping.keywords)
+        const variantSet = new Set<string>()
+
+        const addVariant = (value: string) => {
+          const trimmed = value.trim().toLowerCase()
+          if (trimmed) {
+            variantSet.add(trimmed)
+          }
+        }
+
+        normalizedKeywords.forEach(keyword => {
+          const base = keyword.toLowerCase()
+          addVariant(base)
+          addVariant(pluralize.singular(base))
+          addVariant(pluralize.plural(base))
+        })
+
+        const keywordRegexes = Array.from(variantSet).map(variant => this.createWordBoundaryRegex(variant))
+        const excludeRegexes = (mapping.excludeKeywords ?? [])
+          .map(keyword => keyword.trim())
+          .filter(keyword => keyword.length > 0)
+          .map(keyword => this.createWordBoundaryRegex(keyword.toLowerCase()))
+        const categorySortOrder = INGREDIENT_CATEGORIES[mapping.category]?.sortOrder ?? Number.MAX_SAFE_INTEGER
+
+        return {
+          ...mapping,
+          normalizedKeywords,
+          variantSet,
+          keywordRegexes,
+          excludeRegexes,
+          categorySortOrder
+        }
+      })
+    }
 
     // Try exact ingredient mappings first
     const exactMatch = this.findExactMatch(lowerText)
@@ -161,40 +213,85 @@ class IngredientCategorizer {
     }
   }
 
-  private findExactMatch(lowerText: string): IngredientMapping | null {
-    return this.ingredientMappings.find(mapping => {
-      if (mapping.exactMatches) {
-        // Check exact matches and their plural/singular variants
-        return mapping.exactMatches.some(exact => {
-          const exactLower = exact.toLowerCase()
-          return lowerText === exactLower ||
-                 lowerText === pluralize.singular(exactLower) ||
-                 lowerText === pluralize.plural(exactLower)
-        })
-      }
-      return false
-    }) || null
-  }
+  private findExactMatch(lowerText: string): NormalizedMapping | null {
+    for (const mapping of this.normalizedMappings) {
+      if (this.matchesExcludeKeyword(mapping, lowerText)) continue
 
-  private findKeywordMatch(lowerText: string): IngredientMapping | null {
-    for (const mapping of this.ingredientMappings) {
-      // Check if any exclude keywords are present
-      if (mapping.excludeKeywords &&
-          mapping.excludeKeywords.some(exclude => lowerText.includes(exclude.toLowerCase()))) {
-        continue
-      }
-
-      // Check if any keywords match (including plural/singular variants)
-      if (mapping.keywords.some(keyword => {
-        const keywordLower = keyword.toLowerCase()
-        return lowerText.includes(keywordLower) ||
-               lowerText.includes(pluralize.singular(keywordLower)) ||
-               lowerText.includes(pluralize.plural(keywordLower))
-      })) {
+      if (mapping.variantSet.has(lowerText)) {
         return mapping
       }
     }
     return null
+  }
+
+  private findKeywordMatch(lowerText: string): NormalizedMapping | null {
+    let bestCandidate: MatchCandidate | null = null
+
+    for (const mapping of this.normalizedMappings) {
+      if (this.matchesExcludeKeyword(mapping, lowerText)) continue
+
+      const mappingCandidate = this.getBestCandidateForMapping(mapping, lowerText)
+      if (!mappingCandidate) continue
+
+      if (!bestCandidate || this.isBetterCandidate(mappingCandidate, bestCandidate)) {
+        bestCandidate = mappingCandidate
+      }
+    }
+
+    return bestCandidate?.mapping ?? null
+  }
+
+  private getBestCandidateForMapping(mapping: NormalizedMapping, lowerText: string): MatchCandidate | null {
+    let bestCandidate: MatchCandidate | null = null
+
+    for (const regex of mapping.keywordRegexes) {
+      const match = regex.exec(lowerText)
+      if (!match || !match[0]) continue
+
+      const matchedText = match[0].trim()
+      if (!matchedText) continue
+
+      const score = this.calculateMatchScore(matchedText, match.index)
+      const candidate: MatchCandidate = {
+        mapping,
+        score,
+        matchedLength: matchedText.length,
+        matchIndex: match.index
+      }
+
+      if (!bestCandidate || this.isBetterCandidate(candidate, bestCandidate)) {
+        bestCandidate = candidate
+      }
+    }
+
+    return bestCandidate
+  }
+
+  private calculateMatchScore(matchedText: string, matchIndex: number): number {
+    const wordCount = matchedText.split(/\s+/).filter(Boolean).length
+    const charCount = matchedText.replace(/\s+/g, '').length
+    const baseScore = wordCount * 1000 + charCount * 10
+    return baseScore - matchIndex
+  }
+
+  private isBetterCandidate(candidate: MatchCandidate, currentBest: MatchCandidate): boolean {
+    if (candidate.score !== currentBest.score) {
+      return candidate.score > currentBest.score
+    }
+
+    if (candidate.matchIndex !== currentBest.matchIndex) {
+      return candidate.matchIndex < currentBest.matchIndex
+    }
+
+    if (candidate.mapping.categorySortOrder !== currentBest.mapping.categorySortOrder) {
+      return candidate.mapping.categorySortOrder < currentBest.mapping.categorySortOrder
+    }
+
+    if (candidate.matchedLength !== currentBest.matchedLength) {
+      return candidate.matchedLength > currentBest.matchedLength
+    }
+
+    return candidate.mapping.displayName.length > currentBest.mapping.displayName.length
   }
 
   private findPatternMatch(lowerText: string): { keywords: string[], category: string, confidence: number } | null {
@@ -236,6 +333,29 @@ class IngredientCategorizer {
     return text.split(' ')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ')
+  }
+
+  private normalizeKeywords(keywords: string[] = []): string[] {
+    const normalized: string[] = []
+    keywords.forEach(keyword => {
+      const trimmed = keyword.trim()
+      if (!trimmed) return
+      const exists = normalized.some(existing => existing.toLowerCase() === trimmed.toLowerCase())
+      if (!exists) {
+        normalized.push(trimmed)
+      }
+    })
+    return normalized
+  }
+
+  private matchesExcludeKeyword(mapping: NormalizedMapping, lowerText: string): boolean {
+    if (!mapping.excludeRegexes.length) return false
+    return mapping.excludeRegexes.some(regex => regex.test(lowerText))
+  }
+
+  private createWordBoundaryRegex(term: string): RegExp {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    return new RegExp(`\\b${escaped}\\b`, 'i')
   }
 
   /**

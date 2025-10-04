@@ -26,12 +26,18 @@ class OpenAIService {
     })
   }
 
-  async parseRecipeText(text: string): Promise<ParsedRecipeData> {
+  async parseRecipeText(text: string, targetLanguage?: string): Promise<ParsedRecipeData> {
     if (!text?.trim()) {
       throw new Error('Recipe text is required')
     }
 
-    const systemPrompt = RECIPE_PARSER_PROMPT
+    // Build prompt with language instruction at the TOP for maximum attention
+    let systemPrompt: string
+    if (targetLanguage) {
+      systemPrompt = `CRITICAL INSTRUCTION: You MUST translate the entire output to ${targetLanguage.toUpperCase()}. Every single text field (name, description, all ingredients, all instructions) MUST be translated to ${targetLanguage}. Do NOT leave any text in the original language.\n\n${RECIPE_PARSER_PROMPT}`
+    } else {
+      systemPrompt = `CRITICAL INSTRUCTION: DO NOT TRANSLATE ANYTHING. You must preserve the exact original language of the recipe. Keep all text fields (name, description, ingredients, instructions) in their original language.\n\n${RECIPE_PARSER_PROMPT}`
+    }
 
     try {
       console.log('Making OpenAI API call with model: gpt-3.5-turbo')

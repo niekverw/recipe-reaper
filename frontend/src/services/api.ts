@@ -1,4 +1,4 @@
-import { Household } from '../types/user'
+import { Household, User } from '../types/user'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
@@ -198,7 +198,7 @@ class ApiService {
 
 
   // Recipe scraping operation
-  async scrapeRecipeFromUrl(url: string) {
+  async scrapeRecipeFromUrl(url: string, targetLanguage?: string) {
     return this.request<{
       recipeData: {
         name: string
@@ -214,12 +214,12 @@ class ApiService {
       }
     }>('/recipes/scrape', {
       method: 'POST',
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ url, targetLanguage }),
     })
   }
 
   // Recipe text parsing operation using OpenAI
-  async parseRecipeFromText(text: string) {
+  async parseRecipeFromText(text: string, targetLanguage?: string) {
     return this.request<{
       recipeData: {
         name: string
@@ -235,12 +235,12 @@ class ApiService {
       }
     }>('/recipes/parse-text', {
       method: 'POST',
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, targetLanguage }),
     })
   }
 
   // Recipe text parsing operation using Google Gemini
-  async parseRecipeFromTextGemini(text: string) {
+  async parseRecipeFromTextGemini(text: string, targetLanguage?: string) {
     return this.request<{
       recipeData: {
         name: string
@@ -256,14 +256,17 @@ class ApiService {
       }
     }>('/recipes/parse-text-gemini', {
       method: 'POST',
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, targetLanguage }),
     })
   }
 
   // Recipe image parsing operation using Vision API + Gemini
-  async parseRecipeFromImage(imageFile: File) {
+  async parseRecipeFromImage(imageFile: File, targetLanguage?: string) {
     const formData = new FormData()
     formData.append('image', imageFile)
+    if (targetLanguage) {
+      formData.append('targetLanguage', targetLanguage)
+    }
 
     return this.request<{
       recipeData: {
@@ -431,6 +434,14 @@ class ApiService {
       method: 'DELETE'
     })
     return result
+  }
+
+  // Update user's default translation language preference
+  async updateTranslationPreference(language: string | null): Promise<{ message: string; user: User }> {
+    return this.request<{ message: string; user: User }>('/auth/translation-preference', {
+      method: 'PATCH',
+      body: JSON.stringify({ language }),
+    })
   }
 }
 

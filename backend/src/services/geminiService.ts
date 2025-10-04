@@ -25,12 +25,18 @@ class GeminiService {
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   }
 
-  async parseRecipeText(text: string): Promise<ParsedRecipeData> {
+  async parseRecipeText(text: string, targetLanguage?: string): Promise<ParsedRecipeData> {
     if (!text?.trim()) {
       throw new Error('Recipe text is required')
     }
 
-    const systemPrompt = RECIPE_PARSER_PROMPT
+    // Build prompt with language instruction at the TOP for maximum attention
+    let systemPrompt: string
+    if (targetLanguage) {
+      systemPrompt = `CRITICAL INSTRUCTION: You MUST translate the entire output to ${targetLanguage.toUpperCase()}. Every single text field (name, description, all ingredients, all instructions) MUST be translated to ${targetLanguage}. Do NOT leave any text in the original language.\n\n${RECIPE_PARSER_PROMPT}`
+    } else {
+      systemPrompt = `CRITICAL INSTRUCTION: DO NOT TRANSLATE ANYTHING. You must preserve the exact original language of the recipe. Keep all text fields (name, description, ingredients, instructions) in their original language.\n\n${RECIPE_PARSER_PROMPT}`
+    }
 
     try {
       console.log('Making Gemini API call with model: gemini-2.5-flash-lite')
@@ -88,12 +94,18 @@ class GeminiService {
     }
   }
 
-  async parseRecipeFromImage(imageBuffer: Buffer): Promise<ParsedRecipeData> {
+  async parseRecipeFromImage(imageBuffer: Buffer, targetLanguage?: string): Promise<ParsedRecipeData> {
     if (!imageBuffer || imageBuffer.length === 0) {
       throw new Error('Image buffer is required')
     }
 
-    const systemPrompt = RECIPE_PARSER_PROMPT
+    // Build prompt with language instruction at the TOP for maximum attention
+    let systemPrompt: string
+    if (targetLanguage) {
+      systemPrompt = `CRITICAL INSTRUCTION: You MUST translate the entire output to ${targetLanguage.toUpperCase()}. Every single text field (name, description, all ingredients, all instructions) MUST be translated to ${targetLanguage}. Do NOT leave any text in the original language.\n\n${RECIPE_PARSER_PROMPT}`
+    } else {
+      systemPrompt = `CRITICAL INSTRUCTION: DO NOT TRANSLATE ANYTHING. You must preserve the exact original language of the recipe. Keep all text fields (name, description, ingredients, instructions) in their original language.\n\n${RECIPE_PARSER_PROMPT}`
+    }
 
     try {
       console.log('Making Gemini vision API call with model: gemini-2.5-flash-lite')

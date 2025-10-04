@@ -46,6 +46,7 @@ export const userModel = {
       id,
       email: data.email.toLowerCase().trim(),
       displayName: data.displayName.trim(),
+      defaultTranslationLanguage: undefined,
       createdAt: now,
       updatedAt: now
     }
@@ -103,6 +104,7 @@ export const userModel = {
       email: data.email.toLowerCase().trim(),
       displayName: data.displayName.trim(),
       googleId: data.googleId,
+      defaultTranslationLanguage: undefined,
       createdAt: now,
       updatedAt: now
     }
@@ -116,5 +118,28 @@ export const userModel = {
       'UPDATE users SET google_id = $1, updated_at = $2 WHERE id = $3',
       [googleId, now, userId]
     )
+  },
+
+  async updateTranslationPreference(userId: string, language: string | null): Promise<void> {
+    const db = PostgreSQLDatabase.getInstance()
+    const now = new Date().toISOString()
+
+    await db.run(
+      'UPDATE users SET default_translation_language = $1, updated_at = $2 WHERE id = $3',
+      [language, now, userId]
+    )
+  }
+}
+
+export function mapUserRowToUser(row: UserRow): User {
+  return {
+    id: row.id,
+    email: row.email,
+    displayName: row.display_name,
+    householdId: row.household_id || undefined,
+    googleId: row.google_id || undefined,
+    defaultTranslationLanguage: row.default_translation_language || undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
   }
 }

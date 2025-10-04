@@ -1,7 +1,8 @@
 import { Request, Response } from 'express'
 import crypto from 'crypto'
 import passport from 'passport'
-import { userModel } from '../models/userModel'
+import { userModel, mapUserRowToUser } from '../models/userModel'
+import { SUPPORTED_LANGUAGE_CODES } from '../config/languages'
 import { CreateUserRequest, LoginRequest } from '../types/user'
 
 // Extend Express session to include OAuth state and PKCE
@@ -214,5 +215,72 @@ export const authController = {
         res.redirect(`${frontendUrl}/dashboard`)
       })
     })(req, res, next)
+  },
+
+  // Update user's translation preference
+  async updateTranslationPreference(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          error: { message: 'Not authenticated' }
+        })
+      }
+
+        const { language } = req.body
+
+        let normalizedLanguage: string | null = null
+
+        if (language !== null && language !== undefined) {
+          if (typeof language !== 'string') {
+            return res.status(400).json({
+              error: { message: 'Invalid language parameter' }
+            })
+          }
+
+          const trimmed = language.trim().toLowerCase()
+
+          if (trimmed.length === 0) {
+            normalizedLanguage = null
+          } else if (!SUPPORTED_LANGUAGE_CODES.has(trimmed)) {
+            return res.status(400).json({
+              error: { message: 'Unsupported language code' }
+            })
+          } else {
+            normalizedLanguage = trimmed
+          }
+        }
+
+        await userModel.updateTranslationPreference((req.user as any).id, normalizedLanguage)
+
+        // Fetch updated user data
+        const updatedUser = await userModel.findById((req.user as any).id)
+      if (!updatedUser) {
+        return res.status(404).json({
+          error: { message: 'User not found' }
+        })
+      }
+
+        const sessionUser = mapUserRowToUser(updatedUser)
+
+        await new Promise<void>((resolve, reject) => {
+          req.login(sessionUser, (loginErr) => {
+            if (loginErr) {
+              reject(loginErr)
+            } else {
+              resolve()
+            }
+          })
+        })
+
+      res.json({
+        message: 'Translation preference updated successfully',
+          user: sessionUser
+      })
+    } catch (error) {
+      console.error('Update translation preference error:', error)
+      res.status(500).json({
+        error: { message: 'Failed to update translation preference' }
+      })
+    }
   }
 }

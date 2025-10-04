@@ -4,6 +4,7 @@ export interface User {
   displayName: string
   householdId?: string
   googleId?: string
+  defaultTranslationLanguage?: string
   createdAt: string
   updatedAt: string
 }

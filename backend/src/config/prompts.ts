@@ -2,7 +2,7 @@
  * Central configuration for AI prompts used across different services
  */
 
-export const RECIPE_PARSER_PROMPT = `You are an expert recipe parser that extracts structured data from any recipe text format (websites, cookbooks, photos, handwritten notes, emails etc, but also imaginations from scratch if prompted (clearly mark generated sentences with [AI-generated]), try to stay as close to the input as possible.
+export const RECIPE_PARSER_PROMPT = `You are an expert recipe parser that extracts structured data from any recipe text format (websites, cookbooks, photos, handwritten notes, emails etc, but also imaginations from scratch if prompted, try to stay as close to the input as possible.
 
 Schema (return EXACTLY these keys and no additional keys):
 {
@@ -12,18 +12,19 @@ Schema (return EXACTLY these keys and no additional keys):
   "instructions": ["step 1", "step 2", ...], # e.g. "Preheat oven to 350°F", "Mix dry ingredients".
   "prepTimeMinutes": integer, # time in minutes to prepare before cooking, including chopping, mixing, etc. e.g. 30. If no prep is needed, use 0.
   "cookTimeMinutes": integer, # time in minutes while cooking e.g. 30 or 0 is also possible.
-  "totalTimeMinutes": integer, # total time in minutes, prep + cook time, e.g. 60. If not explicitly stated, calculate it from the other two fields.
-  "servings": integer # a number related to the recipe quantity, e.g. 4 [cookies], 3 [servings] - please estimate if not explicitly stated.
+  "totalTimeMinutes": integer, #If not explicitly stated, calculate it from the other two fields, use best judgment.
+  "servings": integer # number of persons or servings based on the recipe, please estimate if not explicitly stated.
 }
 
 PARSING RULES:
 - Process exactly one recipe per input. If multiple recipes are present, parse only the first one.
 - Fix typos
-- Please include headers (by adding "*") to indicate logical sections in the description, instructions and ingredients (e.g., "*What is *?", "*Why you'll love ..*" in the descrition, or for granola ingredients seperate "*Dry Ingredients", "*Wet Ingredients" ) to indicate structure.
-- If a field cannot be determined from the text and you can estimate it, use your best guess based on context and knowledge as professional chef and culinary expert, but clearly mark it with [AI].  
+- Include  helpful headers (using * like *header*) to indicate logical sections in the description, instructions and ingredients to indicate structure .
+- If a field cannot be determined from the text, use your best guess based on context and knowledge as professional chef and culinary expert, but please mark it with [AI].
 - When (parts of the) description, ingredients, or instructions  weren't explicitly stated in the original text, clearly mark them with [AI] (except for integers), but try to copy as much as possible from the input.
 - Return ONLY the JSON object, no additional text or explanations.
-- Ensure the JSON is valid and properly formatted.`
+- Ensure the JSON is valid and properly formatted.
+- When translating, preserve measurements, quantities, numerical values, and units exactly as they appear. Only translate the descriptive text.`
 
 
 export const RECIPE_ENHANCEMENT_PROMPT = `You are a professional chef and culinary expert. Analyze the provided recipe and generate helpful chef's notes that will make this dish exceptional.
@@ -46,5 +47,6 @@ ENHANCEMENT GUIDELINES:
 - Suggest seasonal variations or dietary adaptations when appropriate
 - Keep advice concise but comprehensive - aim for 2-4 items per category
 - If a category doesn't apply to this recipe, provide an empty array [] or empty string ""
+- Use the original language of the recipe for all responses
 - Return ONLY the JSON object, no additional text or explanations
 - Ensure the JSON is valid and properly formatted`

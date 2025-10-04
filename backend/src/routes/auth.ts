@@ -24,3 +24,6 @@ authRoutes.get('/google', authController.googleAuth)
 
 // GET /auth/google/callback - Handle Google OAuth callback
 authRoutes.get('/google/callback', authController.googleAuthCallback)
+
+// PATCH /auth/translation-preference - Update user's default translation language
+authRoutes.patch('/translation-preference', authController.updateTranslationPreference)

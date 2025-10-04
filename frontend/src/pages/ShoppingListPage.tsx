@@ -60,8 +60,18 @@ function ShoppingListItemComponent({ item, onToggle, onDelete }: ShoppingListIte
   // Use displayName if available, otherwise fall back to description, then ingredient
   const displayText = item.displayName || item.description || item.ingredient
 
-  // Show original ingredient in parentheses only if we have a simplified displayName
-  const showOriginal = item.displayName && item.displayName !== item.ingredient
+  // Show original ingredient in parentheses only if we genuinely simplified it
+  const normalizedDisplayName = item.displayName?.replace(/\s+/g, ' ').trim().toLowerCase() ?? null
+  const normalizedIngredient = item.ingredient?.replace(/\s+/g, ' ').trim().toLowerCase() ?? null
+  const displayIncludesQuantity = item.displayName ? /\d/.test(item.displayName) : false
+
+  const showOriginal = Boolean(
+    item.displayName &&
+    normalizedDisplayName &&
+    normalizedIngredient &&
+    normalizedDisplayName !== normalizedIngredient &&
+    !displayIncludesQuantity
+  )
   const checkboxId = useMemo(() => `shopping-item-${item.id}`, [item.id])
 
   const handleToggle = useCallback(() => {

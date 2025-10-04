@@ -2,1555 +2,1464 @@
   {
     "displayName": "Onions",
     "category": "PRODUCE",
-    "keywords": ["onion", "onions"],
-    "exactMatches": ["yellow onion", "white onion", "red onion", "sweet onion", "vidalia onion"]
+    "keywords": [  "onion","onions","yellow onion","white onion","red onion","sweet onion","vidalia onion"]
   },
   {
     "displayName": "Green Onions",
     "category": "PRODUCE",
-    "keywords": ["green onion", "scallion", "spring onion", "green onions", "scallions"],
-    "exactMatches": ["green onion", "scallions", "green onions"]
+    "keywords": [  "green onion","scallion","spring onion","green onions","scallions"]
   },
   {
     "displayName": "Garlic",
     "category": "PRODUCE",
-    "keywords": ["garlic", "garlic clove", "garlic cloves", "fresh garlic"],
-    "exactMatches": ["garlic", "garlic cloves", "fresh garlic"]
+    "keywords": [  "garlic","garlic clove","garlic cloves","fresh garlic"]
   },
   {
     "displayName": "Tomatoes",
     "category": "PRODUCE",
-    "keywords": ["tomato", "tomatoes", "cherry tomato", "grape tomato", "roma tomato"],
-    "exactMatches": ["fresh tomato", "fresh tomatoes", "cherry tomatoes", "grape tomatoes"],
-    "excludeKeywords": ["canned", "can", "paste", "sauce"]
+    "keywords": [  "tomato","tomatoes","cherry tomato","grape tomato","roma tomato","fresh tomato","fresh tomatoes","cherry tomatoes","grape tomatoes","cocktail tomato","cocktail tomatoes","chopped tomato","chopped tomatoes"],
+    "excludeKeywords": [  "canned","can","paste","sauce"]
   },
   {
     "displayName": "Potatoes",
     "category": "PRODUCE",
-    "keywords": ["potato", "potatoes", "russet potato", "red potato", "yukon potato"],
-    "exactMatches": ["potatoes", "russet potatoes", "red potatoes"]
+    "keywords": [  "potato","potatoes","russet potato","red potato","yukon potato","russet potatoes","red potatoes","baby potato","baby potatoes"]
   },
   {
     "displayName": "Carrots",
     "category": "PRODUCE",
-    "keywords": ["carrot", "carrots", "baby carrot"],
-    "exactMatches": ["carrots", "baby carrots", "fresh carrots"]
+    "keywords": [  "carrot","carrots","baby carrot","baby carrots","fresh carrots"]
   },
   {
     "displayName": "Celery",
     "category": "PRODUCE",
-    "keywords": ["celery", "celery stalk", "celery stalks"],
-    "exactMatches": ["celery", "celery stalks", "fresh celery"]
+    "keywords": [  "celery","celery stalk","celery stalks","fresh celery"]
+  },
+  {
+    "displayName": "Celeriac",
+    "category": "PRODUCE",
+    "keywords": [  "celeriac","celery root","celery knob"]
   },
   {
     "displayName": "Mushrooms",
     "category": "PRODUCE",
-    "keywords": ["mushroom", "mushrooms", "button mushroom", "cremini", "shiitake", "portobello"],
-    "exactMatches": ["mushrooms", "fresh mushrooms", "button mushrooms"]
+    "keywords": [  "mushroom","mushrooms","button mushroom","cremini","shiitake","portobello","fresh mushrooms","button mushrooms"]
   },
   {
     "displayName": "Lettuce",
     "category": "PRODUCE",
-    "keywords": ["lettuce", "romaine", "iceberg lettuce", "butter lettuce", "mixed greens"],
-    "exactMatches": ["lettuce", "romaine lettuce", "mixed greens"]
+    "keywords": [  "lettuce","romaine","iceberg lettuce","butter lettuce","mixed greens","romaine lettuce"]
   },
   {
     "displayName": "Spinach",
     "category": "PRODUCE",
-    "keywords": ["spinach", "baby spinach", "fresh spinach"],
-    "exactMatches": ["spinach", "fresh spinach", "baby spinach"],
-    "excludeKeywords": ["frozen"]
+    "keywords": [  "spinach","baby spinach","fresh spinach"],
+    "excludeKeywords": [  "frozen"]
   },
   {
     "displayName": "Basil",
     "category": "PRODUCE",
-    "keywords": ["basil", "fresh basil", "sweet basil"],
-    "exactMatches": ["fresh basil", "basil leaves"],
-    "excludeKeywords": ["dried"]
+    "keywords": [  "basil","fresh basil","sweet basil","basil leaves"],
+    "excludeKeywords": [  "dried"]
   },
   {
     "displayName": "Parsley",
     "category": "PRODUCE",
-    "keywords": ["parsley", "fresh parsley", "flat leaf parsley", "curly parsley"],
-    "exactMatches": ["fresh parsley", "italian parsley"],
-    "excludeKeywords": ["dried"]
+    "keywords": [  "parsley","fresh parsley","flat leaf parsley","curly parsley","italian parsley"],
+    "excludeKeywords": [  "dried"]
   },
   {
     "displayName": "Cilantro",
     "category": "PRODUCE",
-    "keywords": ["cilantro", "fresh cilantro", "coriander leaves"],
-    "exactMatches": ["fresh cilantro", "cilantro bunch"]
+    "keywords": [  "cilantro","fresh cilantro","coriander leaves","cilantro bunch"]
+  },
+  {
+    "displayName": "Clementines",
+    "category": "PRODUCE",
+    "keywords": [  "clementine","clementines","mandarin","mandarins","tangerine","tangerines","fresh clementines"]
   },
   {
     "displayName": "Lemon",
     "category": "PRODUCE",
-    "keywords": ["lemon", "lemons", "fresh lemon"],
-    "exactMatches": ["lemon", "lemons", "fresh lemon"]
+    "keywords": [  "lemon","lemons","fresh lemon"]
   },
   {
     "displayName": "Lime",
     "category": "PRODUCE",
-    "keywords": ["lime", "limes", "fresh lime"],
-    "exactMatches": ["lime", "limes", "fresh lime"]
+    "keywords": [  "lime","limes","fresh lime"]
   },
   {
     "displayName": "Avocado",
     "category": "PRODUCE",
-    "keywords": ["avocado", "avocados", "ripe avocado"],
-    "exactMatches": ["avocado", "avocados", "ripe avocado"]
+    "keywords": [  "avocado","avocados","ripe avocado"]
   },
   {
     "displayName": "Bananas",
     "category": "PRODUCE",
-    "keywords": ["banana", "bananas", "ripe banana"],
-    "exactMatches": ["bananas", "ripe bananas"]
+    "keywords": [  "banana","bananas","ripe banana","ripe bananas"]
   },
   {
     "displayName": "Strawberries",
     "category": "PRODUCE",
-    "keywords": ["strawberries", "strawberry", "fresh strawberries"],
-    "exactMatches": ["strawberries", "fresh strawberries"],
-    "excludeKeywords": ["frozen"]
+    "keywords": [  "strawberries","strawberry","fresh strawberries"],
+    "excludeKeywords": [  "frozen"]
   },
   {
     "displayName": "Blueberries",
     "category": "PRODUCE",
-    "keywords": ["blueberries", "blueberry", "fresh blueberries"],
-    "exactMatches": ["blueberries", "fresh blueberries"],
-    "excludeKeywords": ["frozen"]
+    "keywords": [  "blueberries","blueberry","fresh blueberries"],
+    "excludeKeywords": [  "frozen"]
   },
   {
     "displayName": "Raspberries",
     "category": "PRODUCE",
-    "keywords": ["raspberries", "raspberry", "fresh raspberries"],
-    "exactMatches": ["raspberries", "fresh raspberries"],
-    "excludeKeywords": ["frozen"]
+    "keywords": [  "raspberries","raspberry","fresh raspberries"],
+    "excludeKeywords": [  "frozen"]
   },
   {
     "displayName": "Blackberries",
     "category": "PRODUCE",
-    "keywords": ["blackberries", "blackberry", "fresh blackberries"],
-    "exactMatches": ["blackberries", "fresh blackberries"],
-    "excludeKeywords": ["frozen"]
+    "keywords": [  "blackberries","blackberry","fresh blackberries"],
+    "excludeKeywords": [  "frozen"]
   },
   {
     "displayName": "Berries",
     "category": "PRODUCE",
-    "keywords": ["berries", "mixed berries", "fresh berries"],
-    "exactMatches": ["berries", "mixed berries"],
-    "excludeKeywords": ["frozen"]
+    "keywords": [  "berries","mixed berries","fresh berries"],
+    "excludeKeywords": [  "frozen"]
   },
   {
     "displayName": "Zucchini",
     "category": "PRODUCE",
-    "keywords": ["zucchini", "courgette", "zucchinis"],
-    "exactMatches": ["zucchini", "zucchinis", "fresh zucchini"]
+    "keywords": [  "zucchini","courgette","zucchinis","fresh zucchini"]
   },
   {
     "displayName": "Eggplant",
     "category": "PRODUCE",
-    "keywords": ["eggplant", "aubergine"],
-    "exactMatches": ["eggplant", "fresh eggplant"]
+    "keywords": [  "eggplant","aubergine","fresh eggplant"]
+  },
+  {
+    "displayName": "Edamame",
+    "category": "PRODUCE",
+    "keywords": [  "edamame","soybean pods","fresh edamame"]
   },
   {
     "displayName": "Broccoli",
     "category": "PRODUCE",
-    "keywords": ["broccoli", "broccoli florets"],
-    "exactMatches": ["broccoli", "fresh broccoli"],
-    "excludeKeywords": ["frozen"]
+    "keywords": [  "broccoli","broccoli florets","fresh broccoli"],
+    "excludeKeywords": [  "frozen"]
   },
   {
     "displayName": "Cauliflower",
     "category": "PRODUCE",
-    "keywords": ["cauliflower", "cauliflower florets"],
-    "exactMatches": ["cauliflower", "fresh cauliflower"]
+    "keywords": [  "cauliflower","cauliflower florets","fresh cauliflower"]
   },
   {
     "displayName": "Brussels Sprouts",
     "category": "PRODUCE",
-    "keywords": ["brussels sprouts", "brussels sprout"],
-    "exactMatches": ["brussels sprouts", "fresh brussels sprouts"]
+    "keywords": [  "brussels sprouts","brussels sprout","fresh brussels sprouts"]
   },
   {
     "displayName": "Kale",
     "category": "PRODUCE",
-    "keywords": ["kale", "curly kale", "lacinato kale"],
-    "exactMatches": ["kale", "fresh kale"]
+    "keywords": [  "kale","curly kale","lacinato kale","fresh kale"]
   },
   {
     "displayName": "Arugula",
     "category": "PRODUCE",
-    "keywords": ["arugula", "rocket", "rocket salad"],
-    "exactMatches": ["arugula", "fresh arugula"]
+    "keywords": [  "arugula","rocket","rocket salad","fresh arugula"]
   },
   {
     "displayName": "Cucumber",
     "category": "PRODUCE",
-    "keywords": ["cucumber", "cucumbers", "english cucumber"],
-    "exactMatches": ["cucumber", "cucumbers", "fresh cucumber"]
+    "keywords": [  "cucumber","cucumbers","english cucumber","fresh cucumber"]
   },
   {
     "displayName": "Bell Pepper",
     "category": "PRODUCE",
-    "keywords": ["bell pepper", "bell peppers", "red bell pepper", "yellow bell pepper", "green bell pepper", "orange bell pepper"],
-    "exactMatches": ["bell pepper", "bell peppers", "red bell pepper", "green bell pepper"]
+    "keywords": [  "bell pepper","bell peppers","red bell pepper","yellow bell pepper","green bell pepper","orange bell pepper"]
   },
   {
     "displayName": "Jalapeño",
     "category": "PRODUCE",
-    "keywords": ["jalapeno", "jalapeño", "jalapenos", "jalapeños"],
-    "exactMatches": ["jalapeno", "jalapeño", "fresh jalapeno"]
+    "keywords": [  "jalapeno","jalapeño","jalapenos","jalapeños","fresh jalapeno"]
   },
   {
     "displayName": "Ginger",
     "category": "PRODUCE",
-    "keywords": ["ginger", "fresh ginger", "ginger root"],
-    "exactMatches": ["fresh ginger", "ginger root"]
+    "keywords": [  "ginger","fresh ginger","ginger root"]
   },
   {
     "displayName": "Shallots",
     "category": "PRODUCE",
-    "keywords": ["shallot", "shallots", "french shallots"],
-    "exactMatches": ["shallots", "fresh shallots"]
+    "keywords": [  "shallot","shallots","french shallots","fresh shallots"]
   },
   {
     "displayName": "Apples",
     "category": "PRODUCE",
-    "keywords": ["apple", "apples", "granny smith", "honeycrisp", "fuji apple"],
-    "exactMatches": ["apples", "fresh apples", "red apples"]
+    "keywords": [  "apple","apples","granny smith","honeycrisp","fuji apple","fresh apples","red apples"]
+  },
+  {
+    "displayName": "Apricots",
+    "category": "PRODUCE",
+    "keywords": [  "apricot","apricots","fresh apricot","fresh apricots"]
   },
   {
     "displayName": "Oranges",
     "category": "PRODUCE",
-    "keywords": ["orange", "oranges", "navel orange", "blood orange"],
-    "exactMatches": ["oranges", "fresh oranges", "navel oranges"]
+    "keywords": [  "orange","oranges","navel orange","blood orange","fresh oranges","navel oranges"]
   },
   {
     "displayName": "Pears",
     "category": "PRODUCE",
-    "keywords": ["pear", "pears", "bartlett pear", "anjou pear"],
-    "exactMatches": ["pears", "fresh pears", "bartlett pears"]
+    "keywords": [  "pear","pears","bartlett pear","anjou pear","fresh pears","bartlett pears"]
   },
   {
     "displayName": "Peaches",
     "category": "PRODUCE",
-    "keywords": ["peach", "peaches", "yellow peach", "white peach"],
-    "exactMatches": ["peaches", "fresh peaches"]
+    "keywords": [  "peach","peaches","yellow peach","white peach","fresh peaches"]
   },
   {
     "displayName": "Nectarines",
     "category": "PRODUCE",
-    "keywords": ["nectarine", "nectarines"],
-    "exactMatches": ["nectarines", "fresh nectarines"]
+    "keywords": [  "nectarine","nectarines","fresh nectarines"]
   },
   {
     "displayName": "Plums",
     "category": "PRODUCE",
-    "keywords": ["plum", "plums", "red plum", "black plum"],
-    "exactMatches": ["plums", "fresh plums"]
+    "keywords": [  "plum","plums","red plum","black plum","fresh plums"]
   },
   {
     "displayName": "Cherries",
     "category": "PRODUCE",
-    "keywords": ["cherry", "cherries", "bing cherry", "rainier cherry"],
-    "exactMatches": ["cherries", "fresh cherries", "bing cherries"]
+    "keywords": [  "cherry","cherries","bing cherry","rainier cherry","fresh cherries","bing cherries"]
   },
   {
     "displayName": "Grapes",
     "category": "PRODUCE",
-    "keywords": ["grape", "grapes", "red grapes", "green grapes", "seedless grapes"],
-    "exactMatches": ["grapes", "fresh grapes", "red grapes", "green grapes"]
+    "keywords": [  "grape","grapes","red grapes","green grapes","seedless grapes","fresh grapes"]
+  },
+  {
+    "displayName": "Grapefruit",
+    "category": "PRODUCE",
+    "keywords": [  "grapefruit","ruby grapefruit","pink grapefruit","fresh grapefruit"]
   },
   {
     "displayName": "Mango",
     "category": "PRODUCE",
-    "keywords": ["mango", "mangoes", "fresh mango"],
-    "exactMatches": ["mango", "fresh mango", "ripe mango"]
+    "keywords": [  "mango","mangoes","fresh mango","ripe mango"]
+  },
+  {
+    "displayName": "Papaya",
+    "category": "PRODUCE",
+    "keywords": [  "papaya","papayas","ripe papaya","fresh papaya"]
   },
   {
     "displayName": "Pineapple",
     "category": "PRODUCE",
-    "keywords": ["pineapple", "fresh pineapple"],
-    "exactMatches": ["pineapple", "fresh pineapple", "whole pineapple"]
+    "keywords": [  "pineapple","fresh pineapple","whole pineapple"]
   },
   {
     "displayName": "Kiwi",
     "category": "PRODUCE",
-    "keywords": ["kiwi", "kiwis", "kiwifruit"],
-    "exactMatches": ["kiwi", "fresh kiwi", "kiwis"]
+    "keywords": [  "kiwi","kiwis","kiwifruit","fresh kiwi"]
   },
   {
     "displayName": "Watermelon",
     "category": "PRODUCE",
-    "keywords": ["watermelon", "seedless watermelon"],
-    "exactMatches": ["watermelon", "fresh watermelon", "whole watermelon"]
+    "keywords": [  "watermelon","seedless watermelon","fresh watermelon","whole watermelon"]
   },
   {
     "displayName": "Cantaloupe",
     "category": "PRODUCE",
-    "keywords": ["cantaloupe", "muskmelon"],
-    "exactMatches": ["cantaloupe", "fresh cantaloupe"]
+    "keywords": [  "cantaloupe","muskmelon","fresh cantaloupe"]
   },
   {
     "displayName": "Honeydew",
     "category": "PRODUCE",
-    "keywords": ["honeydew", "honeydew melon"],
-    "exactMatches": ["honeydew", "fresh honeydew"]
+    "keywords": [  "honeydew","honeydew melon","fresh honeydew"]
   },
   {
     "displayName": "Green Beans",
     "category": "PRODUCE",
-    "keywords": ["green bean", "green beans", "string bean", "string beans"],
-    "exactMatches": ["green beans", "fresh green beans"]
+    "keywords": [  "green bean","green beans","string bean","string beans","fresh green beans"]
   },
   {
     "displayName": "Asparagus",
     "category": "PRODUCE",
-    "keywords": ["asparagus", "fresh asparagus"],
-    "exactMatches": ["asparagus", "fresh asparagus", "asparagus spears"]
+    "keywords": [  "asparagus","fresh asparagus","asparagus spears"]
   },
   {
     "displayName": "Snap Peas",
     "category": "PRODUCE",
-    "keywords": ["snap pea", "snap peas", "sugar snap pea", "sugar snap peas"],
-    "exactMatches": ["snap peas", "sugar snap peas"]
+    "keywords": [  "snap pea","snap peas","sugar snap pea","sugar snap peas"]
   },
   {
     "displayName": "Snow Peas",
     "category": "PRODUCE",
-    "keywords": ["snow pea", "snow peas"],
-    "exactMatches": ["snow peas", "fresh snow peas"]
+    "keywords": [  "snow pea","snow peas","fresh snow peas"]
   },
   {
     "displayName": "Beets",
     "category": "PRODUCE",
-    "keywords": ["beet", "beets", "red beet", "golden beet"],
-    "exactMatches": ["beets", "fresh beets", "red beets"]
+    "keywords": [  "beet","beets","red beet","golden beet","fresh beets","red beets"]
   },
   {
     "displayName": "Radishes",
     "category": "PRODUCE",
-    "keywords": ["radish", "radishes"],
-    "exactMatches": ["radishes", "fresh radishes"]
+    "keywords": [  "radish","radishes","fresh radishes"]
+  },
+  {
+    "displayName": "Radicchio",
+    "category": "PRODUCE",
+    "keywords": [  "radicchio","italian chicory","red chicory"]
   },
   {
     "displayName": "Sweet Potatoes",
     "category": "PRODUCE",
-    "keywords": ["sweet potato", "sweet potatoes", "yam", "yams"],
-    "exactMatches": ["sweet potatoes", "fresh sweet potatoes", "yams"]
+    "keywords": [  "sweet potato","sweet potatoes","yam","yams","fresh sweet potatoes"]
+  },
+  {
+    "displayName": "Turnips",
+    "category": "PRODUCE",
+    "keywords": [  "turnip","turnips","purple top turnip","fresh turnips"]
   },
   {
     "displayName": "Corn on the Cob",
     "category": "PRODUCE",
-    "keywords": ["corn", "corn on the cob", "fresh corn"],
-    "exactMatches": ["corn on the cob", "fresh corn", "ears of corn"]
+    "keywords": [  "corn","corn on the cob","fresh corn","ears of corn"]
   },
   {
     "displayName": "Leeks",
     "category": "PRODUCE",
-    "keywords": ["leek", "leeks"],
-    "exactMatches": ["leeks", "fresh leeks"]
+    "keywords": [  "leek","leeks","fresh leeks"]
   },
   {
     "displayName": "Cabbage",
     "category": "PRODUCE",
-    "keywords": ["cabbage", "green cabbage", "red cabbage", "napa cabbage"],
-    "exactMatches": ["cabbage", "green cabbage", "red cabbage", "napa cabbage"]
+    "keywords": [  "cabbage","green cabbage","red cabbage","napa cabbage"]
   },
   {
     "displayName": "Bok Choy",
     "category": "PRODUCE",
-    "keywords": ["bok choy", "pak choi"],
-    "exactMatches": ["bok choy", "fresh bok choy"]
+    "keywords": [  "bok choy","pak choi","fresh bok choy"]
   },
   {
     "displayName": "Butternut Squash",
     "category": "PRODUCE",
-    "keywords": ["butternut squash", "acorn squash", "spaghetti squash"],
-    "exactMatches": ["butternut squash", "acorn squash", "spaghetti squash"]
+    "keywords": [  "butternut squash","acorn squash","spaghetti squash"]
+  },
+  {
+    "displayName": "Squash",
+    "category": "PRODUCE",
+    "keywords": [  "squash","summer squash","fresh squash"]
+  },
+  {
+    "displayName": "Pumpkin",
+    "category": "PRODUCE",
+    "keywords": [  "pumpkin","sugar pumpkin","pie pumpkin","fresh pumpkin"]
   },
   {
     "displayName": "Fresh Thyme",
     "category": "PRODUCE",
-    "keywords": ["fresh thyme", "thyme"],
-    "exactMatches": ["fresh thyme", "thyme sprigs"],
-    "excludeKeywords": ["dried", "ground"]
+    "keywords": [  "fresh thyme","fresh thyme sprigs","thyme sprigs"],
+    "excludeKeywords": [  "dried","ground"]
   },
   {
     "displayName": "Fresh Oregano",
     "category": "PRODUCE",
-    "keywords": ["fresh oregano", "oregano"],
-    "exactMatches": ["fresh oregano", "oregano leaves"],
-    "excludeKeywords": ["dried", "ground"]
+    "keywords": [  "fresh oregano","fresh oregano leaves","oregano leaves"],
+    "excludeKeywords": [  "dried","ground"]
   },
   {
     "displayName": "Rosemary",
     "category": "PRODUCE",
-    "keywords": ["rosemary", "fresh rosemary"],
-    "exactMatches": ["fresh rosemary", "rosemary sprigs"]
+    "keywords": [  "rosemary","fresh rosemary","rosemary sprigs"]
   },
   {
     "displayName": "Dill",
     "category": "PRODUCE",
-    "keywords": ["dill", "fresh dill", "dill weed"],
-    "exactMatches": ["fresh dill", "dill sprigs"]
+    "keywords": [  "dill","fresh dill","dill weed","dill sprigs"]
+  },
+  {
+    "displayName": "Dates",
+    "category": "PRODUCE",
+    "keywords": [  "dates","medjool dates","deglet noor dates"]
   },
   {
     "displayName": "Mint",
     "category": "PRODUCE",
-    "keywords": ["mint", "fresh mint", "spearmint", "peppermint"],
-    "exactMatches": ["fresh mint", "mint leaves"]
+    "keywords": [  "mint","fresh mint","spearmint","peppermint","mint leaves"]
   },
   {
     "displayName": "Chives",
     "category": "PRODUCE",
-    "keywords": ["chives", "fresh chives"],
-    "exactMatches": ["fresh chives", "chives"]
+    "keywords": [  "chives","fresh chives"]
+  },
+  {
+    "displayName": "Cranberries",
+    "category": "PRODUCE",
+    "keywords": [  "cranberry","cranberries","fresh cranberries"]
+  },
+  {
+    "displayName": "Currants",
+    "category": "PRODUCE",
+    "keywords": [  "currant","currants","red currant","black currant"]
   },
   {
     "displayName": "Sage",
     "category": "PRODUCE",
-    "keywords": ["sage", "fresh sage"],
-    "exactMatches": ["fresh sage", "sage leaves"]
+    "keywords": [  "sage","fresh sage","sage leaves"]
   },
   {
     "displayName": "Ground Beef",
     "category": "MEAT_SEAFOOD",
-    "keywords": ["ground beef", "ground chuck", "hamburger"],
-    "exactMatches": ["ground beef", "80/20 ground beef", "lean ground beef"]
+    "keywords": [  "ground beef","ground chuck","hamburger","80/20 ground beef","lean ground beef"]
   },
   {
     "displayName": "Chicken Breast",
     "category": "MEAT_SEAFOOD",
-    "keywords": ["chicken breast", "boneless chicken breast", "skinless chicken breast"],
-    "exactMatches": ["chicken breast", "boneless skinless chicken breast", "chicken breasts"]
+    "keywords": [  "chicken breast","boneless chicken breast","skinless chicken breast","boneless skinless chicken breast","chicken breasts"]
   },
   {
     "displayName": "Chicken Thighs",
     "category": "MEAT_SEAFOOD",
-    "keywords": ["chicken thigh", "chicken thighs", "boneless thighs"],
-    "exactMatches": ["chicken thighs", "boneless chicken thighs"]
+    "keywords": [  "chicken thigh","chicken thighs","boneless thighs","boneless chicken thighs"]
   },
   {
     "displayName": "Ground Turkey",
     "category": "MEAT_SEAFOOD",
-    "keywords": ["ground turkey", "turkey ground"],
-    "exactMatches": ["ground turkey", "lean ground turkey"]
+    "keywords": [  "ground turkey","turkey ground","lean ground turkey"]
   },
   {
     "displayName": "Salmon",
     "category": "MEAT_SEAFOOD",
-    "keywords": ["salmon", "salmon fillet", "atlantic salmon"],
-    "exactMatches": ["salmon", "salmon fillets", "fresh salmon"],
-    "excludeKeywords": ["canned"]
+    "keywords": [  "salmon","salmon fillet","atlantic salmon","salmon fillets","fresh salmon"],
+    "excludeKeywords": [  "canned"]
   },
   {
     "displayName": "Shrimp",
     "category": "MEAT_SEAFOOD",
-    "keywords": ["shrimp", "prawns", "jumbo shrimp"],
-    "exactMatches": ["shrimp", "large shrimp", "raw shrimp"],
-    "excludeKeywords": ["frozen"]
+    "keywords": [  "shrimp","prawns","jumbo shrimp","large shrimp","raw shrimp"],
+    "excludeKeywords": [  "frozen"]
   },
   {
     "displayName": "Bacon",
     "category": "MEAT_SEAFOOD",
-    "keywords": ["bacon", "thick cut bacon", "turkey bacon"],
-    "exactMatches": ["bacon", "thick-cut bacon"]
+    "keywords": [  "bacon","thick cut bacon","turkey bacon","thick-cut bacon"]
   },
   {
     "displayName": "Ground Pork",
     "category": "MEAT_SEAFOOD",
-    "keywords": ["ground pork", "pork ground", "sausage meat"],
-    "exactMatches": ["ground pork", "lean ground pork"]
+    "keywords": [  "ground pork","pork ground","sausage meat","lean ground pork"]
   },
   {
     "displayName": "Pork Chops",
     "category": "MEAT_SEAFOOD",
-    "keywords": ["pork chop", "pork chops", "bone-in pork chops"],
-    "exactMatches": ["pork chops", "boneless pork chops"]
+    "keywords": [  "pork chop","pork chops","bone-in pork chops","boneless pork chops"]
   },
   {
     "displayName": "Beef",
     "category": "MEAT_SEAFOOD",
-    "keywords": ["beef", "beef steak", "sirloin", "ribeye", "filet mignon"],
-    "exactMatches": ["beef", "ribeye steak", "sirloin steak"]
+    "keywords": [  "beef","beef steak","sirloin","ribeye","filet mignon","ribeye steak","sirloin steak"]
   },
   {
     "displayName": "Chicken",
     "category": "MEAT_SEAFOOD",
-    "keywords": ["chicken", "whole chicken", "roasting chicken"],
-    "exactMatches": ["whole chicken", "roasting chicken"]
+    "keywords": [  "chicken","whole chicken","roasting chicken"]
+  },
+  {
+    "displayName": "Fish",
+    "category": "MEAT_SEAFOOD",
+    "keywords": [  "fish","whole fish","fish fillet","ground fish"]
   },
   {
     "displayName": "Tuna",
     "category": "MEAT_SEAFOOD",
-    "keywords": ["tuna", "tuna steak", "yellowfin tuna", "albacore tuna"],
-    "exactMatches": ["tuna", "tuna steaks", "fresh tuna"],
-    "excludeKeywords": ["canned"]
+    "keywords": [  "tuna","tuna steak","yellowfin tuna","albacore tuna","tuna steaks","fresh tuna"],
+    "excludeKeywords": [  "canned"]
   },
   {
     "displayName": "Cod",
     "category": "MEAT_SEAFOOD",
-    "keywords": ["cod", "cod fillet", "atlantic cod", "pacific cod"],
-    "exactMatches": ["cod", "cod fillets", "fresh cod"]
+    "keywords": [  "cod","cod fillet","atlantic cod","pacific cod","cod fillets","fresh cod"]
   },
   {
     "displayName": "Tilapia",
     "category": "MEAT_SEAFOOD",
-    "keywords": ["tilapia", "tilapia fillet"],
-    "exactMatches": ["tilapia", "tilapia fillets"]
+    "keywords": [  "tilapia","tilapia fillet","tilapia fillets"]
   },
   {
     "displayName": "Mahi Mahi",
     "category": "MEAT_SEAFOOD",
-    "keywords": ["mahi mahi", "mahi-mahi", "dolphin fish"],
-    "exactMatches": ["mahi mahi", "mahi-mahi fillets"]
+    "keywords": [  "mahi mahi","mahi-mahi","dolphin fish","mahi-mahi fillets"]
   },
   {
     "displayName": "Buttermilk",
     "category": "DAIRY_EGGS",
-    "keywords": ["buttermilk", "cultured buttermilk"],
-    "exactMatches": ["buttermilk", "cultured buttermilk"]
+    "keywords": [  "buttermilk","cultured buttermilk"]
   },
   {
     "displayName": "Whole Milk",
     "category": "DAIRY_EGGS",
-    "keywords": ["whole milk", "fresh whole milk"],
-    "exactMatches": ["whole milk", "fresh whole milk"]
+    "keywords": [  "whole milk","fresh whole milk"]
   },
   {
     "displayName": "2% Milk",
     "category": "DAIRY_EGGS",
-    "keywords": ["2% milk", "low fat milk", "reduced fat milk"],
-    "exactMatches": ["2% milk", "low fat milk"]
+    "keywords": [  "2% milk","low fat milk","reduced fat milk"]
   },
   {
     "displayName": "Skim Milk",
     "category": "DAIRY_EGGS",
-    "keywords": ["skim milk", "fat free milk", "nonfat milk"],
-    "exactMatches": ["skim milk", "fat free milk", "nonfat milk"]
+    "keywords": [  "skim milk","fat free milk","nonfat milk"]
   },
   {
     "displayName": "Eggs",
     "category": "DAIRY_EGGS",
-    "keywords": ["egg", "eggs", "large eggs", "free range eggs", "organic eggs"],
-    "exactMatches": ["eggs", "large eggs", "dozen eggs"]
+    "keywords": [  "egg","eggs","large eggs","free range eggs","organic eggs","dozen eggs"]
   },
   {
     "displayName": "Milk",
     "category": "DAIRY_EGGS",
-    "keywords": ["milk"],
-    "exactMatches": ["milk"]
+    "keywords": [  "milk"]
   },
   {
     "displayName": "Butter",
     "category": "DAIRY_EGGS",
-    "keywords": ["butter", "unsalted butter", "salted butter"],
-    "exactMatches": ["butter", "unsalted butter"]
+    "keywords": [  "butter","unsalted butter","salted butter"]
+  },
+  {
+    "displayName": "Swiss Cheese",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "swiss cheese","swiss","emmental","gruyere"]
+  },
+  {
+    "displayName": "American Cheese",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "american cheese","processed american cheese","singles"]
+  },
+  {
+    "displayName": "Provolone",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "provolone","provolone cheese"]
+  },
+  {
+    "displayName": "Blue Cheese",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "blue cheese","gorgonzola","roquefort","stilton"]
   },
   {
     "displayName": "Cheese",
     "category": "DAIRY_EGGS",
-    "keywords": ["cheese", "cheddar", "mozzarella", "parmesan", "swiss cheese", "cream cheese"],
-    "exactMatches": ["cheddar cheese", "mozzarella cheese", "parmesan cheese"]
+    "keywords": [  "cheese"]
   },
   {
     "displayName": "Greek Yogurt",
     "category": "DAIRY_EGGS",
-    "keywords": ["greek yogurt", "yogurt", "plain yogurt"],
-    "exactMatches": ["greek yogurt", "plain greek yogurt"]
+    "keywords": [  "greek yogurt","plain greek yogurt","strained yogurt","greek-style yogurt"]
   },
   {
     "displayName": "Heavy Cream",
     "category": "DAIRY_EGGS",
-    "keywords": ["heavy cream", "heavy whipping cream", "whipping cream"],
-    "exactMatches": ["heavy cream", "heavy whipping cream"]
+    "keywords": [  "heavy cream","heavy whipping cream","whipping cream"]
   },
   {
     "displayName": "Sour Cream",
     "category": "DAIRY_EGGS",
-    "keywords": ["sour cream"],
-    "exactMatches": ["sour cream", "light sour cream"]
+    "keywords": [  "sour cream","light sour cream"]
   },
   {
     "displayName": "Cream Cheese",
     "category": "DAIRY_EGGS",
-    "keywords": ["cream cheese", "softened cream cheese"],
-    "exactMatches": ["cream cheese", "softened cream cheese"]
+    "keywords": [  "cream cheese","softened cream cheese"]
   },
   {
     "displayName": "Cottage Cheese",
     "category": "DAIRY_EGGS",
-    "keywords": ["cottage cheese", "small curd cottage cheese"],
-    "exactMatches": ["cottage cheese", "low fat cottage cheese"]
+    "keywords": [  "cottage cheese","small curd cottage cheese","low fat cottage cheese"]
   },
   {
     "displayName": "Mozzarella",
     "category": "DAIRY_EGGS",
-    "keywords": ["mozzarella", "mozzarella cheese", "fresh mozzarella"],
-    "exactMatches": ["mozzarella", "fresh mozzarella", "mozzarella cheese"]
+    "keywords": [  "mozzarella","mozzarella cheese","fresh mozzarella"]
   },
   {
     "displayName": "Cheddar",
     "category": "DAIRY_EGGS",
-    "keywords": ["cheddar", "cheddar cheese", "sharp cheddar", "mild cheddar"],
-    "exactMatches": ["cheddar cheese", "sharp cheddar", "mild cheddar"]
+    "keywords": [  "cheddar","cheddar cheese","sharp cheddar","mild cheddar"]
   },
   {
     "displayName": "Parmesan",
     "category": "DAIRY_EGGS",
-    "keywords": ["parmesan", "parmesan cheese", "grated parmesan"],
-    "exactMatches": ["parmesan cheese", "grated parmesan"]
+    "keywords": [  "parmesan","parmesan cheese","grated parmesan"]
   },
   {
     "displayName": "Feta",
     "category": "DAIRY_EGGS",
-    "keywords": ["feta", "feta cheese", "crumbled feta"],
-    "exactMatches": ["feta cheese", "crumbled feta"]
+    "keywords": [  "feta","feta cheese","crumbled feta"]
   },
   {
     "displayName": "Goat Cheese",
     "category": "DAIRY_EGGS",
-    "keywords": ["goat cheese", "chevre", "goat cheese log"],
-    "exactMatches": ["goat cheese", "fresh goat cheese"]
+    "keywords": [  "goat cheese","chevre","goat cheese log","fresh goat cheese"]
   },
   {
     "displayName": "Half-and-Half",
     "category": "DAIRY_EGGS",
-    "keywords": ["half and half", "half-and-half", "half & half"],
-    "exactMatches": ["half and half", "half-and-half"]
+    "keywords": [  "half and half","half-and-half","half & half"]
   },
   {
     "displayName": "Ricotta",
     "category": "DAIRY_EGGS",
-    "keywords": ["ricotta", "ricotta cheese", "fresh ricotta"],
-    "exactMatches": ["ricotta cheese", "fresh ricotta"]
+    "keywords": [  "ricotta","ricotta cheese","fresh ricotta"]
   },
   {
     "displayName": "Mascarpone",
     "category": "DAIRY_EGGS",
-    "keywords": ["mascarpone", "mascarpone cheese"],
-    "exactMatches": ["mascarpone", "mascarpone cheese"]
+    "keywords": [  "mascarpone","mascarpone cheese"]
   },
   {
     "displayName": "Almond Milk",
     "category": "DAIRY_EGGS",
-    "keywords": ["almond milk", "unsweetened almond milk", "vanilla almond milk"],
-    "exactMatches": ["almond milk", "unsweetened almond milk"]
+    "keywords": [  "almond milk","unsweetened almond milk","vanilla almond milk"]
   },
   {
     "displayName": "Oat Milk",
     "category": "DAIRY_EGGS",
-    "keywords": ["oat milk", "oatmeal milk", "unsweetened oat milk"],
-    "exactMatches": ["oat milk", "unsweetened oat milk"]
+    "keywords": [  "oat milk","oatmeal milk","unsweetened oat milk"]
   },
   {
     "displayName": "Soy Milk",
     "category": "DAIRY_EGGS",
-    "keywords": ["soy milk", "soymilk", "unsweetened soy milk"],
-    "exactMatches": ["soy milk", "unsweetened soy milk"]
+    "keywords": [  "soy milk","soymilk","unsweetened soy milk"]
   },
   {
     "displayName": "Ghee",
     "category": "DAIRY_EGGS",
-    "keywords": ["ghee", "clarified butter"],
-    "exactMatches": ["ghee", "clarified butter"]
+    "keywords": [  "ghee","clarified butter"]
+  },
+  {
+    "displayName": "Yogurt",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "yogurt","plain yogurt","vanilla yogurt","strawberry yogurt","whole milk yogurt","low fat yogurt"]
   },
   {
     "displayName": "Olive Oil",
     "category": "PANTRY",
-    "keywords": ["olive oil", "extra virgin olive oil", "evoo"],
-    "exactMatches": ["olive oil", "extra virgin olive oil"]
+    "keywords": [  "olive oil","extra virgin olive oil","evoo"]
   },
   {
     "displayName": "Vegetable Oil",
     "category": "PANTRY",
-    "keywords": ["vegetable oil", "canola oil", "cooking oil"],
-    "exactMatches": ["vegetable oil", "canola oil"]
+    "keywords": [  "vegetable oil","canola oil","cooking oil"]
   },
   {
     "displayName": "Salt",
     "category": "PANTRY",
-    "keywords": ["salt", "table salt", "kosher salt", "sea salt"],
-    "exactMatches": ["salt", "kosher salt", "sea salt"]
+    "keywords": [  "salt","table salt","kosher salt","sea salt"]
   },
   {
     "displayName": "Black Pepper",
     "category": "PANTRY",
-    "keywords": ["black pepper", "pepper", "ground black pepper", "freshly ground pepper"],
-    "exactMatches": ["black pepper", "ground black pepper"]
+    "keywords": [  "black pepper","pepper","ground black pepper","freshly ground pepper"]
   },
   {
     "displayName": "Garlic Powder",
     "category": "PANTRY",
-    "keywords": ["garlic powder", "powdered garlic"],
-    "exactMatches": ["garlic powder"]
+    "keywords": [  "garlic powder","powdered garlic"]
   },
   {
     "displayName": "Paprika",
     "category": "PANTRY",
-    "keywords": ["paprika", "sweet paprika", "smoked paprika"],
-    "exactMatches": ["paprika", "smoked paprika"]
+    "keywords": [  "paprika","sweet paprika","smoked paprika"]
   },
   {
     "displayName": "Cumin",
     "category": "PANTRY",
-    "keywords": ["cumin", "ground cumin", "cumin powder"],
-    "exactMatches": ["cumin", "ground cumin"]
+    "keywords": [  "cumin","ground cumin","cumin powder"]
   },
   {
     "displayName": "Oregano",
     "category": "PANTRY",
-    "keywords": ["oregano", "dried oregano", "ground oregano"],
-    "exactMatches": ["oregano", "dried oregano"],
-    "excludeKeywords": ["fresh"]
+    "keywords": [  "oregano","dried oregano","ground oregano"],
+    "excludeKeywords": [  "fresh"]
   },
   {
     "displayName": "Thyme",
     "category": "PANTRY",
-    "keywords": ["thyme", "dried thyme", "ground thyme"],
-    "exactMatches": ["thyme", "dried thyme"],
-    "excludeKeywords": ["fresh"]
+    "keywords": [  "thyme","dried thyme","ground thyme"],
+    "excludeKeywords": [  "fresh"]
   },
   {
     "displayName": "Bay Leaves",
     "category": "PANTRY",
-    "keywords": ["bay leaf", "bay leaves", "dried bay leaves"],
-    "exactMatches": ["bay leaves", "bay leaf"]
+    "keywords": [  "bay leaf","bay leaves","dried bay leaves"]
   },
   {
     "displayName": "Chili Powder",
     "category": "PANTRY",
-    "keywords": ["chili powder", "chile powder", "ground chili"],
-    "exactMatches": ["chili powder", "chile powder"]
+    "keywords": [  "chili powder","chile powder","ground chili"]
   },
   {
     "displayName": "Cayenne",
     "category": "PANTRY",
-    "keywords": ["cayenne", "cayenne pepper", "ground cayenne", "red pepper flakes"],
-    "exactMatches": ["cayenne pepper", "ground cayenne"]
+    "keywords": [  "cayenne","cayenne pepper","ground cayenne","cayenne powder"]
+  },
+  {
+    "displayName": "Sumac",
+    "category": "PANTRY",
+    "keywords": ["sumac","ground sumac"]
   },
   {
     "displayName": "Crushed Red Pepper",
     "category": "PANTRY",
-    "keywords": ["crushed red pepper", "red pepper flakes", "chili flakes"],
-    "exactMatches": ["crushed red pepper", "red pepper flakes"]
+    "keywords": [  "crushed red pepper","red pepper flakes","chili flakes"]
   },
   {
     "displayName": "Curry Powder",
     "category": "PANTRY",
-    "keywords": ["curry powder", "curry", "madras curry powder"],
-    "exactMatches": ["curry powder", "madras curry powder"]
+    "keywords": [  "curry powder","curry","madras curry powder"]
   },
   {
     "displayName": "Garam Masala",
     "category": "PANTRY",
-    "keywords": ["garam masala", "garam masala spice"],
-    "exactMatches": ["garam masala"]
+    "keywords": [  "garam masala","garam masala spice","ground garam masala"]
   },
   {
     "displayName": "Onion Powder",
     "category": "PANTRY",
-    "keywords": ["onion powder", "dried onion powder"],
-    "exactMatches": ["onion powder"]
+    "keywords": [  "onion powder","dried onion powder","powdered onion"]
   },
   {
     "displayName": "Ground Ginger",
     "category": "PANTRY",
-    "keywords": ["ground ginger", "ginger powder", "powdered ginger"],
-    "exactMatches": ["ground ginger", "powdered ginger"]
+    "keywords": [  "ground ginger","ginger powder","powdered ginger"]
   },
   {
     "displayName": "Baking Soda",
     "category": "PANTRY",
-    "keywords": ["baking soda", "sodium bicarbonate"],
-    "exactMatches": ["baking soda"]
+    "keywords": [  "baking soda","sodium bicarbonate"]
   },
   {
     "displayName": "Baking Powder",
     "category": "PANTRY",
-    "keywords": ["baking powder"],
-    "exactMatches": ["baking powder"]
+    "keywords": [  "baking powder"]
   },
   {
     "displayName": "Vanilla Extract",
     "category": "PANTRY",
-    "keywords": ["vanilla extract", "pure vanilla extract", "vanilla"],
-    "exactMatches": ["vanilla extract", "pure vanilla extract"]
+    "keywords": [  "vanilla extract","pure vanilla extract","vanilla","vanilla essence"]
   },
   {
     "displayName": "Soy Sauce",
     "category": "PANTRY",
-    "keywords": ["soy sauce", "low sodium soy sauce"],
-    "exactMatches": ["soy sauce", "low sodium soy sauce"]
+    "keywords": [  "soy sauce","low sodium soy sauce","tamari","light soy sauce","dark soy sauce"]
   },
   {
     "displayName": "Hot Sauce",
     "category": "PANTRY",
-    "keywords": ["hot sauce", "tabasco", "sriracha"],
-    "exactMatches": ["hot sauce", "tabasco sauce", "sriracha"]
+    "keywords": [  "hot sauce","tabasco","sriracha","tabasco sauce"]
   },
   {
     "displayName": "Vinegar",
     "category": "PANTRY",
-    "keywords": ["vinegar", "white vinegar", "apple cider vinegar", "balsamic vinegar"],
-    "exactMatches": ["white vinegar", "apple cider vinegar", "balsamic vinegar"]
+    "keywords": [  "vinegar","white vinegar","apple cider vinegar","balsamic vinegar","red wine vinegar","white wine vinegar","distilled vinegar"]
   },
   {
     "displayName": "Sugar",
     "category": "PANTRY",
-    "keywords": ["sugar", "white sugar", "granulated sugar", "cane sugar"],
-    "exactMatches": ["sugar", "white sugar", "granulated sugar"]
+    "keywords": [  "sugar","white sugar","granulated sugar","cane sugar"]
   },
   {
     "displayName": "Brown Sugar",
     "category": "PANTRY",
-    "keywords": ["brown sugar", "light brown sugar", "dark brown sugar"],
-    "exactMatches": ["brown sugar", "light brown sugar", "dark brown sugar"]
+    "keywords": [  "brown sugar","light brown sugar","dark brown sugar"]
   },
   {
     "displayName": "Cornstarch",
     "category": "PANTRY",
-    "keywords": ["cornstarch", "corn starch", "cornflour"],
-    "exactMatches": ["cornstarch", "corn starch"]
+    "keywords": [  "cornstarch","corn starch","cornflour"]
   },
   {
     "displayName": "Cocoa Powder",
     "category": "PANTRY",
-    "keywords": ["cocoa powder", "unsweetened cocoa powder", "cocoa"],
-    "exactMatches": ["cocoa powder", "unsweetened cocoa powder"]
+    "keywords": [  "cocoa powder","unsweetened cocoa powder","cocoa"]
   },
   {
     "displayName": "Powdered Sugar",
     "category": "PANTRY",
-    "keywords": ["powdered sugar", "confectioners sugar", "icing sugar", "10x sugar"],
-    "exactMatches": ["powdered sugar", "confectioners sugar", "icing sugar"]
+    "keywords": [  "powdered sugar","confectioners sugar","icing sugar","10x sugar"]
   },
   {
     "displayName": "Cornmeal",
     "category": "PANTRY",
-    "keywords": ["cornmeal", "polenta", "yellow cornmeal", "white cornmeal"],
-    "exactMatches": ["cornmeal", "yellow cornmeal", "polenta"]
+    "keywords": [  "cornmeal","polenta","yellow cornmeal","white cornmeal"]
   },
   {
     "displayName": "Active Dry Yeast",
     "category": "PANTRY",
-    "keywords": ["active dry yeast", "dry yeast", "yeast"],
-    "exactMatches": ["active dry yeast", "dry yeast"]
+    "keywords": [  "active dry yeast","dry yeast","yeast"]
   },
   {
     "displayName": "Instant Yeast",
     "category": "PANTRY",
-    "keywords": ["instant yeast", "rapid rise yeast", "quick rise yeast"],
-    "exactMatches": ["instant yeast", "rapid rise yeast"]
+    "keywords": [  "instant yeast","rapid rise yeast","quick rise yeast"]
   },
   {
     "displayName": "Maple Syrup",
     "category": "PANTRY",
-    "keywords": ["maple syrup", "pure maple syrup", "pancake syrup"],
-    "exactMatches": ["maple syrup", "pure maple syrup", "pancake syrup"]
+    "keywords": [  "maple syrup","pure maple syrup","pancake syrup"]
   },
   {
     "displayName": "Honey",
     "category": "PANTRY",
-    "keywords": ["honey", "raw honey", "wildflower honey"],
-    "exactMatches": ["honey", "raw honey"]
+    "keywords": [  "honey","raw honey","wildflower honey"]
   },
   {
     "displayName": "Mustard",
     "category": "PANTRY",
-    "keywords": ["mustard", "yellow mustard", "dijon mustard", "whole grain mustard"],
-    "exactMatches": ["mustard", "dijon mustard", "yellow mustard"]
+    "keywords": [  "mustard","yellow mustard","dijon mustard","whole grain mustard"]
   },
   {
     "displayName": "Mayonnaise",
     "category": "PANTRY",
-    "keywords": ["mayonnaise", "mayo", "hellmanns", "best foods"],
-    "exactMatches": ["mayonnaise", "mayo"]
+    "keywords": [  "mayonnaise","mayo","hellmanns","best foods"]
   },
   {
     "displayName": "Worcestershire Sauce",
     "category": "PANTRY",
-    "keywords": ["worcestershire sauce", "worcestershire"],
-    "exactMatches": ["worcestershire sauce"]
+    "keywords": [  "worcestershire sauce","worcestershire"]
   },
   {
     "displayName": "Fish Sauce",
     "category": "PANTRY",
-    "keywords": ["fish sauce", "asian fish sauce"],
-    "exactMatches": ["fish sauce"]
+    "keywords": [  "fish sauce","asian fish sauce"]
   },
   {
     "displayName": "Ketchup",
     "category": "PANTRY",
-    "keywords": ["ketchup", "catsup", "tomato ketchup"],
-    "exactMatches": ["ketchup", "tomato ketchup"]
+    "keywords": [  "ketchup","catsup","tomato ketchup"]
   },
   {
     "displayName": "BBQ Sauce",
     "category": "PANTRY",
-    "keywords": ["bbq sauce", "barbecue sauce", "barbeque sauce"],
-    "exactMatches": ["bbq sauce", "barbecue sauce"]
+    "keywords": [  "bbq sauce","barbecue sauce","barbeque sauce"]
   },
   {
     "displayName": "Tahini",
     "category": "PANTRY",
-    "keywords": ["tahini", "sesame paste", "tahini sauce"],
-    "exactMatches": ["tahini", "sesame paste"]
+    "keywords": [  "tahini","sesame paste","tahini sauce"]
   },
   {
     "displayName": "Salsa",
     "category": "PANTRY",
-    "keywords": ["salsa", "pico de gallo", "fresh salsa"],
-    "exactMatches": ["salsa", "pico de gallo"]
+    "keywords": [  "salsa","pico de gallo","fresh salsa"]
   },
   {
     "displayName": "Pesto",
     "category": "PANTRY",
-    "keywords": ["pesto", "basil pesto", "pesto sauce"],
-    "exactMatches": ["pesto", "basil pesto"]
+    "keywords": [  "pesto","basil pesto","pesto sauce"]
   },
   {
     "displayName": "Jam",
     "category": "PANTRY",
-    "keywords": ["jam", "jelly", "strawberry jam", "grape jelly", "raspberry jam"],
-    "exactMatches": ["jam", "jelly", "strawberry jam", "grape jelly"]
+    "keywords": [  "jam","jelly","strawberry jam","grape jelly","raspberry jam"]
   },
   {
     "displayName": "Avocado Oil",
     "category": "PANTRY",
-    "keywords": ["avocado oil", "pure avocado oil"],
-    "exactMatches": ["avocado oil"]
+    "keywords": [  "avocado oil","pure avocado oil"]
   },
   {
     "displayName": "Coconut Oil",
     "category": "PANTRY",
-    "keywords": ["coconut oil", "virgin coconut oil", "refined coconut oil"],
-    "exactMatches": ["coconut oil", "virgin coconut oil"]
+    "keywords": [  "coconut oil","virgin coconut oil","refined coconut oil"]
   },
   {
     "displayName": "Peanut Oil",
     "category": "PANTRY",
-    "keywords": ["peanut oil", "groundnut oil"],
-    "exactMatches": ["peanut oil"]
+    "keywords": [  "peanut oil","groundnut oil"]
   },
   {
     "displayName": "Sesame Oil",
     "category": "PANTRY",
-    "keywords": ["sesame oil", "toasted sesame oil", "dark sesame oil"],
-    "exactMatches": ["sesame oil", "toasted sesame oil"]
+    "keywords": [  "sesame oil","toasted sesame oil","dark sesame oil"]
   },
   {
     "displayName": "Rice Vinegar",
     "category": "PANTRY",
-    "keywords": ["rice vinegar", "rice wine vinegar", "seasoned rice vinegar"],
-    "exactMatches": ["rice vinegar", "rice wine vinegar"]
+    "keywords": [  "rice vinegar","rice wine vinegar","seasoned rice vinegar"]
   },
   {
     "displayName": "Coconut Aminos",
     "category": "PANTRY",
-    "keywords": ["coconut aminos", "coconut amino"],
-    "exactMatches": ["coconut aminos"]
+    "keywords": [  "coconut aminos","coconut amino"]
   },
   {
     "displayName": "Turmeric",
     "category": "PANTRY",
-    "keywords": ["turmeric", "ground turmeric"],
-    "exactMatches": ["turmeric", "ground turmeric"]
+    "keywords": [  "turmeric","ground turmeric"]
   },
   {
     "displayName": "Coriander",
     "category": "PANTRY",
-    "keywords": ["coriander", "ground coriander", "cilantro seeds"],
-    "exactMatches": ["coriander", "ground coriander"],
-    "excludeKeywords": ["fresh", "leaves"]
+    "keywords": [  "coriander","ground coriander","cilantro seeds"],
+    "excludeKeywords": [  "fresh","leaves"]
   },
   {
     "displayName": "Cardamom",
     "category": "PANTRY",
-    "keywords": ["cardamom", "ground cardamom", "cardamom pods"],
-    "exactMatches": ["cardamom", "ground cardamom"]
+    "keywords": [  "cardamom","ground cardamom","cardamom pods"]
   },
   {
     "displayName": "Nutmeg",
     "category": "PANTRY",
-    "keywords": ["nutmeg", "ground nutmeg", "fresh nutmeg"],
-    "exactMatches": ["nutmeg", "ground nutmeg"]
+    "keywords": [  "nutmeg","ground nutmeg","fresh nutmeg"]
   },
   {
     "displayName": "Cinnamon",
     "category": "PANTRY",
-    "keywords": ["cinnamon", "ground cinnamon", "cinnamon stick", "cinnamon sticks"],
-    "exactMatches": ["cinnamon", "ground cinnamon", "cinnamon sticks"]
+    "keywords": [  "cinnamon","ground cinnamon","cinnamon stick","cinnamon sticks"]
   },
   {
     "displayName": "Allspice",
     "category": "PANTRY",
-    "keywords": ["allspice", "ground allspice"],
-    "exactMatches": ["allspice", "ground allspice"]
+    "keywords": [  "allspice","ground allspice"]
   },
   {
     "displayName": "Cloves",
     "category": "PANTRY",
-    "keywords": ["cloves", "ground cloves", "whole cloves"],
-    "exactMatches": ["cloves", "ground cloves", "whole cloves"]
+    "keywords": [  "cloves","ground cloves","whole cloves"]
   },
   {
     "displayName": "Miso Paste",
     "category": "PANTRY",
-    "keywords": ["miso", "miso paste", "white miso", "red miso"],
-    "exactMatches": ["miso paste", "white miso", "red miso"]
+    "keywords": [  "miso","miso paste","white miso","red miso"]
   },
   {
     "displayName": "Gochujang",
     "category": "PANTRY",
-    "keywords": ["gochujang", "korean chili paste"],
-    "exactMatches": ["gochujang"]
+    "keywords": [  "gochujang","korean chili paste"]
   },
   {
     "displayName": "Harissa",
     "category": "PANTRY",
-    "keywords": ["harissa", "harissa paste", "north african chili paste"],
-    "exactMatches": ["harissa", "harissa paste"]
+    "keywords": [  "harissa","harissa paste","north african chili paste"]
   },
   {
     "displayName": "Nutritional Yeast",
     "category": "PANTRY",
-    "keywords": ["nutritional yeast", "nutritional flakes"],
-    "exactMatches": ["nutritional yeast"]
+    "keywords": [  "nutritional yeast","nutritional flakes"]
   },
   {
     "displayName": "Seaweed",
     "category": "PANTRY",
-    "keywords": ["seaweed", "nori", "seaweed sheets", "dried seaweed"],
-    "exactMatches": ["nori", "seaweed sheets", "dried seaweed"]
+    "keywords": [  "seaweed","nori","seaweed sheets","dried seaweed"]
   },
   {
     "displayName": "Salad Dressing",
     "category": "PANTRY",
-    "keywords": ["salad dressing", "ranch dressing", "italian dressing", "balsamic vinaigrette", "caesar dressing"],
-    "exactMatches": ["ranch dressing", "italian dressing", "balsamic vinaigrette"]
+    "keywords": [  "salad dressing","ranch dressing","italian dressing","balsamic vinaigrette","caesar dressing"]
   },
   {
     "displayName": "Steak Sauce",
     "category": "PANTRY",
-    "keywords": ["steak sauce", "a1 steak sauce"],
-    "exactMatches": ["steak sauce", "a1 steak sauce"]
+    "keywords": [  "steak sauce","a1 steak sauce"]
   },
   {
     "displayName": "Teriyaki Sauce",
     "category": "PANTRY",
-    "keywords": ["teriyaki sauce", "teriyaki"],
-    "exactMatches": ["teriyaki sauce"]
+    "keywords": [  "teriyaki sauce","teriyaki"]
   },
   {
     "displayName": "Canned Tomatoes",
     "category": "CANNED_JARRED",
-    "keywords": ["canned tomato", "canned tomatoes", "can tomato", "diced tomatoes", "crushed tomatoes", "whole tomatoes"],
-    "exactMatches": ["canned diced tomatoes", "canned crushed tomatoes", "can diced tomatoes"]
+    "keywords": [  "canned tomato","canned tomatoes","can tomato","diced tomatoes","crushed tomatoes","whole tomatoes","canned diced tomatoes","canned crushed tomatoes","can diced tomatoes","chunky tomatoes"]
   },
   {
     "displayName": "Tomato Paste",
     "category": "CANNED_JARRED",
-    "keywords": ["tomato paste", "can tomato paste"],
-    "exactMatches": ["tomato paste", "can tomato paste"]
+    "keywords": [  "tomato paste","can tomato paste"]
   },
   {
     "displayName": "Tomato Sauce",
     "category": "CANNED_JARRED",
-    "keywords": ["tomato sauce", "marinara sauce", "pasta sauce"],
-    "exactMatches": ["tomato sauce", "marinara sauce", "jar pasta sauce"]
+    "keywords": [  "tomato sauce","marinara sauce","pasta sauce","jar pasta sauce"]
   },
   {
     "displayName": "Canned Beans",
     "category": "CANNED_JARRED",
-    "keywords": ["canned beans", "black beans", "kidney beans", "chickpeas", "garbanzo beans", "pinto beans"],
-    "exactMatches": ["canned black beans", "canned kidney beans", "canned chickpeas"]
+    "keywords": [  "canned beans","black beans","kidney beans","pinto beans","canned black beans","canned kidney beans","canned chickpeas","canned pinto beans"]
   },
   {
     "displayName": "Chicken Broth",
     "category": "CANNED_JARRED",
-    "keywords": ["chicken broth", "chicken stock", "low sodium chicken broth"],
-    "exactMatches": ["chicken broth", "low sodium chicken broth", "chicken stock"]
+    "keywords": [  "chicken broth","chicken stock","low sodium chicken broth"]
   },
   {
     "displayName": "Vegetable Broth",
     "category": "CANNED_JARRED",
-    "keywords": ["vegetable broth", "vegetable stock"],
-    "exactMatches": ["vegetable broth", "vegetable stock"]
+    "keywords": [  "vegetable broth","vegetable stock"]
   },
   {
     "displayName": "Coconut Milk",
     "category": "CANNED_JARRED",
-    "keywords": ["coconut milk", "canned coconut milk", "full fat coconut milk"],
-    "exactMatches": ["coconut milk", "canned coconut milk"]
+    "keywords": [  "coconut milk","canned coconut milk","full fat coconut milk"]
   },
   {
     "displayName": "Peanut Butter",
     "category": "CANNED_JARRED",
-    "keywords": ["peanut butter", "creamy peanut butter", "chunky peanut butter", "natural peanut butter"],
-    "exactMatches": ["peanut butter", "creamy peanut butter", "natural peanut butter"]
+    "keywords": [  "peanut butter","creamy peanut butter","chunky peanut butter","natural peanut butter"]
   },
   {
     "displayName": "Almond Butter",
     "category": "CANNED_JARRED",
-    "keywords": ["almond butter", "raw almond butter"],
-    "exactMatches": ["almond butter", "raw almond butter"]
+    "keywords": [  "almond butter","raw almond butter"]
   },
   {
     "displayName": "Apple Sauce",
     "category": "CANNED_JARRED",
-    "keywords": ["applesauce", "apple sauce", "unsweetened applesauce"],
-    "exactMatches": ["applesauce", "unsweetened applesauce"]
+    "keywords": [  "applesauce","apple sauce","unsweetened applesauce","apple puree"]
   },
   {
     "displayName": "Pickles",
     "category": "CANNED_JARRED",
-    "keywords": ["pickles", "dill pickles", "pickle spears"],
-    "exactMatches": ["dill pickles", "pickle spears"]
+    "keywords": [  "pickles","dill pickles","pickle spears"]
   },
   {
     "displayName": "Olives",
     "category": "CANNED_JARRED",
-    "keywords": ["olives", "black olives", "green olives", "kalamata olives"],
-    "exactMatches": ["black olives", "green olives", "kalamata olives"]
+    "keywords": [  "olives","black olives","green olives","kalamata olives"]
   },
   {
     "displayName": "Capers",
     "category": "CANNED_JARRED",
-    "keywords": ["capers", "nonpareil capers"],
-    "exactMatches": ["capers", "nonpareil capers"]
+    "keywords": [  "capers","nonpareil capers"]
   },
   {
     "displayName": "Sun-Dried Tomatoes",
     "category": "CANNED_JARRED",
-    "keywords": ["sun-dried tomatoes", "sun dried tomatoes", "oil-packed sun-dried tomatoes"],
-    "exactMatches": ["sun-dried tomatoes", "oil-packed sun-dried tomatoes"]
+    "keywords": [  "sun-dried tomatoes","sun dried tomatoes","oil-packed sun-dried tomatoes"]
   },
   {
     "displayName": "Canned Corn",
     "category": "CANNED_JARRED",
-    "keywords": ["canned corn", "corn kernels", "cream style corn"],
-    "exactMatches": ["canned corn", "cream style corn"]
+    "keywords": [  "canned corn","corn kernels","cream style corn"]
   },
   {
     "displayName": "Canned Pumpkin",
     "category": "CANNED_JARRED",
-    "keywords": ["canned pumpkin", "pumpkin puree", "libbys pumpkin"],
-    "exactMatches": ["canned pumpkin", "pumpkin puree"]
+    "keywords": [  "canned pumpkin","pumpkin puree","libbys pumpkin"]
   },
   {
     "displayName": "Canned Green Chiles",
     "category": "CANNED_JARRED",
-    "keywords": ["canned green chiles", "green chiles", "diced green chiles"],
-    "exactMatches": ["canned green chiles", "diced green chiles"]
+    "keywords": [  "canned green chiles","green chiles","diced green chiles"]
   },
   {
     "displayName": "Canned Tuna",
     "category": "CANNED_JARRED",
-    "keywords": ["canned tuna", "tuna in water", "tuna in oil", "chunk light tuna", "solid white tuna"],
-    "exactMatches": ["canned tuna", "tuna in water", "tuna in oil"]
+    "keywords": [  "canned tuna","tuna in water","tuna in oil","chunk light tuna","solid white tuna"]
   },
   {
     "displayName": "Canned Salmon",
     "category": "CANNED_JARRED",
-    "keywords": ["canned salmon", "salmon in water", "salmon in oil", "pink salmon", "red salmon"],
-    "exactMatches": ["canned salmon", "salmon in water", "salmon in oil"]
+    "keywords": [  "canned salmon","salmon in water","salmon in oil","pink salmon","red salmon"]
   },
   {
     "displayName": "Frozen Vegetables",
     "category": "FROZEN",
-    "keywords": ["frozen vegetables", "frozen peas", "frozen corn", "frozen broccoli", "frozen spinach"],
-    "exactMatches": ["frozen mixed vegetables", "frozen peas", "frozen corn"]
+    "keywords": [  "frozen vegetables","frozen peas","frozen corn","frozen broccoli","frozen mixed vegetables","mixed frozen vegetables"]
   },
   {
     "displayName": "Frozen Spinach",
     "category": "FROZEN",
-    "keywords": ["frozen spinach", "spinach"],
-    "exactMatches": ["frozen spinach", "frozen chopped spinach"]
+    "keywords": [  "frozen spinach","frozen chopped spinach","frozen leaf spinach"]
   },
   {
     "displayName": "Frozen Green Beans",
     "category": "FROZEN",
-    "keywords": ["frozen green beans", "green beans"],
-    "exactMatches": ["frozen green beans", "frozen cut green beans"]
+    "keywords": [  "frozen green beans","frozen cut green beans","frozen whole green beans"]
   },
   {
     "displayName": "Frozen Berries",
     "category": "FROZEN",
-    "keywords": ["frozen berries", "frozen strawberries", "frozen blueberries", "frozen raspberries"],
-    "exactMatches": ["frozen strawberries", "frozen blueberries", "frozen mixed berries"]
+    "keywords": [  "frozen berries","frozen mixed berries","mixed frozen berries"]
   },
   {
     "displayName": "Frozen Strawberries",
     "category": "FROZEN",
-    "keywords": ["frozen strawberries", "strawberries"],
-    "exactMatches": ["frozen strawberries"]
+    "keywords": [  "frozen strawberries","frozen sliced strawberries"]
   },
   {
     "displayName": "Frozen Blueberries",
     "category": "FROZEN",
-    "keywords": ["frozen blueberries", "blueberries"],
-    "exactMatches": ["frozen blueberries"]
+    "keywords": [  "frozen blueberries","frozen wild blueberries"]
   },
   {
     "displayName": "Ice Cream",
     "category": "FROZEN",
-    "keywords": ["ice cream", "vanilla ice cream", "chocolate ice cream"],
-    "exactMatches": ["ice cream", "vanilla ice cream"]
+    "keywords": [  "ice cream","vanilla ice cream","chocolate ice cream"]
   },
   {
     "displayName": "Frozen Shrimp",
     "category": "FROZEN",
-    "keywords": ["frozen shrimp"],
-    "exactMatches": ["frozen shrimp", "frozen cooked shrimp"]
+    "keywords": [  "frozen shrimp","frozen cooked shrimp"]
   },
   {
     "displayName": "Frozen Fish",
     "category": "FROZEN",
-    "keywords": ["frozen fish", "frozen salmon", "frozen tilapia", "frozen cod"],
-    "exactMatches": ["frozen salmon", "frozen tilapia", "frozen cod"]
+    "keywords": [  "frozen fish","frozen salmon","frozen tilapia","frozen cod"]
   },
   {
     "displayName": "Frozen Fruit",
     "category": "FROZEN",
-    "keywords": ["frozen fruit", "frozen mango", "frozen pineapple", "frozen peach slices"],
-    "exactMatches": ["frozen mango", "frozen pineapple", "frozen mixed fruit"]
+    "keywords": [  "frozen fruit","frozen mango","frozen pineapple","frozen peach slices","frozen mixed fruit"]
   },
   {
     "displayName": "Frozen Waffles",
     "category": "FROZEN",
-    "keywords": ["frozen waffles", "eggo waffles", "whole wheat waffles"],
-    "exactMatches": ["frozen waffles", "eggo waffles"]
+    "keywords": [  "frozen waffles","eggo waffles","whole wheat waffles"]
   },
   {
     "displayName": "Frozen Pizza",
     "category": "FROZEN",
-    "keywords": ["frozen pizza", "pepperoni pizza", "cheese pizza"],
-    "exactMatches": ["frozen pizza", "frozen pepperoni pizza"]
+    "keywords": [  "frozen pizza","pepperoni pizza","cheese pizza","frozen pepperoni pizza"]
   },
   {
     "displayName": "Bread",
     "category": "BAKERY",
-    "keywords": ["bread", "white bread", "wheat bread", "whole grain bread", "sourdough"],
-    "exactMatches": ["bread", "white bread", "wheat bread", "sourdough bread"]
+    "keywords": [  "bread","white bread","wheat bread","whole grain bread","sourdough","sourdough bread"]
   },
   {
     "displayName": "Bagels",
     "category": "BAKERY",
-    "keywords": ["bagel", "bagels", "everything bagel"],
-    "exactMatches": ["bagels", "everything bagels"]
+    "keywords": [  "bagel","bagels","everything bagel","everything bagels"]
   },
   {
     "displayName": "Tortillas",
     "category": "BAKERY",
-    "keywords": ["tortilla", "tortillas", "flour tortilla", "corn tortilla"],
-    "exactMatches": ["flour tortillas", "corn tortillas"]
+    "keywords": [  "tortilla","tortillas","flour tortilla","corn tortilla","flour tortillas","corn tortillas"]
   },
   {
     "displayName": "Pita Bread",
     "category": "BAKERY",
-    "keywords": ["pita", "pita bread", "pita pocket"],
-    "exactMatches": ["pita bread", "pita pockets"]
+    "keywords": [  "pita","pita bread","pita pocket","pita pockets"]
   },
   {
     "displayName": "Croissants",
     "category": "BAKERY",
-    "keywords": ["croissant", "croissants", "butter croissant"],
-    "exactMatches": ["croissants", "butter croissants"]
+    "keywords": [  "croissant","croissants","butter croissant","butter croissants"]
   },
   {
     "displayName": "Muffins",
     "category": "BAKERY",
-    "keywords": ["muffin", "muffins", "blueberry muffins", "bran muffins"],
-    "exactMatches": ["muffins", "blueberry muffins"]
+    "keywords": [  "muffin","muffins","blueberry muffins","bran muffins"]
   },
   {
     "displayName": "Donuts",
     "category": "BAKERY",
-    "keywords": ["donut", "donuts", "doughnut", "doughnuts"],
-    "exactMatches": ["donuts", "glazed donuts"]
+    "keywords": [  "donut","donuts","doughnut","doughnuts","glazed donuts"]
   },
   {
     "displayName": "Cake",
     "category": "BAKERY",
-    "keywords": ["cake", "chocolate cake", "vanilla cake", "birthday cake"],
-    "exactMatches": ["cake", "chocolate cake", "vanilla cake"]
+    "keywords": [  "cake","chocolate cake","vanilla cake","birthday cake"]
   },
   {
     "displayName": "Cookies",
     "category": "BAKERY",
-    "keywords": ["cookies", "chocolate chip cookies", "oatmeal cookies"],
-    "exactMatches": ["cookies", "chocolate chip cookies"]
+    "keywords": [  "cookies","chocolate chip cookies","oatmeal cookies"]
   },
   {
     "displayName": "Hamburger Buns",
     "category": "BAKERY",
-    "keywords": ["hamburger buns", "burger buns", "sesame buns"],
-    "exactMatches": ["hamburger buns", "burger buns"]
+    "keywords": [  "hamburger buns","burger buns","sesame buns"]
   },
   {
     "displayName": "Hot Dog Buns",
     "category": "BAKERY",
-    "keywords": ["hot dog buns", "frankfurter buns", "hotdog buns"],
-    "exactMatches": ["hot dog buns", "hotdog buns"]
+    "keywords": [  "hot dog buns","frankfurter buns","hotdog buns"]
   },
   {
     "displayName": "Brioche Buns",
     "category": "BAKERY",
-    "keywords": ["brioche buns", "brioche burger buns"],
-    "exactMatches": ["brioche buns", "brioche burger buns"]
+    "keywords": [  "brioche buns","brioche burger buns"]
   },
   {
     "displayName": "English Muffins",
     "category": "BAKERY",
-    "keywords": ["english muffins", "toasted english muffins"],
-    "exactMatches": ["english muffins", "thomas english muffins"]
+    "keywords": [  "english muffins","toasted english muffins","thomas english muffins"]
   },
   {
     "displayName": "Sandwich Rolls",
     "category": "BAKERY",
-    "keywords": ["sandwich rolls", "hoagie rolls", "sub rolls", "kaiser rolls"],
-    "exactMatches": ["sandwich rolls", "hoagie rolls", "sub rolls"]
+    "keywords": [  "sandwich rolls","hoagie rolls","sub rolls","kaiser rolls"]
   },
   {
     "displayName": "Rice",
     "category": "GRAINS_PASTA",
-    "keywords": ["rice", "white rice", "brown rice", "jasmine rice", "basmati rice"],
-    "exactMatches": ["white rice", "brown rice", "jasmine rice"]
+    "keywords": [  "rice","white rice","brown rice","jasmine rice","basmati rice"]
   },
   {
     "displayName": "Pasta",
     "category": "GRAINS_PASTA",
-    "keywords": ["pasta", "spaghetti", "penne", "rigatoni", "fettuccine", "linguine"],
-    "exactMatches": ["spaghetti", "penne pasta", "rigatoni"]
+    "keywords": [  "pasta","spaghetti","penne","rigatoni","fettuccine","linguine","penne pasta"]
   },
   {
     "displayName": "Quinoa",
     "category": "GRAINS_PASTA",
-    "keywords": ["quinoa", "tri-color quinoa"],
-    "exactMatches": ["quinoa", "tri-color quinoa"]
+    "keywords": [  "quinoa","tri-color quinoa"]
   },
   {
     "displayName": "Oats",
     "category": "GRAINS_PASTA",
-    "keywords": ["oats", "rolled oats", "old fashioned oats", "quick oats"],
-    "exactMatches": ["rolled oats", "old fashioned oats"]
+    "keywords": [  "oats","rolled oats","old fashioned oats","quick oats"]
   },
   {
     "displayName": "Flour",
     "category": "GRAINS_PASTA",
-    "keywords": ["flour", "all purpose flour", "whole wheat flour", "bread flour"],
-    "exactMatches": ["all purpose flour", "whole wheat flour"]
+    "keywords": [  "flour","all purpose flour","whole wheat flour","bread flour"]
   },
   {
     "displayName": "Bread Crumbs",
     "category": "GRAINS_PASTA",
-    "keywords": ["bread crumbs", "breadcrumbs", "panko", "italian breadcrumbs"],
-    "exactMatches": ["bread crumbs", "panko breadcrumbs", "italian breadcrumbs"]
+    "keywords": [  "bread crumbs","breadcrumbs","panko","italian breadcrumbs","panko breadcrumbs"]
   },
   {
     "displayName": "Couscous",
     "category": "GRAINS_PASTA",
-    "keywords": ["couscous", "israeli couscous", "pearl couscous"],
-    "exactMatches": ["couscous", "israeli couscous"]
+    "keywords": [  "couscous","israeli couscous","pearl couscous"]
   },
   {
     "displayName": "Bulgur",
     "category": "GRAINS_PASTA",
-    "keywords": ["bulgur", "bulgur wheat", "cracked wheat"],
-    "exactMatches": ["bulgur", "bulgur wheat"]
+    "keywords": [  "bulgur","bulgur wheat","cracked wheat"]
   },
   {
     "displayName": "Farro",
     "category": "GRAINS_PASTA",
-    "keywords": ["farro", "pearled farro", "whole farro"],
-    "exactMatches": ["farro", "pearled farro"]
+    "keywords": [  "farro","pearled farro","whole farro"]
   },
   {
     "displayName": "Barley",
     "category": "GRAINS_PASTA",
-    "keywords": ["barley", "pearl barley", "hulled barley"],
-    "exactMatches": ["barley", "pearl barley"]
+    "keywords": [  "barley","pearl barley","hulled barley"]
   },
   {
     "displayName": "Lentils",
     "category": "GRAINS_PASTA",
-    "keywords": ["lentils", "green lentils", "brown lentils", "red lentils"],
-    "exactMatches": ["green lentils", "brown lentils", "red lentils"]
+    "keywords": [  "lentils","green lentils","brown lentils","red lentils"]
   },
   {
     "displayName": "Chickpeas",
     "category": "GRAINS_PASTA",
-    "keywords": ["chickpeas", "garbanzo beans", "chick peas"],
-    "exactMatchefs": ["chickpeas", "garbanzo beans"]
+    "keywords": [  "chickpeas","garbanzo beans","chick peas"]
   },
   {
     "displayName": "Coffee",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["coffee", "ground coffee", "coffee beans", "instant coffee"],
-    "exactMatches": ["ground coffee", "coffee beans"]
+    "keywords": [  "coffee","ground coffee","coffee beans","instant coffee"]
   },
   {
     "displayName": "Tea",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["tea", "black tea", "green tea", "herbal tea"],
-    "exactMatches": ["black tea", "green tea", "tea bags"]
+    "keywords": [  "tea","black tea","green tea","herbal tea","tea bags"]
   },
   {
-    "displayName": "Nuts",
+    "displayName": "Almonds",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["nuts", "almonds", "walnuts", "cashews", "peanuts", "mixed nuts"],
-    "exactMatches": ["almonds", "walnuts", "cashews", "mixed nuts"]
+    "keywords": [  "almonds","almond","raw almonds","salted almonds"]
   },
   {
-    "displayName": "Seeds",
+    "displayName": "Walnuts",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["seeds", "sunflower seeds", "pumpkin seeds", "sesame seeds", "chia seeds"],
-    "exactMatches": ["sesame seeds", "sunflower seeds", "chia seeds"]
+    "keywords": [  "walnuts","walnut","english walnuts","black walnuts"]
+  },
+  {
+    "displayName": "Cashews",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "cashews","cashew","raw cashews","roasted cashews"]
+  },
+  {
+    "displayName": "Peanuts",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "peanuts","peanut","salted peanuts","dry roasted peanuts"]
+  },
+  {
+    "displayName": "Pistachios",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "pistachios","pistachio","shelled pistachios"]
+  },
+  {
+    "displayName": "Pecans",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "pecans","pecan","halves pecans"]
+  },
+  {
+    "displayName": "Mixed Nuts",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "mixed nuts","nuts","trail mix nuts"]
+  },
+  {
+    "displayName": "Sunflower Seeds",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "sunflower seeds","sunflower seed","shelled sunflower seeds"]
+  },
+  {
+    "displayName": "Pumpkin Seeds",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "pumpkin seeds","pepitas","roasted pumpkin seeds"]
+  },
+  {
+    "displayName": "Sesame Seeds",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "sesame seeds","sesame seed","toasted sesame seeds"]
+  },
+  {
+    "displayName": "Chia Seeds",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "chia seeds","chia seed"]
+  },
+  {
+    "displayName": "Flax Seeds",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "flax seeds","flaxseed","ground flaxseed"]
   },
   {
     "displayName": "Granola",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["granola", "homemade granola", "oat granola"],
-    "exactMatches": ["granola", "homemade granola"]
+    "keywords": [  "granola","homemade granola","oat granola"]
   },
   {
     "displayName": "Trail Mix",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["trail mix", "mixed nuts and dried fruit"],
-    "exactMatches": ["trail mix"]
+    "keywords": [  "trail mix","mixed nuts and dried fruit"]
   },
   {
     "displayName": "Chocolate Chips",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["chocolate chips", "semi-sweet chocolate chips", "dark chocolate chips"],
-    "exactMatches": ["chocolate chips", "semi-sweet chocolate chips"]
+    "keywords": [  "chocolate chips","semi-sweet chocolate chips","dark chocolate chips"]
   },
   {
     "displayName": "Popcorn",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["popcorn", "popped popcorn", "popcorn kernels"],
-    "exactMatches": ["popcorn", "popcorn kernels"]
+    "keywords": [  "popcorn","popped popcorn","popcorn kernels"]
   },
   {
     "displayName": "Soda",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["soda", "coke", "pepsi", "sprite", "ginger ale"],
-    "exactMatches": ["coke", "pepsi", "sprite", "ginger ale"]
+    "keywords": [  "soda","cola","pepsi","sprite","ginger ale"]
+  },
+  {
+    "displayName": "Orange Juice",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "orange juice","fresh orange juice","oj"]
+  },
+  {
+    "displayName": "Apple Juice",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "apple juice","fresh apple juice"]
+  },
+  {
+    "displayName": "Cranberry Juice",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "cranberry juice","pure cranberry juice"]
+  },
+  {
+    "displayName": "Grape Juice",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "grape juice","purple grape juice","white grape juice"]
+  },
+  {
+    "displayName": "Pineapple Juice",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "pineapple juice","fresh pineapple juice"]
   },
   {
     "displayName": "Juice",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["juice", "orange juice", "apple juice", "cranberry juice"],
-    "exactMatches": ["orange juice", "apple juice", "cranberry juice"]
+    "keywords": [  "juice","fruit juice","vegetable juice"]
   },
   {
     "displayName": "Sports Drink",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["gatorade", "powerade", "sports drink"],
-    "exactMatches": ["gatorade", "powerade"]
+    "keywords": [  "gatorade","powerade","sports drink"]
   },
   {
     "displayName": "Chips",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["chips", "potato chips", "corn chips", "tortilla chips"],
-    "exactMatches": ["potato chips", "corn chips", "tortilla chips"]
+    "keywords": [  "chips","potato chips","corn chips","tortilla chips"]
   },
   {
     "displayName": "Crackers",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["crackers", "saltine crackers", "ritz crackers", "wheat crackers"],
-    "exactMatches": ["saltine crackers", "ritz crackers"]
+    "keywords": [  "crackers","saltine crackers","ritz crackers","wheat crackers"]
   },
   {
     "displayName": "Pretzels",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["pretzels", "pretzel sticks", "pretzel rods"],
-    "exactMatches": ["pretzels", "salted pretzels"]
+    "keywords": [  "pretzels","pretzel sticks","pretzel rods","salted pretzels"]
   },
   {
     "displayName": "Breakfast Cereal",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["cereal", "breakfast cereal", "corn flakes", "rice krispies", "cheerios"],
-    "exactMatches": ["corn flakes", "rice krispies", "cheerios"]
+    "keywords": [  "cereal","breakfast cereal","corn flakes","rice krispies","cheerios"]
   },
   {
     "displayName": "Sparkling Water",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["sparkling water", "seltzer", "club soda", "fizzy water"],
-    "exactMatches": ["sparkling water", "seltzer water", "club soda"]
+    "keywords": [  "sparkling water","club soda","fizzy water","sparkling mineral water"]
   },
   {
     "displayName": "Liquor",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["liquor", "whiskey", "vodka", "rum", "gin", "tequila", "bourbon", "scotch", "brandy", "cognac"],
-    "exactMatches": ["whiskey", "vodka", "rum", "gin", "tequila", "bourbon", "scotch whisky", "brandy", "cognac"]
+    "keywords": [  "liquor","whiskey","vodka","rum","gin","tequila","bourbon","scotch","brandy","cognac","scotch whisky"]
   },
   {
     "displayName": "Red Wine",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["red wine", "cabernet", "merlot", "pinot noir", "malbec", "shiraz", "zinfandel"],
-    "exactMatches": ["red wine", "cabernet sauvignon", "merlot", "pinot noir", "malbec"]
+    "keywords": [  "red wine","cabernet","merlot","pinot noir","malbec","shiraz","zinfandel","cabernet sauvignon"]
   },
   {
     "displayName": "White Wine",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["white wine", "chardonnay", "sauvignon blanc", "pinot grigio", "riesling", "gewürztraminer"],
-    "exactMatches": ["white wine", "chardonnay", "sauvignon blanc", "pinot grigio", "riesling"]
+    "keywords": [  "white wine","chardonnay","sauvignon blanc","pinot grigio","riesling","gewürztraminer"]
   },
   {
     "displayName": "Champagne",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["champagne", "sparkling wine", "prosecco", "cava", "brut", "rosé champagne"],
-    "exactMatches": ["champagne", "brut champagne", "rosé champagne", "prosecco"]
+    "keywords": [  "champagne","sparkling wine","prosecco","cava","brut","rosé champagne","brut champagne"]
   },
   {
     "displayName": "Beer",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["beer", "ale", "lager", "stout", "porter", "ipa", "pilsner", "wheat beer"],
-    "exactMatches": ["beer", "craft beer", "light beer", "ipa", "stout"]
+    "keywords": [  "beer","ale","lager","stout","porter","ipa","pilsner","wheat beer","craft beer","light beer"]
   },
   {
     "displayName": "Seltzer",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["seltzer", "hard seltzer", "flavored seltzer", "lime seltzer"],
-    "exactMatches": ["seltzer", "hard seltzer", "lime seltzer"]
+    "keywords": [  "seltzer","hard seltzer","flavored seltzer","lime seltzer"]
   },
   {
     "displayName": "Coke",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["coke", "coca cola", "diet coke", "coca-cola"],
-    "exactMatches": ["coke", "coca cola", "diet coke"]
+    "keywords": [  "coke","coca cola","diet coke","coca-cola"]
   },
   {
     "displayName": "Chocolate Bars",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["chocolate bar", "hershey", "snickers", "milky way", "twix", "kit kat", "reeses"],
-    "exactMatches": ["hershey bar", "snickers bar", "milky way bar", "twix bar"]
+    "keywords": [  "chocolate bar","hershey","snickers","milky way","twix","kit kat","reeses","hershey bar","snickers bar","milky way bar","twix bar"]
   },
   {
     "displayName": "Candy",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["candy", "m&ms", "skittles", "starburst", "jelly beans", "gummy bears"],
-    "exactMatches": ["m&ms", "skittles", "starburst", "jelly beans"]
-  },
-  {
-    "displayName": "Ice Cream",
-    "category": "SNACKS_BEVERAGES",
-    "keywords": ["ice cream", "vanilla ice cream", "chocolate ice cream", "strawberry ice cream", "mint chocolate chip"],
-    "exactMatches": ["vanilla ice cream", "chocolate ice cream", "strawberry ice cream"]
-  },
-  {
-    "displayName": "Yogurt",
-    "category": "SNACKS_BEVERAGES",
-    "keywords": ["yogurt", "greek yogurt", "plain yogurt", "vanilla yogurt", "strawberry yogurt"],
-    "exactMatches": ["greek yogurt", "plain yogurt", "vanilla yogurt", "strawberry yogurt"]
+    "keywords": [  "candy","m&ms","skittles","starburst","jelly beans","gummy bears"]
   },
   {
     "displayName": "Water",
     "category": "SNACKS_BEVERAGES",
-    "keywords": ["water", "bottled water", "spring water", "mineral water","warm water","cold water","ice water"],
-    "exactMatches": ["water", "bottled water", "spring water", "mineral water","warm water","cold water","ice water"]
+    "keywords": [  "water","bottled water","spring water","mineral water","warm water","cold water","ice water"]
   }
 ]

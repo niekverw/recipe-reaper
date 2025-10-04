@@ -2,8 +2,7 @@ import passport from 'passport'
 import { Strategy as LocalStrategy } from 'passport-local'
 import { Strategy as GoogleStrategy, Profile } from 'passport-google-oauth20'
 import bcrypt from 'bcryptjs'
-import { userModel } from '../models/userModel'
-import { User } from '../types/user'
+import { userModel, mapUserRowToUser } from '../models/userModel'
 
 // Configure Local Strategy
 passport.use(new LocalStrategy(
@@ -26,17 +25,7 @@ passport.use(new LocalStrategy(
       }
 
       // Convert user row to user object
-      const userObj: User = {
-        id: user.id,
-        email: user.email,
-        displayName: user.display_name,
-        householdId: user.household_id || undefined,
-        googleId: user.google_id || undefined,
-        createdAt: user.created_at,
-        updatedAt: user.updated_at
-      }
-
-      return done(null, userObj)
+      return done(null, mapUserRowToUser(user))
     } catch (error) {
       return done(error)
     }
@@ -82,23 +71,14 @@ passport.use(new GoogleStrategy({
         google_id: googleId,
         password_hash: '',
         household_id: null,
+        default_translation_language: null,
         created_at: newUser.createdAt,
         updated_at: newUser.updatedAt
       }
     }
 
     // Convert to User object for session
-    const userObj: User = {
-      id: user.id,
-      email: user.email,
-      displayName: user.display_name,
-      householdId: user.household_id || undefined,
-      googleId: user.google_id || undefined,
-      createdAt: user.created_at,
-      updatedAt: user.updated_at
-    }
-
-    done(null, userObj)
+    done(null, mapUserRowToUser(user))
   } catch (error) {
     done(error, null)
   }
@@ -117,17 +97,7 @@ passport.deserializeUser(async (id: string, done) => {
       return done(null, false)
     }
 
-    const userObj: User = {
-      id: user.id,
-      email: user.email,
-      displayName: user.display_name,
-      householdId: user.household_id || undefined,
-      googleId: user.google_id || undefined,
-      createdAt: user.created_at,
-      updatedAt: user.updated_at
-    }
-
-    done(null, userObj)
+    done(null, mapUserRowToUser(user))
   } catch (error) {
     done(error)
   }

@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { apiService } from '../services/api'
 import { Household } from '../types/user'
 import { generatePKCEPair } from '../utils/pkce'
+import { SUPPORTED_LANGUAGES, getLanguageName } from '../constants/languages'
 import {
   UserIcon,
   Cog6ToothIcon,
@@ -14,12 +15,13 @@ import {
   ExclamationTriangleIcon,
   CheckIcon,
   EnvelopeIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  LanguageIcon
 } from '@heroicons/react/24/outline'
 import { getRandomSettingsHumor } from '../utils/humor'
 
 function SettingsPage() {
-  const { user, household, createHousehold, joinHousehold, leaveHousehold, logout } = useAuth()
+  const { user, household, createHousehold, joinHousehold, leaveHousehold, logout, refreshUser } = useAuth()
   const [householdData, setHouseholdData] = useState<Household | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -39,11 +41,19 @@ function SettingsPage() {
   // Copy invite code feedback
   const [codeCopied, setCodeCopied] = useState(false)
 
+  // Translation preference
+  const [translationLanguage, setTranslationLanguage] = useState<string>(user?.defaultTranslationLanguage || '')
+  const [isSavingLanguage, setIsSavingLanguage] = useState(false)
+
   useEffect(() => {
     if (household) {
       loadHouseholdDetails()
     }
   }, [household])
+
+  useEffect(() => {
+    setTranslationLanguage(user?.defaultTranslationLanguage || '')
+  }, [user?.defaultTranslationLanguage])
 
   const loadHouseholdDetails = async () => {
     if (!household) return
@@ -159,6 +169,25 @@ function SettingsPage() {
     }
   }
 
+  const handleSaveTranslationPreference = async () => {
+    try {
+      setIsSavingLanguage(true)
+      setError(null)
+
+        await apiService.updateTranslationPreference(translationLanguage || null)
+
+        await refreshUser()
+
+      setSuccess('Translation preference updated successfully!')
+      setTimeout(() => setSuccess(null), 3000)
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update translation preference')
+    } finally {
+      setIsSavingLanguage(false)
+    }
+  }
+
   const handleChangeGoogleAccount = async () => {
     try {
       // Generate PKCE pair for enhanced security
@@ -271,6 +300,63 @@ function SettingsPage() {
               </p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Language Preferences Section */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <LanguageIcon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Language Preferences
+          </h2>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="translationLanguage" className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+              Default Translation Language
+            </label>
+              <select
+                id="translationLanguage"
+                value={translationLanguage}
+                onChange={(e) => setTranslationLanguage(e.target.value)}
+                className="w-full rounded-lg border border-gray-200/50 bg-white/80 px-3 py-2 text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none dark:border-white/10 dark:bg-white/5 dark:text-gray-100 dark:focus:border-blue-400"
+              >
+              <option value="">No Translation (Keep Original Language)</option>
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.name} ({lang.nativeName})
+                </option>
+              ))}
+            </select>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              Set your preferred language for imported recipes. When you import recipes from URLs, text, or images, they will be automatically translated to this language. You can override this setting for individual imports.
+            </p>
+            {translationLanguage && (
+              <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                <strong>Current setting:</strong> Recipes will be translated to {getLanguageName(translationLanguage)}
+              </p>
+            )}
+          </div>
+
+          <button
+            onClick={handleSaveTranslationPreference}
+            disabled={isSavingLanguage}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            {isSavingLanguage ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Saving...
+              </>
+            ) : (
+              <>
+                <CheckIcon className="w-4 h-4" />
+                Save Preference
+              </>
+            )}
+          </button>
         </div>
       </div>
 
