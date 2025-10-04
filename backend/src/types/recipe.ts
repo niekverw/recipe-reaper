@@ -29,6 +29,8 @@ export interface Recipe {
   householdId?: string
   createdAt: string
   updatedAt: string
+  // Permissions computed based on current user context
+  canEdit?: boolean
 }
 
 export interface CreateRecipeRequest {

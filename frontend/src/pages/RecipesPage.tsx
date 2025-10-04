@@ -29,14 +29,11 @@ interface RecipeActionsProps {
   onEdit: (id: string, e: React.MouseEvent) => void
   onDelete: (id: string, e: React.MouseEvent) => void
   onCopy: (id: string, e: React.MouseEvent) => void
-  currentUserId?: string
 }
 
-function RecipeActions({ recipe, onEdit, onDelete, onCopy, currentUserId }: RecipeActionsProps) {
-  const isPublicRecipe = recipe.isPublic && recipe.userId !== currentUserId
-
-  // For public recipes by other users, only show copy button
-  if (isPublicRecipe) {
+function RecipeActions({ recipe, onEdit, onDelete, onCopy }: RecipeActionsProps) {
+  // For recipes user cannot edit, only show copy button
+  if (!recipe.canEdit) {
     return (
       <div className="flex items-center gap-2">
         <button
@@ -100,11 +97,10 @@ interface RecipeGridCardProps {
   onDelete: (id: string, e: React.MouseEvent) => void
   onCopy: (id: string, e: React.MouseEvent) => void
   onTagClick: (tag: string) => void
-  currentUserId?: string
   prioritize?: boolean
 }
 
-function RecipeGridCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentUserId, prioritize }: RecipeGridCardProps) {
+function RecipeGridCard({ recipe, onEdit, onDelete, onCopy, onTagClick, prioritize }: RecipeGridCardProps) {
   const { src, imageSizes } = buildRecipeImageSources(recipe)
   return (
     <Link to={`/recipe/${recipe.id}`} className="block group">
@@ -132,7 +128,6 @@ function RecipeGridCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentU
               onEdit={onEdit}
               onDelete={onDelete}
               onCopy={onCopy}
-              currentUserId={currentUserId}
             />
           </div>
           <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10 hidden sm:block">
@@ -205,11 +200,10 @@ interface RecipeListCardProps {
   onDelete: (id: string, e: React.MouseEvent) => void
   onCopy: (id: string, e: React.MouseEvent) => void
   onTagClick: (tag: string) => void
-  currentUserId?: string
   prioritize?: boolean
 }
 
-function RecipeListCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentUserId, prioritize }: RecipeListCardProps) {
+function RecipeListCard({ recipe, onEdit, onDelete, onCopy, onTagClick, prioritize }: RecipeListCardProps) {
   const { src, imageSizes } = buildRecipeImageSources(recipe)
   return (
     <Link to={`/recipe/${recipe.id}`} className="block group">
@@ -286,7 +280,6 @@ function RecipeListCard({ recipe, onEdit, onDelete, onCopy, onTagClick, currentU
             onEdit={onEdit}
             onDelete={onDelete}
             onCopy={onCopy}
-            currentUserId={currentUserId}
           />
         </div>
       </div>
@@ -785,7 +778,6 @@ function RecipesPage() {
                     onDelete={handleDelete}
                     onCopy={handleCopy}
                     onTagClick={addTagFilter}
-                    currentUserId={user?.id}
                     prioritize={index < PRIORITIZED_IMAGE_COUNT}
                   />
                 ))}
@@ -800,7 +792,6 @@ function RecipesPage() {
                     onDelete={handleDelete}
                     onCopy={handleCopy}
                     onTagClick={addTagFilter}
-                    currentUserId={user?.id}
                     prioritize={index < PRIORITIZED_IMAGE_COUNT}
                   />
                 ))}

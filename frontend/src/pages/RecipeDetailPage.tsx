@@ -573,29 +573,33 @@ function RecipeDetailPage() {
             >
               <DocumentDuplicateIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             </button>
-            <button
-              onClick={() => navigate(`/recipe/${recipe.id}/edit`)}
-              className="p-3 rounded-full bg-white/0 dark:bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="Edit recipe"
-            >
-              <PencilIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            </button>
-            <button
-              onClick={async () => {
-                if (window.confirm('Delete this recipe?')) {
-                  try {
-                    await apiService.deleteRecipe(recipe.id)
-                    navigate('/')
-                  } catch (err) {
-                    alert('Failed to delete recipe: ' + (err instanceof Error ? err.message : 'Unknown error'))
-                  }
-                }
-              }}
-              className="p-3 rounded-full bg-white/0 dark:bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              aria-label="Delete recipe"
-            >
-              <TrashIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
-            </button>
+            {recipe.canEdit && (
+              <>
+                <button
+                  onClick={() => navigate(`/recipe/${recipe.id}/edit`)}
+                  className="p-3 rounded-full bg-white/0 dark:bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  aria-label="Edit recipe"
+                >
+                  <PencilIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                </button>
+                <button
+                  onClick={async () => {
+                    if (window.confirm('Delete this recipe?')) {
+                      try {
+                        await apiService.deleteRecipe(recipe.id)
+                        navigate('/')
+                      } catch (err) {
+                        alert('Failed to delete recipe: ' + (err instanceof Error ? err.message : 'Unknown error'))
+                      }
+                    }
+                  }}
+                  className="p-3 rounded-full bg-white/0 dark:bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  aria-label="Delete recipe"
+                >
+                  <TrashIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -641,7 +645,7 @@ function RecipeDetailPage() {
                           >
                             {tag}
                           </button>
-                          {user && (
+                          {recipe.canEdit && (
                             <button
                               onClick={() => handleRemoveTag(tag)}
                               disabled={isUpdatingTags}
@@ -722,7 +726,7 @@ function RecipeDetailPage() {
                         </div>
                       )}
                     </div>
-                  ) : user ? (
+                  ) : recipe.canEdit ? (
                     <button
                       onClick={() => setShowTagInput(true)}
                       disabled={isUpdatingTags}

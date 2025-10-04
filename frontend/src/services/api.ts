@@ -32,6 +32,7 @@ export interface Recipe {
   householdId?: string
   createdAt: string
   updatedAt: string
+  canEdit?: boolean
 }
 
 export interface CreateRecipeData {

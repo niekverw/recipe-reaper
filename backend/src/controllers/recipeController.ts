@@ -216,8 +216,9 @@ export const recipeController = {
 
   async getRecipeById(req: Request, res: Response, next: NextFunction) {
     try {
+      const user = req.user as User | undefined
       const { id } = req.params
-      const recipe = await recipeModel.findById(id)
+      const recipe = await recipeModel.findById(id, user?.id, user?.householdId)
 
       if (!recipe) {
         throw createError('Recipe not found', 404)

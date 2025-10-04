@@ -26,12 +26,30 @@ interface RecipeRow {
   household_id: string | null
   created_at: string
   updated_at: string
+  is_household_member?: boolean  // Computed field to check if creator is in user's household
 }
 
-function rowToRecipe(row: RecipeRow): Recipe {
+function rowToRecipe(row: RecipeRow, currentUserId?: string, currentHouseholdId?: string): Recipe {
   const parsedIngredients = JSON.parse(row.ingredients)
   const parsedTags = row.tags ? JSON.parse(row.tags) : []
   const parsedImageSizes = row.image_sizes ? JSON.parse(row.image_sizes) : undefined
+
+  // Compute canEdit permission
+  let canEdit = false
+  if (currentUserId) {
+    // User owns the recipe
+    if (row.user_id === currentUserId) {
+      canEdit = true
+    }
+    // Recipe is assigned to user's household
+    else if (currentHouseholdId && row.household_id === currentHouseholdId) {
+      canEdit = true
+    }
+    // Recipe creator is a household member
+    else if (row.is_household_member) {
+      canEdit = true
+    }
+  }
 
   return {
     id: row.id,
@@ -52,29 +70,46 @@ function rowToRecipe(row: RecipeRow): Recipe {
     userId: row.user_id || undefined,
     householdId: row.household_id || undefined,
     createdAt: row.created_at,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
+    canEdit
   }
 }
 
 export const recipeModel = {
   async findAll(filters: RecipeFilters = {}): Promise<Recipe[]> {
     const db = PostgreSQLDatabase.getInstance()
-    let sql = 'SELECT * FROM recipes WHERE 1=1'
+
+    // Build SELECT clause with is_household_member check if household context exists
+    let selectClause = 'SELECT recipes.*'
+    const householdMemberParamIndex = filters.householdId ? '$1' : null
+    if (filters.householdId) {
+      selectClause += `,
+        (recipes.user_id IN (
+          SELECT id FROM users WHERE household_id = ${householdMemberParamIndex}
+        )) as is_household_member`
+    }
+
+    let sql = `${selectClause} FROM recipes WHERE 1=1`
     const params: any[] = []
+
+    // Add householdId as first parameter if it exists (for the SELECT clause)
+    if (filters.householdId) {
+      params.push(filters.householdId)
+    }
 
     // Simplified 2-level privacy: private (personal + household) vs public
     if (filters.scope === 'my' && filters.userId) {
       if (filters.householdId) {
         const userParamIndex = params.length + 1
-        const householdParamIndex = params.length + 2
+        // householdId is already params[0], so reference $1
         sql += ` AND (
-          user_id = $${userParamIndex}
-          OR household_id = $${householdParamIndex}
-          OR user_id IN (
-            SELECT id FROM users WHERE household_id = $${householdParamIndex}
+          recipes.user_id = $${userParamIndex}
+          OR recipes.household_id = $1
+          OR recipes.user_id IN (
+            SELECT id FROM users WHERE household_id = $1
           )
         )`
-        params.push(filters.userId, filters.householdId)
+        params.push(filters.userId)
       } else {
         sql += ` AND user_id = $${params.length + 1}`
         params.push(filters.userId)
@@ -85,16 +120,16 @@ export const recipeModel = {
     } else if (filters.scope === 'all' && filters.userId) {
       if (filters.householdId) {
         const userParamIndex = params.length + 1
-        const householdParamIndex = params.length + 2
+        // householdId is already params[0], so reference $1
         sql += ` AND (
-          user_id = $${userParamIndex}
-          OR household_id = $${householdParamIndex}
-          OR user_id IN (
-            SELECT id FROM users WHERE household_id = $${householdParamIndex}
+          recipes.user_id = $${userParamIndex}
+          OR recipes.household_id = $1
+          OR recipes.user_id IN (
+            SELECT id FROM users WHERE household_id = $1
           )
-          OR is_public = true
+          OR recipes.is_public = true
         )`
-        params.push(filters.userId, filters.householdId)
+        params.push(filters.userId)
       } else {
         sql += ` AND (user_id = $${params.length + 1} OR is_public = true)`
         params.push(filters.userId)
@@ -153,13 +188,28 @@ export const recipeModel = {
     }
 
     const rows = await db.all<RecipeRow>(sql, params)
-    return rows.map(rowToRecipe)
+    return rows.map(row => rowToRecipe(row, filters.userId, filters.householdId))
   },
 
-  async findById(id: string): Promise<Recipe | null> {
+  async findById(id: string, userId?: string, householdId?: string): Promise<Recipe | null> {
     const db = PostgreSQLDatabase.getInstance()
-    const row = await db.get<RecipeRow>('SELECT * FROM recipes WHERE id = $1', [id])
-    return row ? rowToRecipe(row) : null
+
+    let sql = 'SELECT recipes.*'
+    const params: any[] = []
+
+    if (householdId) {
+      sql += `,
+        (recipes.user_id IN (
+          SELECT id FROM users WHERE household_id = $1
+        )) as is_household_member`
+      params.push(householdId)
+    }
+
+    sql += ' FROM recipes WHERE recipes.id = $' + (params.length + 1)
+    params.push(id)
+
+    const row = await db.get<RecipeRow>(sql, params)
+    return row ? rowToRecipe(row, userId, householdId) : null
   },
 
   async checkPublicNameExists(name: string, excludeId?: string): Promise<boolean> {
