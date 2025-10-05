@@ -1,5 +1,6 @@
 import { describe, expect, it } from '@jest/globals'
-import { ingredientCategorizer, INGREDIENT_CATEGORIES, IngredientCategory } from '../utils/ingredientCategorizer'
+import { ingredientCategorizer, INGREDIENT_CATEGORIES } from '../src'
+import type { IngredientCategory } from '../src'
 
 // Test case type for easy addition of new examples
 type TestCase = {

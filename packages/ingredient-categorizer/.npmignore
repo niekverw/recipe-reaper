@@ -1,0 +1,31 @@
+# Source files (only ship dist/)
+src/
+tests/
+*.ts
+!*.d.ts
+
+# Config files
+tsconfig.json
+tsup.config.ts
+jest.config.js
+
+# Development
+node_modules/
+.github/
+*.log
+*.tgz
+
+# Documentation (keep README, LICENSE in published package)
+DETACH.md
+MIGRATION_SUMMARY.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

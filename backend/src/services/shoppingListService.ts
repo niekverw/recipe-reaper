@@ -1,5 +1,5 @@
 import { ingredientParser } from '../utils/ingredientParser'
-import { ingredientCategorizer } from '../utils/ingredientCategorizer'
+import { ingredientCategorizer } from '@ingredient-categorizer/core'
 
 export interface ShoppingListItem {
   id: string

@@ -7,5 +7,8 @@ module.exports = {
     'src/**/*.ts',
     '!src/**/*.d.ts',
   ],
-  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts']
+  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
+  moduleNameMapper: {
+    '@ingredient-categorizer/core': '<rootDir>/../packages/ingredient-categorizer/src/index.ts'
+  }
 }

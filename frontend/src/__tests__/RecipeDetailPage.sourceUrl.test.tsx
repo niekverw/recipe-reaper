@@ -4,6 +4,7 @@ import { vi, beforeEach, describe, it, expect } from 'vitest'
 import RecipeDetailPage from '../pages/RecipeDetailPage'
 import { Recipe } from '../services/api'
 
+
 const { mockGetRecipe } = vi.hoisted(() => ({
   mockGetRecipe: vi.fn()
 }))

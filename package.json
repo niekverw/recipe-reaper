@@ -1,0 +1,23 @@
+{
+  "name": "recipeapp-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @ingredient-categorizer/core && npm run build -w frontend && npm run build -w backend",
+    "build:package": "npm run build -w @ingredient-categorizer/core",
+    "test": "npm run test -w @ingredient-categorizer/core && npm run test -w backend",
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "serve": "npm run build && npm run start:prod -w backend",
+    "serve:tunnel": "npm run build && npm run serve:tunnel -w backend"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18"
+  }
+}

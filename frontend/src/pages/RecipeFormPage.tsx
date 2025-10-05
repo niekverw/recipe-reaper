@@ -74,7 +74,7 @@ function RecipeFormPage() {
   // Privacy state
   const [nameExists, setNameExists] = useState(false)
   const [isCheckingName, setIsCheckingName] = useState(false)
-  const [nameCheckDebounce, setNameCheckDebounce] = useState<number | null>(null)
+  const [nameCheckDebounce, setNameCheckDebounce] = useState<NodeJS.Timeout | null>(null)
   const [privacyMessage, setPrivacyMessage] = useState<string>('')
   const [privacyError, setPrivacyError] = useState<string | null>(null)
 
