@@ -25,7 +25,7 @@ class GeminiService {
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   }
 
-  async parseRecipeText(text: string, targetLanguage?: string): Promise<ParsedRecipeData> {
+  async parseRecipeText(text: string, targetLanguage?: string, additionalContext?: string): Promise<ParsedRecipeData> {
     if (!text?.trim()) {
       throw new Error('Recipe text is required')
     }
@@ -42,7 +42,20 @@ class GeminiService {
       console.log('Making Gemini API call with model: gemini-2.5-flash-lite')
       const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' })
 
-      const result = await model.generateContent(`${systemPrompt}\n\n${text}`)
+      const promptSections = [systemPrompt]
+
+      if (additionalContext?.trim()) {
+        promptSections.push(
+          'ADDITIONAL USER NOTES TO INFORM THE RECIPE (FOLLOW THESE IF POSSIBLE):\n' +
+          additionalContext.trim()
+        )
+      }
+
+      promptSections.push(text)
+
+      const composedPrompt = promptSections.join('\n\n')
+
+      const result = await model.generateContent(composedPrompt)
       const response = await result.response
       const content = response.text()
 
@@ -88,6 +101,14 @@ class GeminiService {
     } catch (error) {
       console.error('Gemini API Error:', error)
       if (error instanceof Error) {
+        // Check for rate limit errors
+        if (error.message.includes('429') || error.message.includes('quota') || error.message.includes('rate limit')) {
+          throw new Error('Rate limit exceeded for AI service. Please try again in a few moments.')
+        }
+        // Check for API key errors
+        if (error.message.includes('API key') || error.message.includes('invalid_api_key')) {
+          throw new Error('AI service configuration error. Please contact support.')
+        }
         throw new Error(`Failed to parse recipe text: ${error.message}`)
       }
       throw new Error('Failed to parse recipe text: Unknown error')
@@ -186,6 +207,14 @@ class GeminiService {
     } catch (error) {
       console.error('Gemini Vision API Error:', error)
       if (error instanceof Error) {
+        // Check for rate limit errors
+        if (error.message.includes('429') || error.message.includes('quota') || error.message.includes('rate limit')) {
+          throw new Error('Rate limit exceeded for AI service. Please try again in a few moments.')
+        }
+        // Check for API key errors
+        if (error.message.includes('API key') || error.message.includes('invalid_api_key')) {
+          throw new Error('AI service configuration error. Please contact support.')
+        }
         throw new Error(`Failed to parse recipe from image: ${error.message}`)
       }
       throw new Error('Failed to parse recipe from image: Unknown error')

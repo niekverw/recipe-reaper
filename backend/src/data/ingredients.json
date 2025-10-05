@@ -2,22 +2,22 @@
   {
     "displayName": "Onions",
     "category": "PRODUCE",
-    "keywords": [  "onion","onions","yellow onion","white onion","red onion","sweet onion","vidalia onion"]
+    "keywords": [  "onion","yellow onion","white onion","red onion","sweet onion","vidalia onion"]
   },
   {
     "displayName": "Green Onions",
     "category": "PRODUCE",
-    "keywords": [  "green onion","scallion","spring onion","green onions","scallions"]
+    "keywords": [  "green onion","scallion","spring onion","scallions"]
   },
   {
     "displayName": "Garlic",
     "category": "PRODUCE",
-    "keywords": [  "garlic","garlic clove","garlic cloves","fresh garlic"]
+    "keywords": [  "garlic","garlic clove","fresh garlic"]
   },
   {
     "displayName": "Tomatoes",
     "category": "PRODUCE",
-    "keywords": [  "tomato","tomatoes","cherry tomato","grape tomato","roma tomato","fresh tomato","fresh tomatoes","cherry tomatoes","grape tomatoes","cocktail tomato","cocktail tomatoes","chopped tomato","chopped tomatoes"],
+    "keywords": [  "tomato","cherry tomato","grape tomato","roma tomato","fresh tomato","cocktail tomato","chopped tomato"],
     "excludeKeywords": [  "canned","can","paste","sauce"]
   },
   {
@@ -185,6 +185,31 @@
     "keywords": [  "jalapeno","jalapeño","jalapenos","jalapeños","fresh jalapeno"]
   },
   {
+    "displayName": "Cubanelle Pepper",
+    "category": "PRODUCE",
+    "keywords": [  "cubanelle","cubanelle pepper","italian frying pepper","italian pepper"]
+  },
+  {
+    "displayName": "Anaheim Pepper",
+    "category": "PRODUCE",
+    "keywords": [  "anaheim","anaheim pepper","california pepper","mild green chile"]
+  },
+  {
+    "displayName": "Poblano Pepper",
+    "category": "PRODUCE",
+    "keywords": [  "poblano","poblano pepper","poblano chile"]
+  },
+  {
+    "displayName": "Serrano Pepper",
+    "category": "PRODUCE",
+    "keywords": [  "serrano","serrano pepper","serrano chile"]
+  },
+  {
+    "displayName": "Habanero Pepper",
+    "category": "PRODUCE",
+    "keywords": [  "habanero","habanero pepper","habanero chile"]
+  },
+  {
     "displayName": "Ginger",
     "category": "PRODUCE",
     "keywords": [  "ginger","fresh ginger","ginger root"]
@@ -325,6 +350,21 @@
     "keywords": [  "turnip","turnips","purple top turnip","fresh turnips"]
   },
   {
+    "displayName": "Parsnips",
+    "category": "PRODUCE",
+    "keywords": [  "parsnip","parsnips","fresh parsnips"]
+  },
+  {
+    "displayName": "Rutabaga",
+    "category": "PRODUCE",
+    "keywords": [  "rutabaga","swede","yellow turnip"]
+  },
+  {
+    "displayName": "Daikon",
+    "category": "PRODUCE",
+    "keywords": [  "daikon","daikon radish","japanese radish"]
+  },
+  {
     "displayName": "Corn on the Cob",
     "category": "PRODUCE",
     "keywords": [  "corn","corn on the cob","fresh corn","ears of corn"]
@@ -387,6 +427,16 @@
     "keywords": [  "dates","medjool dates","deglet noor dates"]
   },
   {
+    "displayName": "Figs",
+    "category": "PRODUCE",
+    "keywords": [  "figs","fig","fresh figs","dried figs"]
+  },
+  {
+    "displayName": "Pomegranate",
+    "category": "PRODUCE",
+    "keywords": [  "pomegranate","pomegranates","fresh pomegranate"]
+  },
+  {
     "displayName": "Mint",
     "category": "PRODUCE",
     "keywords": [  "mint","fresh mint","spearmint","peppermint","mint leaves"]
@@ -410,6 +460,71 @@
     "displayName": "Sage",
     "category": "PRODUCE",
     "keywords": [  "sage","fresh sage","sage leaves"]
+  },
+  {
+    "displayName": "Tarragon",
+    "category": "PRODUCE",
+    "keywords": [  "tarragon","fresh tarragon","french tarragon"]
+  },
+  {
+    "displayName": "Marjoram",
+    "category": "PRODUCE",
+    "keywords": [  "marjoram","fresh marjoram","sweet marjoram"]
+  },
+  {
+    "displayName": "Savory",
+    "category": "PRODUCE",
+    "keywords": [  "savory","summer savory","winter savory"]
+  },
+  {
+    "displayName": "Artichokes",
+    "category": "PRODUCE",
+    "keywords": [  "artichoke","artichokes","globe artichoke","jerusalem artichoke"]
+  },
+  {
+    "displayName": "Fennel",
+    "category": "PRODUCE",
+    "keywords": [  "fennel","fennel bulb","anise","fresh fennel"]
+  },
+  {
+    "displayName": "Jicama",
+    "category": "PRODUCE",
+    "keywords": [  "jicama","yam bean","fresh jicama"]
+  },
+  {
+    "displayName": "Kohlrabi",
+    "category": "PRODUCE",
+    "keywords": [  "kohlrabi","german turnip","fresh kohlrabi"]
+  },
+  {
+    "displayName": "Gooseberries",
+    "category": "PRODUCE",
+    "keywords": [  "gooseberry","gooseberries","fresh gooseberries"]
+  },
+  {
+    "displayName": "Elderberries",
+    "category": "PRODUCE",
+    "keywords": [  "elderberry","elderberries","fresh elderberries"]
+  },
+  {
+    "displayName": "Pomelo",
+    "category": "PRODUCE",
+    "keywords": [  "pomelo","pummelo","shaddock"]
+  },
+  {
+    "displayName": "Passion Fruit",
+    "category": "PRODUCE",
+    "keywords": [  "passion fruit","passionfruit","lilikoi"]
+  },
+  {
+    "displayName": "Dragon Fruit",
+    "category": "PRODUCE",
+    "keywords": [  "dragon fruit","pitaya","pitahaya"]
+  },
+  {
+    "displayName": "Starfruit",
+    "category": "PRODUCE",
+    "keywords": [  "starfruit","carambola","five fingers"]
   },
   {
     "displayName": "Ground Beef",
@@ -620,6 +735,86 @@
     "keywords": [  "mascarpone","mascarpone cheese"]
   },
   {
+    "displayName": "Monterey Jack",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "monterey jack","monterey jack cheese","pepper jack","jalapeno jack"]
+  },
+  {
+    "displayName": "Colby Cheese",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "colby","colby cheese","longhorn cheese"]
+  },
+  {
+    "displayName": "Gouda",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "gouda","gouda cheese","smoked gouda"]
+  },
+  {
+    "displayName": "Brie",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "brie","brie cheese","triple cream brie"]
+  },
+  {
+    "displayName": "Camembert",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "camembert","camembert cheese"]
+  },
+  {
+    "displayName": "Havarti",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "havarti","havarti cheese","dill havarti"]
+  },
+  {
+    "displayName": "Asiago",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "asiago","asiago cheese","aged asiago"]
+  },
+  {
+    "displayName": "Pecorino",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "pecorino","pecorino romano","pecorino cheese"]
+  },
+  {
+    "displayName": "Manchego",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "manchego","manchego cheese"]
+  },
+  {
+    "displayName": "Fontina",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "fontina","fontina cheese"]
+  },
+  {
+    "displayName": "Taleggio",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "taleggio","taleggio cheese"]
+  },
+  {
+    "displayName": "Rice Milk",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "rice milk","unsweetened rice milk","vanilla rice milk"]
+  },
+  {
+    "displayName": "Hemp Milk",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "hemp milk","hemp seed milk","unsweetened hemp milk"]
+  },
+  {
+    "displayName": "Coconut Milk",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "coconut milk","unsweetened coconut milk","vanilla coconut milk"]
+  },
+  {
+    "displayName": "Greek Yogurt Flavors",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "vanilla greek yogurt","strawberry greek yogurt","honey greek yogurt","chobani","fage","siggi's"]
+  },
+  {
+    "displayName": "Icelandic Yogurt",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "icelandic yogurt","skyr","icelandic style yogurt"]
+  },
+  {
     "displayName": "Almond Milk",
     "category": "DAIRY_EGGS",
     "keywords": [  "almond milk","unsweetened almond milk","vanilla almond milk"]
@@ -662,7 +857,7 @@
   {
     "displayName": "Black Pepper",
     "category": "PANTRY",
-    "keywords": [  "black pepper","pepper","ground black pepper","freshly ground pepper"]
+    "keywords": [  "black pepper","ground black pepper","freshly ground pepper","pepper"]
   },
   {
     "displayName": "Garlic Powder",
@@ -973,6 +1168,91 @@
     "keywords": [  "teriyaki sauce","teriyaki"]
   },
   {
+    "displayName": "Saffron",
+    "category": "PANTRY",
+    "keywords": [  "saffron","saffron threads","spanish saffron"]
+  },
+  {
+    "displayName": "Star Anise",
+    "category": "PANTRY",
+    "keywords": [  "star anise","star anise pods","chinese star anise"]
+  },
+  {
+    "displayName": "Fennel Seeds",
+    "category": "PANTRY",
+    "keywords": [  "fennel seeds","ground fennel","fennel seed"]
+  },
+  {
+    "displayName": "Mustard Seeds",
+    "category": "PANTRY",
+    "keywords": [  "mustard seeds","yellow mustard seeds","brown mustard seeds"]
+  },
+  {
+    "displayName": "Almond Extract",
+    "category": "PANTRY",
+    "keywords": [  "almond extract","pure almond extract"]
+  },
+  {
+    "displayName": "Lemon Extract",
+    "category": "PANTRY",
+    "keywords": [  "lemon extract","pure lemon extract"]
+  },
+  {
+    "displayName": "Peppermint Extract",
+    "category": "PANTRY",
+    "keywords": [  "peppermint extract","pure peppermint extract"]
+  },
+  {
+    "displayName": "Maple Extract",
+    "category": "PANTRY",
+    "keywords": [  "maple extract","pure maple extract"]
+  },
+  {
+    "displayName": "Agave Nectar",
+    "category": "PANTRY",
+    "keywords": [  "agave nectar","agave syrup","blue agave"]
+  },
+  {
+    "displayName": "Stevia",
+    "category": "PANTRY",
+    "keywords": [  "stevia","stevia sweetener","truvia"]
+  },
+  {
+    "displayName": "Monk Fruit Sweetener",
+    "category": "PANTRY",
+    "keywords": [  "monk fruit","monk fruit sweetener","lakanto"]
+  },
+  {
+    "displayName": "Hoisin Sauce",
+    "category": "PANTRY",
+    "keywords": [  "hoisin sauce","hoisin","chinese hoisin"]
+  },
+  {
+    "displayName": "Oyster Sauce",
+    "category": "PANTRY",
+    "keywords": [  "oyster sauce","oyster flavored sauce"]
+  },
+  {
+    "displayName": "Plum Sauce",
+    "category": "PANTRY",
+    "keywords": [  "plum sauce","duck sauce","sweet plum sauce"]
+  },
+  {
+    "displayName": "Ponzu Sauce",
+    "category": "PANTRY",
+    "keywords": [  "ponzu","ponzu sauce","citrus ponzu"]
+  },
+  {
+    "displayName": "Mirin",
+    "category": "PANTRY",
+    "keywords": [  "mirin","sweet rice wine","japanese mirin"]
+  },
+  {
+    "displayName": "Rice Wine",
+    "category": "PANTRY",
+    "keywords": [  "rice wine","shaoxing wine","chinese rice wine"]
+  },
+  {
     "displayName": "Canned Tomatoes",
     "category": "CANNED_JARRED",
     "keywords": [  "canned tomato","canned tomatoes","can tomato","diced tomatoes","crushed tomatoes","whole tomatoes","canned diced tomatoes","canned crushed tomatoes","can diced tomatoes","chunky tomatoes"]
@@ -1025,7 +1305,7 @@
   {
     "displayName": "Pickles",
     "category": "CANNED_JARRED",
-    "keywords": [  "pickles","dill pickles","pickle spears"]
+    "keywords": [  "pickles","dill pickles","pickle spears","cornichons","gherkin","gherkins"]
   },
   {
     "displayName": "Olives",
@@ -1200,12 +1480,12 @@
   {
     "displayName": "Rice",
     "category": "GRAINS_PASTA",
-    "keywords": [  "rice","white rice","brown rice","jasmine rice","basmati rice"]
+    "keywords": [  "rice","white rice","brown rice","jasmine rice","basmati rice","arborio","arborio rice","carnaroli rice"]
   },
   {
     "displayName": "Pasta",
     "category": "GRAINS_PASTA",
-    "keywords": [  "pasta","spaghetti","penne","rigatoni","fettuccine","linguine","penne pasta"]
+    "keywords": [  "pasta","spaghetti","penne","rigatoni","fettuccine","linguine","penne pasta","lasagna","angel hair","rotini","cavatappi","ziti","orzo","gemelli","bucatini","pappardelle","ravioli","canneloni","Orechiette","farfalle","manicotti","gnocchi","tortellini","tortelloni","agnolotti","soba noodles","udon noodles","ramen noodles","somen noodles","rice noodles","glass noodles","cellophane noodles","bean thread noodles","tagliatelle","tagliolini","capellini","vermicelli","ditalini","acini di pepe","pastina","conchiglie","fusilli","radiatore","campanelle","casarecce","paccheri","paccheri rigati"]
   },
   {
     "displayName": "Quinoa",
@@ -1218,9 +1498,28 @@
     "keywords": [  "oats","rolled oats","old fashioned oats","quick oats"]
   },
   {
-    "displayName": "Flour",
+    "displayName": "Oat Bran",
     "category": "GRAINS_PASTA",
-    "keywords": [  "flour","all purpose flour","whole wheat flour","bread flour"]
+    "keywords": [  "oat bran","bran","oat bran cereal"]
+  },
+  {
+    "displayName": "Noodles",
+    "category": "GRAINS_PASTA",
+    "keywords": [  "rice noodles","rice vermicelli","rice stick noodles","noodles","ramen"]
+  },
+  {    "displayName": "Macaroni",
+    "category": "GRAINS_PASTA",
+    "keywords": [  "macaroni","elbow macaroni","macaroni pasta"]
+  },
+  {
+  "displayName": "Flour",
+  "category": "GRAINS_PASTA",
+  "keywords": [  "flour","all purpose flour","wheat flour","bread flour","semolina","cake flour","self rising flour","gluten free flour"]
+  },
+  {
+    "displayName": "Wheat Germ",
+    "category": "GRAINS_PASTA",
+    "keywords": [  "wheat germ","toasted wheat germ"]
   },
   {
     "displayName": "Bread Crumbs",
@@ -1328,6 +1627,31 @@
     "keywords": [  "flax seeds","flaxseed","ground flaxseed"]
   },
   {
+    "displayName": "Brazil Nuts",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "brazil nuts","brazil nut","raw brazil nuts"]
+  },
+  {
+    "displayName": "Macadamia Nuts",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "macadamia nuts","macadamia","roasted macadamia nuts"]
+  },
+  {
+    "displayName": "Pine Nuts",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "pine nuts","pignoli","pignolia nuts"]
+  },
+  {
+    "displayName": "Hazelnuts",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "hazelnuts","hazelnut","filberts","roasted hazelnuts"]
+  },
+  {
+    "displayName": "Chestnuts",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "chestnuts","roasted chestnuts","fresh chestnuts"]
+  },
+  {
     "displayName": "Granola",
     "category": "SNACKS_BEVERAGES",
     "keywords": [  "granola","homemade granola","oat granola"]
@@ -1388,9 +1712,34 @@
     "keywords": [  "gatorade","powerade","sports drink"]
   },
   {
+    "displayName": "Energy Drink",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "energy drink","red bull","monster","rockstar","5 hour energy"]
+  },
+  {
+    "displayName": "Iced Tea",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "iced tea","sweet tea","unsweetened iced tea","peach iced tea"]
+  },
+  {
+    "displayName": "Lemonade",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "lemonade","fresh lemonade","pink lemonade","strawberry lemonade"]
+  },
+  {
+    "displayName": "Kombucha",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "kombucha","gt's kombucha","raw kombucha"]
+  },
+  {
+    "displayName": "Protein Shake",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "protein shake","protein drink","whey protein shake"]
+  },
+  {
     "displayName": "Chips",
     "category": "SNACKS_BEVERAGES",
-    "keywords": [  "chips","potato chips","corn chips","tortilla chips"]
+    "keywords": [  "chips","potato chips","corn chips","tortilla chips","doritos","cheetos","pringles","lays","fritos","cheez-its","goldfish","salt and vinegar chips","barbecue chips","sour cream and onion chips","jalapeno chips","nacho cheese doritos","cool ranch doritos","flamin hot cheetos","cheetos puffs","original pringles","sour cream pringles","lays classic","lays wavy","fritos corn chips","fritos scoops"]
   },
   {
     "displayName": "Crackers",
@@ -1455,7 +1804,7 @@
   {
     "displayName": "Candy",
     "category": "SNACKS_BEVERAGES",
-    "keywords": [  "candy","m&ms","skittles","starburst","jelly beans","gummy bears"]
+    "keywords": [  "candy","m&ms","skittles","starburst","jelly beans","gummy bears","licorice","hard candy","lollipops","sour patch kids","nerds","jolly ranchers","life savers","butterfinger","baby ruth","almond joy","mounds","payday","whatchamacallit","zero bar","good & plenty","jawbreakers","peppermint patties","tootsie rolls","milk duds"]
   },
   {
     "displayName": "Water",

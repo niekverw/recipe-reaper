@@ -1,57 +1,226 @@
 import { describe, expect, it } from '@jest/globals'
-import { ingredientCategorizer, INGREDIENT_CATEGORIES } from '../utils/ingredientCategorizer'
+import { ingredientCategorizer, INGREDIENT_CATEGORIES, IngredientCategory } from '../utils/ingredientCategorizer'
+
+// Test case type for easy addition of new examples
+type TestCase = {
+	input: string
+	expectedDisplayName: string
+	expectedCategory: IngredientCategory
+	minConfidence?: number
+	exactConfidence?: number
+	description?: string
+}
+
+// Exact match test cases (confidence = 1.0)
+const exactMatchCases: TestCase[] = [
+	{
+		input: 'fresh tuna',
+		expectedDisplayName: 'Tuna',
+		expectedCategory: INGREDIENT_CATEGORIES.MEAT_SEAFOOD,
+		exactConfidence: 1.0,
+		description: 'exact keyword match'
+	},
+	{
+		input: 'arborio',
+		expectedDisplayName: 'Rice',
+		expectedCategory: INGREDIENT_CATEGORIES.GRAINS_PASTA,
+		exactConfidence: 1.0,
+		description: 'arborio rice variety matches to rice'
+	}
+]
+
+// Whole word match test cases (confidence = 0.85)
+const wholeWordMatchCases: TestCase[] = [
+	{
+		input: '2 cups chopped tomato',
+		expectedDisplayName: 'Tomatoes',
+		expectedCategory: INGREDIENT_CATEGORIES.PRODUCE,
+		exactConfidence: 0.85,
+		description: 'whole word match with quantity and preparation'
+	},
+	{
+		input: 'crumbled goat cheese',
+		expectedDisplayName: 'Goat Cheese',
+		expectedCategory: INGREDIENT_CATEGORIES.DAIRY_EGGS,
+		minConfidence: 0.8,
+		description: 'multi-word specificity over generic'
+	},
+	{
+		input: 'almond milk beverage',
+		expectedDisplayName: 'Almond Milk',
+		expectedCategory: INGREDIENT_CATEGORIES.DAIRY_EGGS,
+		minConfidence: 0.8,
+		description: 'longer descriptive match preferred'
+	},
+	{
+		input: 'shredded cheese blend',
+		expectedDisplayName: 'Cheese',
+		expectedCategory: INGREDIENT_CATEGORIES.DAIRY_EGGS,
+		minConfidence: 0.8,
+		description: 'fallback to generic when no specific match'
+	}
+]
+
+// Exclude keyword behavior test cases
+const excludeKeywordCases: TestCase[] = [
+	{
+		input: '1 canned tuna',
+		expectedDisplayName: 'Canned Tuna',
+		expectedCategory: INGREDIENT_CATEGORIES.CANNED_JARRED,
+		exactConfidence: 0.85,
+		description: 'exclude keyword triggers pattern fallback'
+	}
+]
+
+// Complex real-world examples
+const complexExampleCases: TestCase[] = [
+	{
+		input: '1 small red onion, thinly sliced (about ½ cup) and rinsed in a sieve under warm water for 2 minutes)',
+		expectedDisplayName: 'Onions',
+		expectedCategory: INGREDIENT_CATEGORIES.PRODUCE,
+		minConfidence: 0.5,
+		description: 'complex description with measurements and instructions'
+	},
+	{
+		input: 'semolina pasta flour',
+		expectedDisplayName: 'Flour',
+		expectedCategory: INGREDIENT_CATEGORIES.GRAINS_PASTA,
+		minConfidence: 0.6,
+		description: 'multi-word ingredient with specific type'
+	}
+]
+
+// Pattern heuristic test cases (frozen, canned, dried, etc.)
+const patternHeuristicCases: TestCase[] = [
+	{
+		input: 'frozen mystery meal',
+		expectedDisplayName: 'Mystery Meal',
+		expectedCategory: INGREDIENT_CATEGORIES.FROZEN,
+		exactConfidence: 0.9,
+		description: 'frozen keyword triggers frozen category via pattern heuristic'
+	},
+	{
+		input: 'jarred secret sauce',
+		expectedDisplayName: 'Secret Sauce',
+		expectedCategory: INGREDIENT_CATEGORIES.CANNED_JARRED,
+		exactConfidence: 0.8,
+		description: 'jarred keyword routes to canned/jarred category'
+	}
+]
+
+// Edge cases and typos (for future fuzzy matching implementation)
+const edgeCasesAndTypos: TestCase[] = [
+	{
+		input: 'quantum dust',
+		expectedDisplayName: 'Quantum Dust',
+		expectedCategory: INGREDIENT_CATEGORIES.OTHER,
+		exactConfidence: 0.1,
+		description: 'unknown ingredient falls back to OTHER category'
+	}
+]
 
 describe('ingredientCategorizer', () => {
-	it('returns a high confidence exact match when the ingredient matches a keyword exactly', () => {
-		const result = ingredientCategorizer.categorizeIngredient('fresh tuna')
+	describe('Exact Matches', () => {
+		it.each(exactMatchCases)(
+			'$description: "$input" → $expectedDisplayName',
+			({ input, expectedDisplayName, expectedCategory, exactConfidence, minConfidence }) => {
+				const result = ingredientCategorizer.categorizeIngredient(input)
+				expect(result.displayName).toBe(expectedDisplayName)
+				expect(result.category).toEqual(expectedCategory)
 
-		expect(result.displayName).toBe('Tuna')
-		expect(result.category).toEqual(INGREDIENT_CATEGORIES.MEAT_SEAFOOD)
-		expect(result.confidence).toBeCloseTo(1)
+				if (exactConfidence !== undefined) {
+					expect(result.confidence).toBeCloseTo(exactConfidence)
+				} else if (minConfidence !== undefined) {
+					expect(result.confidence).toBeGreaterThanOrEqual(minConfidence)
+				}
+			}
+		)
 	})
 
-	it('uses keyword inclusion when no exact match is found', () => {
-		const result = ingredientCategorizer.categorizeIngredient('2 cups chopped tomato')
+	describe('Whole Word Matches', () => {
+		it.each(wholeWordMatchCases)(
+			'$description: "$input" → $expectedDisplayName',
+			({ input, expectedDisplayName, expectedCategory, exactConfidence, minConfidence }) => {
+				const result = ingredientCategorizer.categorizeIngredient(input)
+				expect(result.displayName).toBe(expectedDisplayName)
+				expect(result.category).toEqual(expectedCategory)
 
-		expect(result.displayName).toBe('Tomatoes')
-		expect(result.category).toEqual(INGREDIENT_CATEGORIES.PRODUCE)
-		expect(result.confidence).toBeCloseTo(0.85)
+				if (exactConfidence !== undefined) {
+					expect(result.confidence).toBeCloseTo(exactConfidence)
+				} else if (minConfidence !== undefined) {
+					expect(result.confidence).toBeGreaterThanOrEqual(minConfidence)
+				}
+			}
+		)
 	})
 
-	it('respects exclude keywords and falls back when excluded terms are present', () => {
-		const result = ingredientCategorizer.categorizeIngredient('1 canned tuna')
+	describe('Exclude Keyword Behavior', () => {
+		it.each(excludeKeywordCases)(
+			'$description: "$input" → $expectedDisplayName',
+			({ input, expectedDisplayName, expectedCategory, exactConfidence, minConfidence }) => {
+				const result = ingredientCategorizer.categorizeIngredient(input)
+				expect(result.displayName).toBe(expectedDisplayName)
+				expect(result.category).toEqual(expectedCategory)
 
-		expect(result.displayName).toBe('Canned Tuna')
-		expect(result.category).toEqual(INGREDIENT_CATEGORIES.CANNED_JARRED)
-		expect(result.confidence).toBeCloseTo(0.85)
+				if (exactConfidence !== undefined) {
+					expect(result.confidence).toBeCloseTo(exactConfidence)
+				} else if (minConfidence !== undefined) {
+					expect(result.confidence).toBeGreaterThanOrEqual(minConfidence)
+				}
+			}
+		)
 	})
 
-	it('prefers the most specific multi-word match when multiple mappings apply', () => {
-		const result = ingredientCategorizer.categorizeIngredient('crumbled goat cheese')
+	describe('Complex Real-World Examples', () => {
+		it.each(complexExampleCases)(
+			'$description: "$input" → $expectedDisplayName',
+			({ input, expectedDisplayName, expectedCategory, exactConfidence, minConfidence }) => {
+				const result = ingredientCategorizer.categorizeIngredient(input)
+				expect(result.displayName).toBe(expectedDisplayName)
+				expect(result.category).toEqual(expectedCategory)
 
-		expect(result.displayName).toBe('Goat Cheese')
-		expect(result.category).toEqual(INGREDIENT_CATEGORIES.DAIRY_EGGS)
+				if (exactConfidence !== undefined) {
+					expect(result.confidence).toBeCloseTo(exactConfidence)
+				} else if (minConfidence !== undefined) {
+					expect(result.confidence).toBeGreaterThanOrEqual(minConfidence)
+				}
+			}
+		)
 	})
 
-	it('chooses longer descriptive match over generic alternatives', () => {
-		const result = ingredientCategorizer.categorizeIngredient('almond milk beverage')
+	describe('Pattern Heuristics', () => {
+		// Tests for frozen, canned, dried, ground, fresh patterns
+		it.each(patternHeuristicCases)(
+			'$description: "$input" → $expectedDisplayName',
+			({ input, expectedDisplayName, expectedCategory, exactConfidence, minConfidence }) => {
+				const result = ingredientCategorizer.categorizeIngredient(input)
+				expect(result.displayName).toBe(expectedDisplayName)
+				expect(result.category).toEqual(expectedCategory)
 
-		expect(result.displayName).toBe('Almond Milk')
-		expect(result.category).toEqual(INGREDIENT_CATEGORIES.DAIRY_EGGS)
+				if (exactConfidence !== undefined) {
+					expect(result.confidence).toBeCloseTo(exactConfidence)
+				} else if (minConfidence !== undefined) {
+					expect(result.confidence).toBeGreaterThanOrEqual(minConfidence)
+				}
+			}
+		)
 	})
 
-	it('still falls back to generic mapping when no specific keywords exist', () => {
-		const result = ingredientCategorizer.categorizeIngredient('shredded cheese blend')
+	describe('Edge Cases and Typos', () => {
+		// Future fuzzy matching tests
+		it.each(edgeCasesAndTypos)(
+			'$description: "$input" → $expectedDisplayName',
+			({ input, expectedDisplayName, expectedCategory, exactConfidence, minConfidence }) => {
+				const result = ingredientCategorizer.categorizeIngredient(input)
+				expect(result.displayName).toBe(expectedDisplayName)
+				expect(result.category).toEqual(expectedCategory)
 
-		expect(result.displayName).toBe('Cheese')
-		expect(result.category).toEqual(INGREDIENT_CATEGORIES.DAIRY_EGGS)
-	})
-
-	it('categorizes complex onion description to onions in produce', () => {
-		const result = ingredientCategorizer.categorizeIngredient('1 small red onion, thinly sliced (about ½ cup) and rinsed in a sieve under warm water for 2 minutes)')
-
-		expect(result.displayName).toBe('Onions')
-		expect(result.category).toEqual(INGREDIENT_CATEGORIES.PRODUCE)
-		expect(result.confidence).toBeGreaterThan(0.5)
+				if (exactConfidence !== undefined) {
+					expect(result.confidence).toBeCloseTo(exactConfidence)
+				} else if (minConfidence !== undefined) {
+					expect(result.confidence).toBeGreaterThanOrEqual(minConfidence)
+				}
+			}
+		)
 	})
 })

@@ -5,10 +5,10 @@ import { existsSync } from 'fs'
 // Load .env from the root directory (parent of backend)
 config({ path: join(__dirname, '../../.env') })
 
-import express from 'express'
+import express, { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
 import session from 'express-session'
-import rateLimit from 'express-rate-limit'
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit'
 import compression from 'compression'
 import { PostgreSQLDatabase } from './models/database-pg'
 import { recipeRoutes } from './routes/recipes'
@@ -51,6 +51,31 @@ const compressionMiddleware = compression({
 })
 app.use(compressionMiddleware)
 
+const parsePositiveInt = (value: string | undefined, fallback: number): number => {
+  if (!value) return fallback
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
+
+const isProduction = process.env.NODE_ENV === 'production'
+
+const apiRateLimitWindowMs = parsePositiveInt(process.env.API_RATE_LIMIT_WINDOW_MS, 15 * 60 * 1000)
+const apiRateLimitMaxRequests = parsePositiveInt(
+  process.env.API_RATE_LIMIT_MAX_REQUESTS,
+  isProduction ? 2000 : 10000
+)
+
+console.log(`API Rate Limit Config: ${apiRateLimitMaxRequests} requests per ${apiRateLimitWindowMs / 1000 / 60} minutes (${isProduction ? 'production' : 'development'} mode)`)
+
+const notFoundRateLimitWindowMs = parsePositiveInt(
+  process.env.NOT_FOUND_RATE_LIMIT_WINDOW_MS,
+  15 * 60 * 1000
+)
+const notFoundRateLimitMax = parsePositiveInt(
+  process.env.NOT_FOUND_RATE_LIMIT_MAX,
+  isProduction ? 10 : 50
+)
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps, curl requests, Postman)
@@ -78,48 +103,10 @@ app.use(cors({
   credentials: true
 }))
 
-// Rate limiting - different limits for authenticated vs anonymous users
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: (req) => {
-    // Authenticated users get much higher limits
-    if (req.user) {
-      return process.env.NODE_ENV === 'production' ? 2000 : 10000
-    }
-    // Anonymous users get reasonable limits
-    return process.env.NODE_ENV === 'production' ? 500 : 2000
-  },
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-  // Skip rate limiting for health checks
-  skip: (req) => req.path === '/health'
-})
-app.use('/api/', limiter)
-
-// Stricter rate limiting for expensive operations (AI, scraping)
-const strictLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: (req) => {
-    // Authenticated users get higher limits for expensive operations
-    if (req.user) {
-      return process.env.NODE_ENV === 'production' ? 50 : 200
-    }
-    // Anonymous users get very limited access to expensive operations
-    return process.env.NODE_ENV === 'production' ? 5 : 20
-  },
-  message: 'Too many requests for this operation, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-app.use('/api/recipes/scrape', strictLimiter)
-app.use('/api/recipes/parse-text', strictLimiter)
-app.use('/api/recipes/parse-text-gemini', strictLimiter)
-
 // Rate limiting for 404 responses (prevents abuse from unauthorized requests)
 const notFoundLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 10 : 50, // Very restrictive limits
+  windowMs: notFoundRateLimitWindowMs,
+  max: notFoundRateLimitMax,
   message: 'Too many invalid requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -202,6 +189,59 @@ app.use(session({
 app.use(passport.initialize())
 app.use(passport.session())
 
+const requireSignedInForApi = (req: Request, res: Response, next: NextFunction) => {
+  if (req.path.startsWith('/auth')) {
+    return next()
+  }
+
+  const isAuthenticated = typeof req.isAuthenticated === 'function'
+    ? req.isAuthenticated()
+    : Boolean(req.user)
+
+  if (isAuthenticated) {
+    return next()
+  }
+
+  return res.status(401).json({
+    error: {
+      message: 'Authentication required. Please sign in and try again.'
+    }
+  })
+}
+
+const apiRateLimiter = rateLimit({
+  windowMs: apiRateLimitWindowMs,
+  max: apiRateLimitMaxRequests,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const user = req.user as { id?: string | number; userId?: string | number } | undefined
+    const identifier = user?.id ?? user?.userId
+    if (identifier !== undefined) {
+      const key = `user:${String(identifier)}`
+      console.log(`Rate limit key for ${req.method} ${req.path}: ${key}`)
+      return key
+    }
+    // For non-authenticated requests, use IP as fallback
+    const rawIp = req.ip || req.socket.remoteAddress
+    const generatedIpKey = rawIp ? ipKeyGenerator(rawIp) : 'unknown'
+    console.log(`Rate limit key for ${req.method} ${req.path}: ip:${generatedIpKey}`)
+    return `ip:${generatedIpKey}`
+  },
+  skip: (req) => req.path === '/health' || req.path.startsWith('/auth'),
+  message: 'Too many requests. Please slow down and try again later.',
+  handler: (req, res) => {
+    const user = req.user as { id?: string | number; userId?: string | number } | undefined
+    const identifier = user?.id ?? user?.userId
+    console.log(`RATE LIMIT HIT for ${identifier ? `user:${identifier}` : req.ip} on ${req.method} ${req.path}`)
+    res.status(429).json({
+      error: {
+        message: 'Too many requests. Please slow down and try again later.'
+      }
+    })
+  }
+})
+
 // Serve uploaded images statically
 app.use('/uploads', express.static(join(process.cwd(), 'data', 'uploads')))
 
@@ -213,6 +253,8 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes)
+app.use('/api', requireSignedInForApi)
+app.use('/api', apiRateLimiter)
 app.use('/api/recipes', recipeRoutes)
 app.use('/api/ingredients', ingredientRoutes)
 app.use('/api/households', householdRoutes)

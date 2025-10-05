@@ -1,5 +1,26 @@
 import { Household, User } from '../types/user'
 
+const translateScraperErrorMessage = (message: string | undefined | null): string | undefined => {
+  if (!message) return message ?? undefined
+
+  const normalized = message.toLowerCase()
+
+  const scraperHints = [
+    "nonetype",
+    'recipe scrape failed',
+    'unable to parse recipe',
+    'not currently supported',
+  ]
+
+  const hasScraperSignature = scraperHints.some((hint) => normalized.includes(hint))
+
+  if (hasScraperSignature) {
+    return 'This website is not currently supported by the recipe scraper. Try using the "Text" or "Image" import options instead.'
+  }
+
+  return message
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 export interface IngredientCategory {
@@ -109,6 +130,7 @@ export interface AddToShoppingListRequest {
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`
+    const startTime = performance.now()
 
     // Don't set Content-Type for FormData, let the browser set it
     const isFormData = options?.body instanceof FormData
@@ -125,9 +147,65 @@ class ApiService {
       ...options,
     })
 
+    // Track API call for performance monitoring
+    const duration = performance.now() - startTime
+    try {
+      // Dynamically import to avoid circular dependencies
+      import('../utils/performanceMonitor').then(({ performanceMonitor }) => {
+        performanceMonitor.trackAPICall(
+          endpoint,
+          options?.method || 'GET',
+          response.status,
+          Math.round(duration)
+        )
+      }).catch(() => {
+        // Silently fail if performance monitor isn't available
+      })
+    } catch (e) {
+      // Silently fail
+    }
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error' } }))
-      throw new Error(errorData.error?.message || `HTTP ${response.status}`)
+      // Try to parse error response as JSON
+      const fallbackErrorMessage = `Server error (${response.status})`
+      let errorMessage = fallbackErrorMessage
+
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.error?.message || errorData.message || errorMessage
+      } catch (parseError) {
+        // If JSON parsing fails, try to get text response
+        try {
+          const errorText = await response.text()
+          if (errorText) {
+            errorMessage = errorText
+          }
+        } catch (textError) {
+          // Use default error message with status code
+        }
+      }
+
+      // Provide helpful messages for common HTTP status codes
+      const friendlyErrorMessage = translateScraperErrorMessage(errorMessage)
+      if (friendlyErrorMessage) {
+        errorMessage = friendlyErrorMessage
+      }
+
+      if (response.status === 429) {
+        errorMessage = 'Rate limit exceeded. Please wait a moment and try again.'
+      } else if (response.status === 503) {
+        errorMessage = 'Service temporarily unavailable. Please try again in a few moments.'
+      } else if (response.status === 500) {
+        const hasMeaningfulMessage = errorMessage &&
+          errorMessage !== fallbackErrorMessage &&
+          !/internal server error/i.test(errorMessage)
+
+        if (!hasMeaningfulMessage) {
+          errorMessage = 'An internal server error occurred. Please try again.'
+        }
+      }
+
+      throw new Error(errorMessage)
     }
 
     // Handle responses with no content (like DELETE operations)
@@ -199,7 +277,17 @@ class ApiService {
 
 
   // Recipe scraping operation
-  async scrapeRecipeFromUrl(url: string, targetLanguage?: string) {
+  async scrapeRecipeFromUrl(url: string, targetLanguage?: string, additionalContext?: string) {
+    const payload: Record<string, unknown> = { url }
+
+    if (targetLanguage) {
+      payload.targetLanguage = targetLanguage
+    }
+
+    if (additionalContext) {
+      payload.additionalContext = additionalContext
+    }
+
     return this.request<{
       recipeData: {
         name: string
@@ -215,7 +303,7 @@ class ApiService {
       }
     }>('/recipes/scrape', {
       method: 'POST',
-      body: JSON.stringify({ url, targetLanguage }),
+      body: JSON.stringify(payload),
     })
   }
 
@@ -241,7 +329,17 @@ class ApiService {
   }
 
   // Recipe text parsing operation using Google Gemini
-  async parseRecipeFromTextGemini(text: string, targetLanguage?: string) {
+  async parseRecipeFromTextGemini(text: string, targetLanguage?: string, additionalContext?: string) {
+    const payload: Record<string, unknown> = { text }
+
+    if (targetLanguage) {
+      payload.targetLanguage = targetLanguage
+    }
+
+    if (additionalContext) {
+      payload.additionalContext = additionalContext
+    }
+
     return this.request<{
       recipeData: {
         name: string
@@ -257,7 +355,7 @@ class ApiService {
       }
     }>('/recipes/parse-text-gemini', {
       method: 'POST',
-      body: JSON.stringify({ text, targetLanguage }),
+      body: JSON.stringify(payload),
     })
   }
 

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { LoginData } from '../../types/user'
 import { generatePKCEPair } from '../../utils/pkce'
+import AlertBanner from '../AlertBanner'
 
 interface LoginFormProps {
   onSuccess?: () => void
@@ -88,9 +89,12 @@ function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
           </div>
 
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-              <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
-            </div>
+            <AlertBanner
+              variant="error"
+              description={error}
+              onDismiss={() => setError(null)}
+              isCompact
+            />
           )}
 
           <button

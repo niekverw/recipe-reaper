@@ -68,7 +68,7 @@ describe('Recipe Scraper API', () => {
   })
 
   describe('POST /api/recipes/scrape', () => {
-    const validUrl = 'https://example.com/recipe'
+    const validUrl = 'https://cooking.nytimes.com/recipes/1022068-skillet-chicken-with-mushrooms-and-caramelized-onions'
     const mockScrapedData = {
       name: 'Test Recipe',
       description: 'A delicious test recipe',

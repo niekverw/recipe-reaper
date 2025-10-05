@@ -14,12 +14,14 @@ import {
   TagIcon,
   LockClosedIcon,
   GlobeAltIcon,
-  HomeIcon
+  HomeIcon,
+  UserIcon
 } from '@heroicons/react/24/outline'
 import { apiService, Recipe } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { getRandomLoadingHumor, getRandomGeneralHumor } from '../utils/humor'
 import ResponsiveImage from '../components/ResponsiveImage'
+import AlertBanner from '../components/AlertBanner'
 import { buildRecipeImageSources, buildHeroImagePreloadData } from '../utils/recipeImages'
 
 const PRIORITIZED_IMAGE_COUNT = 6
@@ -301,6 +303,7 @@ function RecipesPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [availableTags, setAvailableTags] = useState<string[]>([])
   const [showTagFilter, setShowTagFilter] = useState(false)
+  const [showOnlyMyRecipes, setShowOnlyMyRecipes] = useState(false)
 
   // Get scope from URL parameters
   const scope = searchParams.get('scope') as 'my' | 'public' | 'all' || (user ? 'my' : 'public')
@@ -312,11 +315,14 @@ function RecipesPage() {
         recipe.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         recipe.description.toLowerCase().includes(searchQuery.toLowerCase())
 
-      // Tag filter
+      // Tag filter (OR logic - recipe must have at least one of the selected tags)
       const matchesTags = selectedTags.length === 0 ||
-        selectedTags.every(tag => recipe.tags?.includes(tag))
+        selectedTags.some(tag => recipe.tags?.includes(tag))
 
-      return matchesSearch && matchesTags
+      // My recipes filter
+      const matchesMyRecipes = !showOnlyMyRecipes || recipe.userId === user?.id
+
+      return matchesSearch && matchesTags && matchesMyRecipes
     })
 
     return filtered.sort((a, b) => {
@@ -333,7 +339,7 @@ function RecipesPage() {
           return 0
       }
     })
-  }, [recipes, searchQuery, sortBy, selectedTags])
+  }, [recipes, searchQuery, sortBy, selectedTags, showOnlyMyRecipes, user?.id])
 
   // Hero image preload optimization - stable dependencies to prevent churn
   const firstRecipe = filteredAndSortedRecipes[0]
@@ -628,6 +634,23 @@ function RecipesPage() {
                 )}
               </button>
 
+              {user && (
+                <button
+                  type="button"
+                  onClick={() => setShowOnlyMyRecipes(!showOnlyMyRecipes)}
+                  aria-pressed={showOnlyMyRecipes}
+                  className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                    showOnlyMyRecipes
+                      ? 'border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-200'
+                      : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                  }`}
+                  title="Show only recipes I created"
+                >
+                  <UserIcon className="h-4 w-4" />
+                  <span className="hidden sm:inline">My Recipes</span>
+                </button>
+              )}
+
               <div className="ml-auto flex items-center gap-2">
                 <div className="relative">
                   <select
@@ -728,23 +751,20 @@ function RecipesPage() {
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-red-700 dark:text-red-400">{error}</p>
+          <AlertBanner
+            variant="error"
+            description={error}
+            onDismiss={() => setError(null)}
+            actions={(
               <button
-                onClick={() => setError(null)}
-                className="text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                type="button"
+                onClick={loadRecipes}
+                className="font-medium text-red-700 underline underline-offset-2 hover:text-red-900 dark:text-red-300 dark:hover:text-red-100"
               >
-                ✕
+                Try again
               </button>
-            </div>
-            <button
-              onClick={loadRecipes}
-              className="mt-2 text-sm text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 underline"
-            >
-              Try again
-            </button>
-          </div>
+            )}
+          />
         )}
 
         {/* Content */}

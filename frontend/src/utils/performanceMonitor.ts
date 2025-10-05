@@ -18,12 +18,25 @@ export interface PWAMetric {
   timestamp: number
 }
 
+export interface APICallMetric {
+  url: string
+  method: string
+  timestamp: number
+  status?: number
+  duration?: number
+}
+
 class PerformanceMonitor {
   private metrics: PerformanceMetric[] = []
   private pwaMetrics: PWAMetric[] = []
+  private apiCalls: APICallMetric[] = []
   private isInitialized = false
   private analyticsEnabled = false
   private installStartTime: number | null = null
+
+  // Rate limit configuration (matching backend defaults)
+  private readonly RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000 // 15 minutes
+  private readonly RATE_LIMIT_MAX = 10000 // default max requests
 
   // Core Web Vitals thresholds
   private static readonly THRESHOLDS = {
@@ -375,17 +388,118 @@ class PerformanceMonitor {
     return [...this.pwaMetrics]
   }
 
+  public trackAPICall(url: string, method: string, status?: number, duration?: number) {
+    const metric: APICallMetric = {
+      url,
+      method,
+      timestamp: Date.now(),
+      status,
+      duration
+    }
+    this.apiCalls.push(metric)
+
+    // Store in localStorage
+    try {
+      const stored = localStorage.getItem('pwa-api-calls')
+      const calls = stored ? JSON.parse(stored) : []
+      calls.push(metric)
+
+      // Keep only last 500 API calls
+      if (calls.length > 500) {
+        calls.splice(0, calls.length - 500)
+      }
+
+      localStorage.setItem('pwa-api-calls', JSON.stringify(calls))
+    } catch (error) {
+      console.warn('Failed to store API call metric:', error)
+    }
+  }
+
+  public getAPICallsInWindow(windowMs: number = this.RATE_LIMIT_WINDOW_MS): APICallMetric[] {
+    const now = Date.now()
+    const windowStart = now - windowMs
+
+    // Get calls from memory and localStorage
+    let allCalls: APICallMetric[] = [...this.apiCalls]
+
+    try {
+      const stored = localStorage.getItem('pwa-api-calls')
+      if (stored) {
+        const storedCalls = JSON.parse(stored)
+        allCalls = [...storedCalls, ...allCalls]
+      }
+    } catch (error) {
+      console.warn('Failed to read stored API calls:', error)
+    }
+
+    // Filter to current window and remove duplicates
+    const uniqueCalls = Array.from(
+      new Map(allCalls.map(call => [`${call.timestamp}-${call.url}-${call.method}`, call])).values()
+    )
+
+    return uniqueCalls.filter(call => call.timestamp >= windowStart)
+  }
+
+  public getRateLimitInfo() {
+    const callsInWindow = this.getAPICallsInWindow()
+    const remaining = Math.max(0, this.RATE_LIMIT_MAX - callsInWindow.length)
+    const percentUsed = (callsInWindow.length / this.RATE_LIMIT_MAX) * 100
+
+    // Find oldest call in window to determine reset time
+    const oldestCall = callsInWindow.length > 0
+      ? Math.min(...callsInWindow.map(c => c.timestamp))
+      : Date.now()
+    const resetTime = oldestCall + this.RATE_LIMIT_WINDOW_MS
+    const resetIn = Math.max(0, resetTime - Date.now())
+
+    return {
+      used: callsInWindow.length,
+      limit: this.RATE_LIMIT_MAX,
+      remaining,
+      percentUsed: Math.round(percentUsed * 10) / 10,
+      windowMs: this.RATE_LIMIT_WINDOW_MS,
+      resetIn,
+      resetAt: new Date(resetTime).toLocaleTimeString(),
+      status: percentUsed > 90 ? '🔴 Critical' : percentUsed > 70 ? '🟡 Warning' : '🟢 Good'
+    }
+  }
+
   public clearStoredMetrics() {
     localStorage.removeItem('pwa-performance-metrics')
     localStorage.removeItem('pwa-metrics')
-    console.log('🗑️ Cleared stored performance metrics')
+    localStorage.removeItem('pwa-api-calls')
+    console.log('🗑️ Cleared stored performance metrics and API call history')
   }
 
   // Debug method to show current metrics
   public debug() {
     console.group('🚀 PWA Performance Debug')
+
     console.log('Core Web Vitals:', this.metrics)
     console.log('PWA Metrics:', this.pwaMetrics)
+
+    // Show API rate limit info
+    const rateLimitInfo = this.getRateLimitInfo()
+    console.group('📊 API Rate Limit Status')
+    console.log(`${rateLimitInfo.status}`)
+    console.log(`Used: ${rateLimitInfo.used} / ${rateLimitInfo.limit} (${rateLimitInfo.percentUsed}%)`)
+    console.log(`Remaining: ${rateLimitInfo.remaining} requests`)
+    console.log(`Window: ${rateLimitInfo.windowMs / 1000 / 60} minutes`)
+    console.log(`Resets at: ${rateLimitInfo.resetAt} (in ${Math.round(rateLimitInfo.resetIn / 1000 / 60)} minutes)`)
+    console.groupEnd()
+
+    // Show recent API calls
+    const recentCalls = this.getAPICallsInWindow().slice(-10)
+    if (recentCalls.length > 0) {
+      console.group(`🔗 Recent API Calls (last ${Math.min(10, recentCalls.length)} of ${this.getAPICallsInWindow().length})`)
+      recentCalls.forEach(call => {
+        const time = new Date(call.timestamp).toLocaleTimeString()
+        const duration = call.duration ? ` (${call.duration}ms)` : ''
+        const status = call.status ? ` [${call.status}]` : ''
+        console.log(`${time} ${call.method} ${call.url}${status}${duration}`)
+      })
+      console.groupEnd()
+    }
 
     // Show stored metrics
     try {

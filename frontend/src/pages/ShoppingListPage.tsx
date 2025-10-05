@@ -14,6 +14,7 @@ import { apiService, ShoppingListItem } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { getCategoryById, IngredientCategory } from '../utils/categories'
 import { getRandomLoadingHumor, getRandomShoppingListHumor } from '../utils/humor'
+import AlertBanner, { AlertVariant } from '../components/AlertBanner'
 
 interface CustomCheckboxProps {
   id: string
@@ -139,15 +140,20 @@ export default function ShoppingListPage() {
   const [items, setItems] = useState<ShoppingListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [banner, setBanner] = useState<{ variant: AlertVariant; message: string } | null>(null)
   const [updating, setUpdating] = useState<Set<string>>(new Set())
   const [newItem, setNewItem] = useState('')
   const [isAddingManualItem, setIsAddingManualItem] = useState(false)
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
+  const showBanner = useCallback((variant: AlertVariant, message: string) => {
+    setBanner({ variant, message })
+  }, [])
 
   const loadShoppingList = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
+      setBanner(null)
       const shoppingList = await apiService.getShoppingList()
       setItems(shoppingList)
     } catch (err) {
@@ -190,7 +196,7 @@ export default function ShoppingListPage() {
       // Revert optimistic update on error
       setItems(previousItems)
       console.error('Failed to update shopping list item:', err)
-      // Could show a toast notification here
+      showBanner('error', 'Failed to update shopping list item. Please try again.')
     } finally {
       setUpdating(prev => {
         const newSet = new Set(prev)
@@ -198,7 +204,7 @@ export default function ShoppingListPage() {
         return newSet
       })
     }
-  }, [items, updating])
+  }, [items, updating, showBanner])
 
   const handleDeleteItem = useCallback(async (id: string) => {
     if (updating.has(id)) return
@@ -217,7 +223,7 @@ export default function ShoppingListPage() {
       // Revert optimistic update on error
       setItems(previousItems)
       console.error('Failed to delete shopping list item:', err)
-      // Could show a toast notification here
+      showBanner('error', 'Failed to delete shopping list item. Please try again.')
     } finally {
       setUpdating(prev => {
         const newSet = new Set(prev)
@@ -225,7 +231,7 @@ export default function ShoppingListPage() {
         return newSet
       })
     }
-  }, [items, updating])
+  }, [items, updating, showBanner])
 
   const handleClearAll = useCallback(async () => {
     if (items.length === 0) return
@@ -238,9 +244,9 @@ export default function ShoppingListPage() {
       await loadShoppingList()
     } catch (err) {
       console.error('Failed to clear all items:', err)
-      // Could show a toast notification here
+      showBanner('error', 'Failed to clear shopping list. Please try again.')
     }
-  }, [items, loadShoppingList])
+  }, [items, loadShoppingList, showBanner])
 
   const handleAddManualItem = useCallback(async () => {
     const trimmedItem = newItem.trim()
@@ -269,11 +275,11 @@ export default function ShoppingListPage() {
       setNewItem('')
     } catch (err) {
       console.error('Failed to add manual item:', err)
-      // Could show a toast notification here
+      showBanner('error', 'Failed to add item. Please try again.')
     } finally {
       setIsAddingManualItem(false)
     }
-  }, [isAddingManualItem, newItem])
+  }, [isAddingManualItem, newItem, showBanner])
 
   const handleManualItemKeyDown = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -343,20 +349,26 @@ export default function ShoppingListPage() {
   if (error) {
     return (
       <div className="px-4 py-8 max-w-4xl mx-auto">
-        <div className="text-center py-20">
-          <div className="max-w-md mx-auto">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ShoppingBagIcon className="w-8 h-8 text-gray-400" />
-            </div>
-            <h1 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-white">Error Loading Shopping List</h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
-            <button
-              onClick={loadShoppingList}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-              <ArrowPathIcon className="w-4 h-4" />
-              Try Again
-            </button>
+        <div className="py-20">
+          <div className="max-w-md mx-auto space-y-6 text-center">
+            <AlertBanner
+              variant="error"
+              title="Error loading shopping list"
+              description={error}
+              actions={(
+                <button
+                  type="button"
+                  onClick={loadShoppingList}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  <ArrowPathIcon className="w-4 h-4" />
+                  Try Again
+                </button>
+              )}
+            />
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Your list stays safe—give it another go in a moment.
+            </p>
           </div>
         </div>
       </div>
@@ -388,6 +400,16 @@ export default function ShoppingListPage() {
           )}
         </div>
       </div>
+
+      {banner && (
+        <div className="mb-4">
+          <AlertBanner
+            variant={banner.variant}
+            description={banner.message}
+            onDismiss={() => setBanner(null)}
+          />
+        </div>
+      )}
 
       {/* Add Item Input */}
       <div className="mb-4">

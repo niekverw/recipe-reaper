@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import LoginForm from '../components/auth/LoginForm'
 import RegisterForm from '../components/auth/RegisterForm'
+import AlertBanner from '../components/AlertBanner'
 
 function LoginPage() {
   const navigate = useNavigate()
@@ -59,9 +60,11 @@ function LoginPage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
-          </div>
+          <AlertBanner
+            variant="error"
+            description={error}
+            onDismiss={() => setError(null)}
+          />
         )}
 
         {mode === 'login' ? (

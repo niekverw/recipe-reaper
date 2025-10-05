@@ -6,15 +6,17 @@ import { IngredientHelper } from '../utils/ingredientHelper'
 import { isOurUploadedImage, deleteUploadedImage } from '../utils/imageUtils'
 import { SUPPORTED_LANGUAGES, getLanguageName } from '../constants/languages'
 import TagInput from '../components/TagInput'
+import AlertBanner from '../components/AlertBanner'
 import {
   ArrowLeftIcon,
   CheckIcon,
   LockClosedIcon,
   GlobeAltIcon,
   HomeIcon,
-  InformationCircleIcon,
   Cog6ToothIcon,
-  XMarkIcon
+  XMarkIcon,
+  PlusIcon,
+  MinusIcon
 } from '@heroicons/react/24/outline'
 
 interface RecipeFormData {
@@ -88,6 +90,8 @@ function RecipeFormPage() {
   const [importLanguage, setImportLanguage] = useState<string | undefined>(user?.defaultTranslationLanguage)
   const [hasManualImportLanguage, setHasManualImportLanguage] = useState(false)
   const [isImportSettingsOpen, setIsImportSettingsOpen] = useState(false)
+  const [isUrlGeminiContextOpen, setIsUrlGeminiContextOpen] = useState(false)
+  const [urlGeminiContext, setUrlGeminiContext] = useState('')
   const canImportFromUrl = Boolean(importUrl.trim())
 
   // Image upload state (for upload button next to Image URL)
@@ -199,6 +203,13 @@ function RecipeFormPage() {
     }
   }, [isImportSettingsOpen])
 
+  useEffect(() => {
+    if (importType !== 'url' && isUrlGeminiContextOpen) {
+      setIsUrlGeminiContextOpen(false)
+      setUrlGeminiContext('')
+    }
+  }, [importType, isUrlGeminiContextOpen])
+
   const loadAvailableTags = async () => {
     try {
       const tags = await apiService.getAllTags()
@@ -304,7 +315,7 @@ function RecipeFormPage() {
       setImportUrl('')
     } catch (error) {
       console.error('Failed to import recipe from URL:', error)
-      setImportError('Failed to import recipe from URL. Please check the URL and try again.')
+      setImportError(error instanceof Error ? error.message : 'Failed to import recipe from URL. Please check the URL and try again.')
     } finally {
       setIsImporting(false)
     }
@@ -333,7 +344,7 @@ function RecipeFormPage() {
       setImportText('')
     } catch (error) {
       console.error('Failed to parse recipe from text:', error)
-      setImportError('Failed to parse recipe from text. Please try again.')
+      setImportError(error instanceof Error ? error.message : 'Failed to parse recipe from text. Please try again.')
     } finally {
       setIsImporting(false)
     }
@@ -351,7 +362,11 @@ function RecipeFormPage() {
       setIsImporting(true)
       setImportError(null)
 
-      const response = await apiService.scrapeRecipeFromUrl(targetUrl, importLanguage || undefined)
+      const response = await apiService.scrapeRecipeFromUrl(
+        targetUrl,
+        importLanguage || undefined,
+        urlGeminiContext.trim() || undefined
+      )
       const recipeData = response.recipeData
 
       const normalizedIngredients = recipeData.ingredients
@@ -461,7 +476,10 @@ function RecipeFormPage() {
       setIsImportingGemini(true)
       setImportError(null)
 
-      const response = await apiService.parseRecipeFromTextGemini(importText.trim(), importLanguage || undefined)
+      const response = await apiService.parseRecipeFromTextGemini(
+        importText.trim(),
+        importLanguage || undefined
+      )
       const recipeData = response.recipeData
 
       // Check if form has existing data and confirm overwrite
@@ -793,17 +811,11 @@ function RecipeFormPage() {
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <p className="text-red-700 dark:text-red-400">{error}</p>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
+        <AlertBanner
+          variant="error"
+          description={error}
+          onDismiss={() => setError(null)}
+        />
       )}
 
       {/* Import Section */}
@@ -931,7 +943,7 @@ function RecipeFormPage() {
               <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
                 Paste a recipe URL to automatically fill in the form with recipe data from supported websites.
               </p>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <input
                   type="text"
                   value={importUrl}
@@ -947,6 +959,33 @@ function RecipeFormPage() {
                   autoCorrect="off"
                   spellCheck="false"
                 />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsUrlGeminiContextOpen(prev => {
+                      const next = !prev
+                      if (!next) {
+                        setUrlGeminiContext('')
+                      }
+                      return next
+                    })
+                  }}
+                  className={`sm:self-center inline-flex items-center justify-center w-8 h-8 rounded-md border transition-colors focus:outline-none focus:ring-2 focus:ring-green-500/60 dark:focus:ring-green-400/60 ${
+                    isUrlGeminiContextOpen
+                      ? 'border-green-500 bg-green-50 text-green-700 dark:border-green-400 dark:bg-green-900/40 dark:text-green-100'
+                      : 'border-green-200 text-green-700 hover:bg-green-50 dark:border-green-600 dark:text-green-200 dark:hover:bg-green-900/30'
+                  } ${isImporting ? 'opacity-80 cursor-not-allowed' : ''}`}
+                  aria-expanded={isUrlGeminiContextOpen}
+                  aria-controls="url-gemini-extra-context"
+                  aria-label={isUrlGeminiContextOpen ? 'Hide extra Gemini note' : 'Add note for Gemini'}
+                  disabled={isImporting}
+                >
+                  {isUrlGeminiContextOpen ? (
+                    <MinusIcon className="w-4 h-4" />
+                  ) : (
+                    <PlusIcon className="w-4 h-4" />
+                  )}
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -969,10 +1008,35 @@ function RecipeFormPage() {
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                       </svg>
-                      Import Recipe
+                      Import
                     </>
                   )}
                 </button>
+              </div>
+              <div className="mt-3 space-y-3">
+                {isUrlGeminiContextOpen && (
+                  <div
+                    className="w-full rounded-lg border border-green-200 bg-green-50/50 p-3 dark:border-green-700 dark:bg-green-900/30"
+                    id="url-gemini-extra-context"
+                  >
+                    <label
+                      htmlFor="url-gemini-context"
+                      className="block text-xs font-medium text-green-800 dark:text-green-100 mb-2"
+                    >
+                      Extra description or instructions (optional)
+                    </label>
+                    <textarea
+                      id="url-gemini-context"
+                      value={urlGeminiContext}
+                      onChange={(e) => setUrlGeminiContext(e.target.value)}
+                      rows={3}
+                      className="w-full rounded-md border border-green-200 bg-white/90 px-3 py-2 text-sm text-green-900 placeholder-green-700/60 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-400 dark:border-green-600 dark:bg-green-950/40 dark:text-green-100 dark:placeholder-green-300"
+                      placeholder="Add special instructions, ingredient preferences, or notes for the recipe import."
+                      disabled={isImporting}
+                    />
+                  
+                  </div>
+                )}
               </div>
             </>
           ) : importType === 'text' ? (
@@ -1017,7 +1081,7 @@ Serves: 24 cookies`}
                   className="w-full px-3 py-2 border border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-blue-900/30 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none text-sm"
                   disabled={isImporting || isImportingGemini}
                 />
-                <div className="flex gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"
                     onClick={handleImportFromTextGemini}
@@ -1034,7 +1098,7 @@ Serves: 24 cookies`}
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
-                        Parse with Gemini
+                        Parse
                       </>
                     )}
                   </button>
@@ -1153,9 +1217,13 @@ Serves: 24 cookies`}
           )}
 
           {importError && (
-            <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-red-700 dark:text-red-400 text-sm">{importError}</p>
-            </div>
+            <AlertBanner
+              variant="error"
+              description={importError}
+              onDismiss={() => setImportError(null)}
+              className="mt-3"
+              isCompact
+            />
           )}
         </div>
       )}
@@ -1488,18 +1556,21 @@ Bake for 25-30 minutes`}
 
                 {/* Privacy Error */}
                 {privacyError && (
-                  <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                    <InformationCircleIcon className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-red-800 dark:text-red-200">{privacyError}</p>
-                  </div>
+                  <AlertBanner
+                    variant="error"
+                    description={privacyError}
+                    onDismiss={() => setPrivacyError(null)}
+                    isCompact
+                  />
                 )}
 
                 {/* Smart Privacy Message */}
                 {privacyMessage && (
-                  <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <InformationCircleIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-blue-800 dark:text-blue-200">{privacyMessage}</p>
-                  </div>
+                  <AlertBanner
+                    variant="info"
+                    description={privacyMessage}
+                    isCompact
+                  />
                 )}
               </div>
             </div>

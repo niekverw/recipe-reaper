@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeftIcon,
@@ -7,7 +7,6 @@ import {
   PencilIcon,
   TrashIcon,
   ShareIcon,
-  PrinterIcon,
   CheckIcon,
   ScaleIcon,
   ChevronDownIcon,
@@ -24,6 +23,7 @@ import { IngredientHelper } from '../utils/ingredientHelper'
 import { TagHelper } from '../utils/tagHelper'
 import { getRandomLoadingHumor } from '../utils/humor'
 import TextWithHeaders from '../components/TextWithHeaders'
+import AlertBanner from '../components/AlertBanner'
 import { TextHeaderParser } from '../utils/textHeaderParser'
 import ResponsiveImage from '../components/ResponsiveImage'
 import { scaleIngredient } from '../utils/scaleIngredient'
@@ -219,6 +219,7 @@ function RecipeDetailPage() {
   const [filteredTagSuggestions, setFilteredTagSuggestions] = useState<string[]>([])
   const [highlightedTagIndex, setHighlightedTagIndex] = useState(0)
   const shoppingListButton = useShoppingListButtonState()
+  const scaleMenuRef = useRef<HTMLDivElement | null>(null)
 
   const openImageModal = useCallback(() => {
     setShowImageModal(true)
@@ -297,6 +298,31 @@ function RecipeDetailPage() {
     }
   }, [newTag, showTagInput, availableTags, recipe?.tags])
 
+  useEffect(() => {
+    if (!showScaleMenu) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!scaleMenuRef.current) return
+      if (!scaleMenuRef.current.contains(event.target as Node)) {
+        setShowScaleMenu(false)
+      }
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowScaleMenu(false)
+      }
+    }
+
+    window.addEventListener('mousedown', handleClickOutside)
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [showScaleMenu])
+
   if (loading) {
     return (
       <div className="px-4 py-8 max-w-4xl mx-auto">
@@ -367,12 +393,6 @@ function RecipeDetailPage() {
     } else {
       navigator.clipboard.writeText(window.location.href)
     }
-  }
-
-  const handlePrint = () => {
-    if (!recipe) return
-
-    window.print()
   }
 
   const scaleOptions = [
@@ -540,13 +560,6 @@ function RecipeDetailPage() {
             aria-label="Share recipe"
           >
             <ShareIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-          </button>
-          <button
-            onClick={handlePrint}
-            className="p-3 rounded-full bg-white/0 dark:bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Print recipe"
-          >
-            <PrinterIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
           </button>
           <div className="flex items-center gap-2">
             <button
@@ -972,7 +985,7 @@ function RecipeDetailPage() {
                   {checkedIngredients.size === IngredientHelper.getAllIngredients(recipe.ingredients).length ? 'Deselect All' : 'Select All'}
                 </button>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" ref={scaleMenuRef}>
                 <ScaleIcon className="w-4 h-4 text-gray-400" />
                 <div className="relative">
                   <button
@@ -985,27 +998,21 @@ function RecipeDetailPage() {
                   </button>
                   
                   {showScaleMenu && (
-                    <>
-                      <div 
-                        className="fixed inset-0 z-40" 
-                        onClick={() => setShowScaleMenu(false)}
-                      />
-                      <div className="absolute right-0 mt-2 w-24 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
-                        {scaleOptions.map(option => (
-                          <button
-                            key={option.key}
-                            type="button"
-                            onClick={() => handleScaleChange(option.value)}
-                            className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between cursor-pointer ${
-                              scale === option.value ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'
-                            }`}
-                          >
-                            <span>{option.label}</span>
-                            {scale === option.value && <CheckIcon className="w-3 h-3" />}
-                          </button>
-                        ))}
-                      </div>
-                    </>
+                    <div className="absolute right-0 mt-2 w-24 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-30">
+                      {scaleOptions.map(option => (
+                        <button
+                          key={option.key}
+                          type="button"
+                          onClick={() => handleScaleChange(option.value)}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between cursor-pointer ${
+                            scale === option.value ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          {scale === option.value && <CheckIcon className="w-3 h-3" />}
+                        </button>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
@@ -1110,9 +1117,13 @@ function RecipeDetailPage() {
           </div>
 
           {enhancementError && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-red-600 dark:text-red-400 text-sm">{enhancementError}</p>
-            </div>
+            <AlertBanner
+              variant="error"
+              description={enhancementError}
+              onDismiss={() => setEnhancementError(null)}
+              className="mb-4"
+              isCompact
+            />
           )}
 
           {recipe.aiEnhancedNotes ? (

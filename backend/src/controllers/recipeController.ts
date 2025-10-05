@@ -13,10 +13,13 @@ import { join } from 'path'
 
 interface ScrapeRecipeRequest {
   url: string
+  targetLanguage?: string
+  additionalContext?: string
 }
 
 interface ParseTextRecipeRequest {
   text: string
+  additionalContext?: string
 }
 
 function parseServings(servings?: string): number | undefined {
@@ -352,7 +355,7 @@ export const recipeController = {
 
   async scrapeRecipe(req: Request, res: Response, next: NextFunction) {
     try {
-      const { url, targetLanguage }: ScrapeRecipeRequest & { targetLanguage?: string } = req.body
+  const { url, targetLanguage, additionalContext }: ScrapeRecipeRequest = req.body
 
       if (!url?.trim()) {
         throw createError('URL is required', 400)
@@ -425,15 +428,31 @@ export const recipeController = {
         image?: string
       } | null = null
 
-      const rawRecipeText = buildRecipeTextFromScrape(scrapedData, ingredients, instructions)
+      // Check if scraper returned an error
+      if (scrapedData.error) {
+        throw createError(`Failed to scrape recipe: ${scrapedData.error}`, 400)
+      }
 
-      if (rawRecipeText.trim().length > 0) {
-        try {
-          parsedDataFromGemini = await geminiService.parseRecipeText(rawRecipeText, targetLanguage)
-          console.log('Gemini parsed recipe data:', JSON.stringify(parsedDataFromGemini, null, 2))
-        } catch (error) {
-          console.warn('Gemini enhancement for scraped recipe failed:', error)
+      // Only call Gemini if the scraper successfully returned recipe data
+      const hasValidScrapedData = ingredients.length > 0 && instructions.length > 0
+
+      if (hasValidScrapedData) {
+        const rawRecipeText = buildRecipeTextFromScrape(scrapedData, ingredients, instructions)
+
+        if (rawRecipeText.trim().length > 0) {
+          try {
+            parsedDataFromGemini = await geminiService.parseRecipeText(
+              rawRecipeText,
+              targetLanguage,
+              additionalContext
+            )
+            console.log('Gemini parsed recipe data:', JSON.stringify(parsedDataFromGemini, null, 2))
+          } catch (error) {
+            console.warn('Gemini enhancement for scraped recipe failed:', error)
+          }
         }
+      } else {
+        throw createError('No recipe data found at the provided URL. The scraper could not extract ingredients or instructions.', 404)
       }
 
       const transformedData = {
@@ -464,11 +483,25 @@ export const recipeController = {
     } catch (error) {
       // Handle specific scraper errors
       if (error instanceof Error) {
+        // Check for unsupported website
+        if (error.message.includes('not supported') || error.message.includes('not currently supported')) {
+          throw createError('This website is not currently supported by the recipe scraper. Try using the "Text" or "Image" import options instead.', 400)
+        }
+        // Check for 404 errors
         if (error.message.includes('404') || error.message.includes('not found')) {
           throw createError('Recipe not found at the provided URL', 404)
         }
+        // Check for network errors
         if (error.message.includes('timeout') || error.message.includes('network')) {
           throw createError('Unable to reach the website. Please check the URL and try again.', 500)
+        }
+        // Check for recipe-scrapers specific errors
+        if (error.message.includes('recipe-scrapers')) {
+          // Extract the actual error message from the scraper output
+          const match = error.message.match(/exception: (.+?)(?:\n|$)/)
+          if (match) {
+            throw createError(`Scraper error: ${match[1]}`, 400)
+          }
         }
       }
       next(error)
@@ -477,7 +510,7 @@ export const recipeController = {
 
   async parseTextRecipe(req: Request, res: Response, next: NextFunction) {
     try {
-      const { text, targetLanguage }: ParseTextRecipeRequest & { targetLanguage?: string } = req.body
+  const { text, targetLanguage }: ParseTextRecipeRequest & { targetLanguage?: string } = req.body
 
       if (!text?.trim()) {
         throw createError('Recipe text is required', 400)
@@ -520,14 +553,14 @@ export const recipeController = {
 
   async parseTextRecipeGemini(req: Request, res: Response, next: NextFunction) {
     try {
-      const { text, targetLanguage }: ParseTextRecipeRequest & { targetLanguage?: string } = req.body
+  const { text, targetLanguage, additionalContext }: ParseTextRecipeRequest & { targetLanguage?: string; additionalContext?: string } = req.body
 
       if (!text?.trim()) {
         throw createError('Recipe text is required', 400)
       }
 
       // Parse the text using Gemini
-      const parsedData = await geminiService.parseRecipeText(text, targetLanguage)
+  const parsedData = await geminiService.parseRecipeText(text, targetLanguage, additionalContext)
 
       // Transform to match scraper response format
       const transformedData = {

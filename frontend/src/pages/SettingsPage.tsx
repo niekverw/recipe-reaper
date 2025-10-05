@@ -4,6 +4,7 @@ import { apiService } from '../services/api'
 import { Household } from '../types/user'
 import { generatePKCEPair } from '../utils/pkce'
 import { SUPPORTED_LANGUAGES, getLanguageName } from '../constants/languages'
+import AlertBanner from '../components/AlertBanner'
 import {
   UserIcon,
   Cog6ToothIcon,
@@ -245,30 +246,20 @@ function SettingsPage() {
 
       {/* Success Message */}
       {success && (
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-          <div className="flex items-center gap-2">
-            <CheckIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
-            <p className="text-green-700 dark:text-green-400">{success}</p>
-          </div>
-        </div>
+        <AlertBanner
+          variant="success"
+          description={success}
+          onDismiss={() => setSuccess(null)}
+        />
       )}
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ExclamationTriangleIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
-              <p className="text-red-700 dark:text-red-400">{error}</p>
-            </div>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
+        <AlertBanner
+          variant="error"
+          description={error}
+          onDismiss={() => setError(null)}
+        />
       )}
 
       {/* Profile Section */}

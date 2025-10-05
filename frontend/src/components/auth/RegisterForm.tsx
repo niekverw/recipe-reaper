@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { RegisterData } from '../../types/user'
+import AlertBanner from '../AlertBanner'
 
 interface RegisterFormProps {
   onSuccess?: () => void
@@ -158,9 +159,12 @@ function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) {
           </div>
 
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-              <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
-            </div>
+            <AlertBanner
+              variant="error"
+              description={error}
+              onDismiss={() => setError(null)}
+              isCompact
+            />
           )}
 
           <button
