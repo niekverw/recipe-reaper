@@ -1,6 +1,6 @@
 # Recipe App Backend
 
-A Node.js/Express API for managing recipes with web scraping capabilities.
+A comprehensive Node.js/Express API for recipe management, web scraping, AI-powered recipe parsing, and intelligent ingredient categorization with 377+ ingredients across grocery store sections.
 
 ## Quick Run: 
 ```bash
@@ -19,11 +19,17 @@ npm install
 python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
 ```
 
-**3. Start the server:**
+**3. Set up ingredient categorizer (optional - for development):**
 ```bash
-npm run dev  # Development with auto-reload
+cd ../packages/ingredient-categorizer && npm install
+```
+
+**4. Start the server:**
+```bash
+cd ../backend  # Return to backend directory
+npm run dev    # Development with auto-reload
 # or
-npm start    # Production build
+npm start      # Production build
 ```
 
 **Test scraping:**
@@ -33,6 +39,16 @@ python scraper.py "https://cooking.nytimes.com/recipes/1027165-eggplant-chickpea
 
 ## API Endpoints
 
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user
+- `POST /api/auth/logout` - Logout user
+- `GET /api/auth/profile` - Get current user profile
+- `GET /api/auth/status` - Check authentication status
+- `GET /api/auth/google` - Initiate Google OAuth
+- `GET /api/auth/google/callback` - Handle Google OAuth callback
+- `PATCH /api/auth/translation-preference` - Update user's default translation language
+
 ### Recipes
 - `GET /api/recipes` - List recipes (with filtering)
 - `POST /api/recipes` - Create recipe
@@ -40,11 +56,35 @@ python scraper.py "https://cooking.nytimes.com/recipes/1027165-eggplant-chickpea
 - `PUT /api/recipes/:id` - Update recipe
 - `DELETE /api/recipes/:id` - Delete recipe
 - `POST /api/recipes/scrape` - Scrape recipe from URL
+- `GET /api/recipes/tags` - Get all unique tags
+- `GET /api/recipes/check-name` - Check if recipe name exists
+- `POST /api/recipes/parse-text` - Parse recipe from text (OpenAI)
+- `POST /api/recipes/parse-text-gemini` - Parse recipe from text (Gemini)
+- `POST /api/recipes/parse-image` - Parse recipe from image
+- `POST /api/recipes/upload-image` - Upload recipe image
+- `DELETE /api/recipes/delete-image/:filename` - Delete uploaded image
+- `POST /api/recipes/:id/copy` - Copy a recipe
+- `POST /api/recipes/:id/enhance` - Enhance recipe with AI
 
 ### Ingredients
 - `POST /api/ingredients/parse` - Parse ingredient strings
 - `POST /api/ingredients/scale` - Scale ingredient quantities
 - `POST /api/ingredients/parse-text` - Parse from multiline text
+
+### Households
+- `POST /api/households` - Create new household
+- `POST /api/households/join` - Join household by invite code
+- `POST /api/households/leave` - Leave current household
+- `GET /api/households/current` - Get current user's household
+- `POST /api/households/regenerate-invite` - Regenerate invite code
+
+### Shopping List
+- `GET /api/shopping-list` - Get user's shopping list
+- `POST /api/shopping-list` - Add ingredients to shopping list
+- `PUT /api/shopping-list/:id` - Update shopping list item
+- `DELETE /api/shopping-list/:id` - Remove item from shopping list
+- `DELETE /api/shopping-list/completed` - Clear completed items
+- `DELETE /api/shopping-list` - Clear all items
 
 ### Health
 - `GET /health` - Server health check
@@ -71,6 +111,48 @@ python scraper.py "https://cooking.nytimes.com/recipes/1027165-eggplant-chickpea
 - Parse ingredient strings into structured data
 - Scale recipes up/down
 - Handle various measurement formats
+- **Smart ingredient categorization** for grocery shopping
+- Support for 377+ ingredient types across categories (produce, dairy, meats, pantry items, etc.)
+
+### AI-Powered Features
+- **Recipe parsing** from text and images using OpenAI GPT-3.5-turbo and Google Gemini 2.5-flash-lite
+- **Recipe enhancement** with AI-generated improvements and suggestions
+- **Translation and language detection** 
+- **Intelligent ingredient extraction** from natural language descriptions
+- **Fallback AI services** for reliable recipe processing
+
+### AI Services Integration
+
+The backend integrates multiple AI services for intelligent recipe processing:
+
+#### OpenAI GPT-3.5-turbo (`openaiService.ts`)
+- **Primary use**: Recipe parsing from text descriptions
+- **Fallback service**: Used when Gemini is unavailable
+- **Configuration**: Requires `OPENAI_API_KEY` environment variable
+
+#### Google Gemini 2.5-flash-lite (`geminiService.ts`, `recipeEnhancementService.ts`)
+- **Primary use**: Recipe parsing from text and images, recipe enhancement
+- **Advanced features**: Can process both text and image inputs for recipes
+- **Configuration**: Requires `GEMINI_API_KEY` environment variable
+
+#### Service Architecture
+```
+Recipe Input → Primary AI Service → Structured Recipe Data
+                    ↓ (if fails)
+              Fallback AI Service → Structured Recipe Data
+```
+
+#### Error Handling
+- Automatic fallback between AI services
+- Graceful degradation if all AI services fail
+- Comprehensive error logging and user feedback
+- Rate limiting and retry logic for API calls
+
+### Ingredient Categorization
+- Automatic categorization of ingredients for shopping lists
+- Grocery store section mapping (produce, dairy, meats, pantry, etc.)
+- Extensible ingredient database with keyword matching
+- Supports plant-based alternatives and international ingredients
 
 ## Development
 
@@ -92,8 +174,9 @@ npm run test:coverage # Test coverage
 ### Architecture
 ```
 Express API → Controllers → Models → PostgreSQL Database
-                    ↓
-            Python Scraper (for web scraping)
+                    ↓                    ↓
+            Python Scraper     Ingredient Categorizer
+            (web scraping)     (shopping categorization)
 ```
 
 ### Environment
@@ -137,6 +220,16 @@ backend/
 ├── requirements.txt    # Python dependencies
 ├── package.json        # Node.js dependencies
 └── README.md          # This file
+
+packages/
+└── ingredient-categorizer/  # Ingredient categorization package
+    ├── src/
+    │   ├── data/           # Ingredient database (ingredients.json)
+    │   ├── index.ts        # Main categorization logic
+    │   └── types.ts        # Type definitions
+    ├── tests/              # Unit tests
+    ├── package.json        # Package configuration
+    └── README.md          # Package documentation
 ```
 
 ## Overview
@@ -341,6 +434,52 @@ If you encounter issues with the virtual environment:
 - Error handling is implemented both in Python and Node.js layers
 - The scraper respects website terms of service and doesn't circumvent bot protection
 
+## Ingredient Categorizer Package
+
+The ingredient categorization functionality is implemented as a separate TypeScript package that provides intelligent categorization of ingredients for grocery shopping lists.
+
+### What It Does
+
+- **Categorizes ingredients** into grocery store sections (produce, dairy, meats, pantry, etc.)
+- **Keyword-based matching** against a comprehensive ingredient database
+- **Extensible design** - easy to add new ingredients and categories
+- **Supports multiple variations** of ingredient names (e.g., "scallions" = "green onions")
+- **Recently updated** with plant-based proteins, fermented foods, and specialty greens
+
+### Database Structure
+
+The ingredient database (`packages/ingredient-categorizer/src/data/ingredients.json`) contains 377+ ingredients with the following structure:
+
+```json
+{
+  "displayName": "Tomatoes",
+  "category": "PRODUCE",
+  "keywords": ["tomato", "cherry tomato", "roma tomato", "fresh tomato"],
+  "excludeKeywords": ["canned", "paste", "sauce"]
+}
+```
+
+**Categories include:**
+- **PRODUCE** (fruits, vegetables, herbs, specialty greens)
+- **DAIRY_EGGS** (milk, cheese, eggs, yogurt, fermented dairy)
+- **MEAT_SEAFOOD** (beef, chicken, fish, pork, plant-based alternatives)
+- **GRAINS_PASTA** (rice, pasta, grains, legumes, pseudocereals)
+- **PANTRY** (oils, spices, canned goods, condiments, baking essentials)
+- **SNACKS_BEVERAGES** (nuts, seeds, snacks, drinks, specialty items)
+
+### Usage
+
+The categorizer is used by the backend API to automatically organize shopping lists by grocery store sections, making shopping more efficient.
+
+### Adding New Ingredients
+
+To add new ingredients to the database:
+
+1. Edit `packages/ingredient-categorizer/src/data/ingredients.json`
+2. Add a new object with `displayName`, `category`, and `keywords` array
+3. Optionally add `excludeKeywords` to prevent false matches
+4. Run tests to ensure JSON validity
+
 ### Dependencies
 
 **Python Dependencies:**
@@ -351,19 +490,61 @@ If you encounter issues with the virtual environment:
 - Standard Node.js packages (see `package.json`)
 - No additional Python-related packages needed
 
+**Ingredient Categorizer:**
+- TypeScript package with comprehensive ingredient database
+- No external runtime dependencies
+- Uses JSON data file for ingredient definitions
+
 ### Environment Variables
 
 No environment variables are required for the Python scraper functionality. The virtual environment path is resolved relative to the backend directory.
+
+### API Configuration
+
+The backend integrates with several external APIs for enhanced functionality:
+
+#### Required Environment Variables
+```bash
+# AI Services (at least one required for recipe parsing)
+OPENAI_API_KEY=your_openai_api_key_here          # Optional - GPT-3.5-turbo
+GEMINI_API_KEY=your_gemini_api_key_here          # Required - gemini-2.5-flash-lite
+
+# Google OAuth (required for user authentication)
+GOOGLE_CLIENT_ID=your_google_client_id_here
+GOOGLE_CLIENT_SECRET=your_google_client_secret_here
+GOOGLE_CALLBACK_URL=http://localhost:3001/api/auth/google/callback
+
+# Database (required)
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=recipeapp
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+
+# Security (required)
+SESSION_SECRET=your-secure-random-session-secret-here
+```
+
+#### Optional Environment Variables
+```bash
+PORT=3001                                      # Server port
+NODE_ENV=development                           # Environment mode
+FRONTEND_URL=http://localhost:5173             # CORS allowed origins
+ALLOW_PUBLIC_API=false                         # Public API access control
+```
 
 ### Version Control
 
 - **Commit these files:**
   - `requirements.txt` - Python dependencies
   - `scraper.py` - Python scraper script
+  - `packages/ingredient-categorizer/src/data/ingredients.json` - Ingredient database
+  - `packages/ingredient-categorizer/package.json` - Package configuration
   - This README
 
 - **Do not commit:**
   - `venv/` directory (should be in `.gitignore`)
   - Any `__pycache__/` directories
+  - `packages/ingredient-categorizer/node_modules/` (if present)
 
 The virtual environment should be recreated locally using the setup instructions above.
