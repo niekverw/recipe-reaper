@@ -24,6 +24,10 @@ interface RecipeRow {
   tags: string | null
   user_id: string | null
   household_id: string | null
+  original_scraped_data: string | null
+  original_text_input: string | null
+  import_additional_context: string | null
+  language: string | null
   created_at: string
   updated_at: string
   is_household_member?: boolean  // Computed field to check if creator is in user's household
@@ -69,6 +73,10 @@ function rowToRecipe(row: RecipeRow, currentUserId?: string, currentHouseholdId?
     tags: parsedTags,
     userId: row.user_id || undefined,
     householdId: row.household_id || undefined,
+    originalScrapedData: row.original_scraped_data || undefined,
+    originalTextInput: row.original_text_input || undefined,
+    importAdditionalContext: row.import_additional_context || undefined,
+    language: row.language || undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     canEdit
@@ -266,11 +274,15 @@ export const recipeModel = {
       householdId = data.householdId || null
     }
 
+    const normalizedLanguage = data.language ? data.language.trim().toLowerCase() : null
+
     const sql = `
       INSERT INTO recipes (
         id, name, description, prep_time_minutes, cook_time_minutes, total_time_minutes, servings,
-        ingredients, instructions, image, image_sizes, source_url, is_public, user_id, household_id, copied_from, tags, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+        ingredients, instructions, image, image_sizes, source_url, is_public, user_id, household_id, copied_from, tags,
+        original_scraped_data, original_text_input, import_additional_context, language,
+        created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
     `
 
     const params = [
@@ -291,6 +303,10 @@ export const recipeModel = {
       householdId,
       data.copiedFrom || null,
       JSON.stringify(normalizedTags),
+      data.originalScrapedData || null,
+      data.originalTextInput || null,
+      data.importAdditionalContext || null,
+      normalizedLanguage,
       now,
       now
     ]
@@ -361,6 +377,11 @@ export const recipeModel = {
       updates.push(`tags = $${params.length + 1}`)
       const normalizedTags = TagHelper.normalizeTags(data.tags || [])
       params.push(JSON.stringify(normalizedTags))
+    }
+    if (data.language !== undefined) {
+      updates.push(`language = $${params.length + 1}`)
+      const normalizedLanguage = data.language ? data.language.trim().toLowerCase() : null
+      params.push(normalizedLanguage)
     }
 
     updates.push(`updated_at = $${params.length + 1}`)

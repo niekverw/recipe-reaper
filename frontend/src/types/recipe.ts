@@ -11,6 +11,7 @@ export interface Recipe {
   image?: string
   sourceUrl?: string
   tags?: string[]
+  language?: string
   createdAt: string
   updatedAt: string
 }

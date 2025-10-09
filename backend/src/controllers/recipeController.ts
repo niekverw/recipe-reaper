@@ -10,6 +10,7 @@ import { imageService } from '../services/imageService'
 import { User } from '../types/user'
 import { spawn } from 'child_process'
 import { join } from 'path'
+import { isSupportedLanguage, SUPPORTED_LANGUAGE_CODES } from '../utils/languageHelper'
 
 interface ScrapeRecipeRequest {
   url: string
@@ -103,7 +104,7 @@ function buildRecipeTextFromScrape(data: any, ingredients: string[], instruction
 
 async function scrapeWithPython(url: string): Promise<any> {
   return new Promise((resolve, reject) => {
-    const pythonExecutable = join(__dirname, '../../venv/bin/python')
+    const pythonExecutable = join(__dirname, '../../../.venv/bin/python')
     const scraperScript = join(__dirname, '../../scraper.py')
 
     const pythonProcess = spawn(pythonExecutable, [scraperScript, url], {
@@ -239,6 +240,17 @@ export const recipeController = {
 
       const recipeData: CreateRecipeRequest = req.body
 
+      const normalizedLanguage = recipeData.language?.trim().toLowerCase()
+
+      if (!normalizedLanguage || !isSupportedLanguage(normalizedLanguage)) {
+        throw createError(
+          `A valid recipe language is required. Supported codes: ${SUPPORTED_LANGUAGE_CODES.join(', ')}`,
+          400
+        )
+      }
+
+      recipeData.language = normalizedLanguage
+
       // Validation
       if (!recipeData.name?.trim()) {
         throw createError('Recipe name is required', 400)
@@ -316,6 +328,30 @@ export const recipeController = {
           // Continue with update using original URL if processing fails
         }
       }
+
+      const normalizedUpdateLanguage = updates.language !== undefined
+        ? updates.language?.trim().toLowerCase()
+        : undefined
+      if (updates.language !== undefined) {
+        if (!normalizedUpdateLanguage || !isSupportedLanguage(normalizedUpdateLanguage)) {
+          throw createError(
+            `A valid recipe language is required. Supported codes: ${SUPPORTED_LANGUAGE_CODES.join(', ')}`,
+            400
+          )
+        }
+      }
+
+      const normalizedExistingLanguage = existingRecipe.language?.trim().toLowerCase()
+      const effectiveLanguage = normalizedUpdateLanguage ?? normalizedExistingLanguage
+
+      if (!effectiveLanguage || !isSupportedLanguage(effectiveLanguage)) {
+        throw createError(
+          `A valid recipe language is required. Supported codes: ${SUPPORTED_LANGUAGE_CODES.join(', ')}`,
+          400
+        )
+      }
+
+      updates.language = effectiveLanguage
 
       const updatedRecipe = await recipeModel.update(id, updates)
       res.json({ recipe: updatedRecipe })
@@ -426,6 +462,7 @@ export const recipeController = {
         totalTimeMinutes?: number
         servings?: number
         image?: string
+        language?: string
       } | null = null
 
       // Check if scraper returned an error
@@ -476,7 +513,10 @@ export const recipeController = {
         totalTimeMinutes:
           parsedDataFromGemini?.totalTimeMinutes ?? scrapedData.totalTimeMinutes ?? undefined,
         servings:
-          parsedDataFromGemini?.servings ?? parseServings(scrapedData.yields)
+          parsedDataFromGemini?.servings ?? parseServings(scrapedData.yields),
+        language: parsedDataFromGemini?.language ?? (scrapedData.language as string | undefined),
+        originalScrapedData: JSON.stringify(scrapedData),
+        importAdditionalContext: additionalContext
       }
 
       res.json({ recipeData: transformedData })
@@ -530,7 +570,9 @@ export const recipeController = {
         totalTimeMinutes: parsedData.totalTimeMinutes,
         servings: parsedData.servings,
         image: parsedData.image,
-        sourceUrl: undefined // No source URL for text input
+        sourceUrl: undefined, // No source URL for text input
+        language: parsedData.language,
+        originalTextInput: text
       }
 
       res.json({ recipeData: transformedData })
@@ -573,7 +615,10 @@ export const recipeController = {
         totalTimeMinutes: parsedData.totalTimeMinutes,
         servings: parsedData.servings,
         image: parsedData.image,
-        sourceUrl: undefined // No source URL for text input
+        sourceUrl: undefined, // No source URL for text input
+        language: parsedData.language,
+        originalTextInput: text,
+        importAdditionalContext: additionalContext
       }
 
       res.json({ recipeData: transformedData })
@@ -624,7 +669,8 @@ export const recipeController = {
         instructions: recipe.instructions,
         prepTimeMinutes: recipe.prepTimeMinutes,
         cookTimeMinutes: recipe.cookTimeMinutes,
-        servings: recipe.servings
+        servings: recipe.servings,
+        language: recipe.language
       }
 
       // Generate AI enhancement
@@ -685,7 +731,8 @@ export const recipeController = {
         totalTimeMinutes: parsedData.totalTimeMinutes,
         servings: parseServings(parsedData.servings?.toString()),
         image: storedImage.url,
-        imageSizes: storedImage.sizes
+        imageSizes: storedImage.sizes,
+        language: parsedData.language
       }
 
       res.json({

@@ -27,6 +27,11 @@ export interface Recipe {
   // Simplified 2-level privacy: private (personal/household) vs public
   userId?: string
   householdId?: string
+  // Original input tracking (stores pre-AI processing data)
+  originalScrapedData?: string // JSON string of raw scraper output (URL imports)
+  originalTextInput?: string // Original recipe text (text imports)
+  importAdditionalContext?: string // Additional context from "+" button
+  language?: string // ISO 639-1 language code (2 letters) detected by AI
   createdAt: string
   updatedAt: string
   // Permissions computed based on current user context
@@ -56,6 +61,11 @@ export interface CreateRecipeRequest {
   userId?: string
   householdId?: string
   copiedFrom?: string
+  // Original input tracking (stores pre-AI processing data)
+  originalScrapedData?: string
+  originalTextInput?: string
+  importAdditionalContext?: string
+  language?: string
 }
 
 export interface UpdateRecipeRequest {
@@ -77,6 +87,7 @@ export interface UpdateRecipeRequest {
   sourceUrl?: string
   isPublic?: boolean
   tags?: string[]
+  language?: string
 }
 
 export interface RecipeFilters {

@@ -207,7 +207,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
 
       expect(screen.getByText('Import from URL')).toBeInTheDocument()
       expect(screen.getByPlaceholderText('https://example.com/recipe')).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /import recipe/i })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /^import(ing\.\.\.)?$/i })).toBeInTheDocument()
     })
 
     it('should not show URL import section when editing recipe', () => {
@@ -242,7 +242,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
       renderRecipeFormPage()
 
       const urlInput = screen.getByPlaceholderText('https://example.com/recipe')
-      const importButton = screen.getByRole('button', { name: /import recipe/i })
+  const importButton = screen.getByRole('button', { name: /^import(ing\.\.\.)?$/i })
 
       // Enter URL
   await user.type(urlInput, 'https://example.com/recipe')
@@ -287,7 +287,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
       renderRecipeFormPage()
 
       const urlInput = screen.getByPlaceholderText('https://example.com/recipe')
-      const importButton = screen.getByRole('button', { name: /import recipe/i })
+  const importButton = screen.getByRole('button', { name: /^import(ing\.\.\.)?$/i })
 
   await user.type(urlInput, 'https://example.com/recipe')
   await user.click(importButton)
@@ -312,7 +312,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
     it('should handle empty URL validation', async () => {
       renderRecipeFormPage()
 
-      const importButton = screen.getByRole('button', { name: /import recipe/i })
+  const importButton = screen.getByRole('button', { name: /^import(ing\.\.\.)?$/i })
 
       // Try to import without URL
   await user.click(importButton)
@@ -333,7 +333,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
       renderRecipeFormPage()
 
       const urlInput = screen.getByPlaceholderText('https://example.com/recipe')
-      const importButton = screen.getByRole('button', { name: /import recipe/i })
+  const importButton = screen.getByRole('button', { name: /^import(ing\.\.\.)?$/i })
 
   await user.type(urlInput, 'https://invalid-url.com/recipe')
   await user.click(importButton)
@@ -350,7 +350,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
       renderRecipeFormPage()
 
       const urlInput = screen.getByPlaceholderText('https://example.com/recipe')
-      const importButton = screen.getByRole('button', { name: /import recipe/i })
+  const importButton = screen.getByRole('button', { name: /^import(ing\.\.\.)?$/i })
 
       await user.type(urlInput, 'https://example.com/recipe')
       await user.click(importButton)
@@ -375,7 +375,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
 
       // Try to import
       const urlInput = screen.getByPlaceholderText('https://example.com/recipe')
-      const importButton = screen.getByRole('button', { name: /import recipe/i })
+  const importButton = screen.getByRole('button', { name: /^import(ing\.\.\.)?$/i })
 
       await user.type(urlInput, 'https://example.com/recipe')
       await user.click(importButton)
@@ -403,7 +403,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
 
       // Try to import
       const urlInput = screen.getByPlaceholderText('https://example.com/recipe')
-      const importButton = screen.getByRole('button', { name: /import recipe/i })
+  const importButton = screen.getByRole('button', { name: /^import(ing\.\.\.)?$/i })
 
       await user.type(urlInput, 'https://example.com/recipe')
       await user.click(importButton)
@@ -416,7 +416,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
     it('should indicate import button is inactive when URL is empty', () => {
       renderRecipeFormPage()
 
-      const importButton = screen.getByRole('button', { name: /import recipe/i })
+  const importButton = screen.getByRole('button', { name: /^import(ing\.\.\.)?$/i })
       expect(importButton).not.toBeDisabled()
       expect(importButton).toHaveAttribute('aria-disabled', 'true')
     })
@@ -425,7 +425,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
       renderRecipeFormPage()
 
       const urlInput = screen.getByPlaceholderText('https://example.com/recipe')
-      const importButton = screen.getByRole('button', { name: /import recipe/i })
+  const importButton = screen.getByRole('button', { name: /^import(ing\.\.\.)?$/i })
 
       await user.type(urlInput, 'https://example.com/recipe')
       expect(importButton).not.toBeDisabled()
@@ -456,7 +456,7 @@ describe('RecipeFormPage - URL Import Feature', () => {
       await userEvent.type(instructionsInput, 'Mix and bake')
 
       // Submit form
-      const submitButton = screen.getByRole('button', { name: /save recipe/i })
+      const submitButton = screen.getByRole('button', { name: /save/i })
       await userEvent.click(submitButton)
 
       // Verify API was called with correct data structure

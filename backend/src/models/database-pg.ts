@@ -188,6 +188,28 @@ export class PostgreSQLDatabase {
         ADD COLUMN IF NOT EXISTS display_name TEXT
       `)
 
+      // Add original input tracking columns to recipes table (for migration)
+      await client.query(`
+        ALTER TABLE recipes
+        ADD COLUMN IF NOT EXISTS original_scraped_data TEXT
+      `)
+
+      await client.query(`
+        ALTER TABLE recipes
+        ADD COLUMN IF NOT EXISTS original_text_input TEXT
+      `)
+
+      await client.query(`
+        ALTER TABLE recipes
+        ADD COLUMN IF NOT EXISTS import_additional_context TEXT
+      `)
+
+      // Add language column to recipes table (for migration)
+      await client.query(`
+        ALTER TABLE recipes
+        ADD COLUMN IF NOT EXISTS language VARCHAR(2)
+      `)
+
       await client.query('COMMIT')
       console.log('PostgreSQL tables and indexes created successfully')
     } catch (error) {

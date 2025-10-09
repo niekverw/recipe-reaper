@@ -37,6 +37,11 @@ interface RecipeFormData {
   sourceUrl?: string
   tags: string[]
   isPublic?: boolean
+  // Original input tracking
+  originalScrapedData?: string
+  originalTextInput?: string
+  importAdditionalContext?: string
+  language: string
 }
 
 
@@ -63,7 +68,8 @@ function RecipeFormPage() {
     imageSizes: undefined,
     sourceUrl: undefined,
     tags: [],
-    isPublic: true // Default to public
+    isPublic: true, // Default to public
+    language: user?.defaultTranslationLanguage || 'en'
   })
 
   const [loading, setLoading] = useState(false)
@@ -124,7 +130,8 @@ function RecipeFormPage() {
         imageSizes: copiedRecipe.imageSizes,
         sourceUrl: copiedRecipe.sourceUrl,
         tags: copiedRecipe.tags || [],
-        isPublic: false // Copied recipes default to private
+        isPublic: false, // Copied recipes default to private
+        language: copiedRecipe.language || user?.defaultTranslationLanguage || 'en'
       })
       setPreviousImageUrl(copiedRecipe.image || '')
       setOriginalImageUrl(copiedRecipe.image || '')
@@ -231,12 +238,15 @@ function RecipeFormPage() {
         ingredients: IngredientHelper.toTextareaFormat(recipe.ingredients),
         instructions: recipe.instructions.join('\n'),
         prepTimeMinutes: recipe.prepTimeMinutes,
+        cookTimeMinutes: recipe.cookTimeMinutes,
+        totalTimeMinutes: recipe.totalTimeMinutes,
         servings: recipe.servings,
         image: recipe.image || '',
         imageSizes: recipe.imageSizes,
         sourceUrl: recipe.sourceUrl,
         tags: recipe.tags || [],
-        isPublic: recipe.isPublic
+        isPublic: recipe.isPublic,
+        language: recipe.language || user?.defaultTranslationLanguage || 'en'
       })
       setPreviousImageUrl(recipe.image || '')
       setOriginalImageUrl(recipe.image || '')
@@ -248,7 +258,7 @@ function RecipeFormPage() {
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
 
     let processedValue: string | number | undefined = value
@@ -272,10 +282,15 @@ function RecipeFormPage() {
         }
       }
       // External URLs are kept as-is
+    } else if (
+      name === 'prepTimeMinutes' ||
+      name === 'cookTimeMinutes' ||
+      name === 'totalTimeMinutes' ||
+      name === 'servings'
+    ) {
+      processedValue = value === '' ? undefined : Number(value)
     } else {
-      processedValue = name === 'prepTimeMinutes' || name === 'servings'
-        ? (value === '' ? undefined : Number(value))
-        : value
+      processedValue = value
     }
 
     setFormData(prev => ({
@@ -402,7 +417,11 @@ function RecipeFormPage() {
     imageSizes: undefined,
     sourceUrl: recipeData.sourceUrl ?? targetUrl,
     tags: prev.tags,
-    isPublic: prev.isPublic
+    isPublic: prev.isPublic,
+    // Store original input data
+    originalScrapedData: recipeData.originalScrapedData,
+    importAdditionalContext: recipeData.importAdditionalContext,
+    language: recipeData.language || prev.language
   }))
 
       // Clear import URL
@@ -440,7 +459,8 @@ function RecipeFormPage() {
       }
 
       // Update form with imported data
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         name: recipeData.name,
         description: recipeData.description,
         ingredients: recipeData.ingredients.join('\n'),
@@ -453,8 +473,11 @@ function RecipeFormPage() {
         imageSizes: undefined,
         sourceUrl: recipeData.sourceUrl,
         tags: [],
-        isPublic: true
-      })
+        isPublic: true,
+        // Store original input data
+        originalTextInput: recipeData.originalTextInput,
+        language: recipeData.language || prev.language
+      }))
 
       // Clear import text
       setImportText('')
@@ -494,7 +517,8 @@ function RecipeFormPage() {
       }
 
       // Update form with imported data
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         name: recipeData.name,
         description: recipeData.description,
         ingredients: recipeData.ingredients.join('\n'),
@@ -507,8 +531,12 @@ function RecipeFormPage() {
         imageSizes: undefined,
         sourceUrl: recipeData.sourceUrl,
         tags: [],
-        isPublic: true
-      })
+        isPublic: true,
+        // Store original input data
+        originalTextInput: recipeData.originalTextInput,
+        importAdditionalContext: recipeData.importAdditionalContext,
+        language: recipeData.language || prev.language
+      }))
 
       // Clear import text
       setImportText('')
@@ -555,7 +583,8 @@ function RecipeFormPage() {
       }
 
       // Update form with imported data
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         name: recipeData.name,
         description: recipeData.description,
         ingredients: recipeData.ingredients.join('\n'),
@@ -568,8 +597,9 @@ function RecipeFormPage() {
         imageSizes: undefined,
         sourceUrl: recipeData.sourceUrl,
         tags: [],
-        isPublic: true
-      })
+        isPublic: true,
+        language: recipeData.language || prev.language
+      }))
 
       // Clear import image
       setImportImage(null)
@@ -646,6 +676,11 @@ function RecipeFormPage() {
       return
     }
 
+    if (!formData.language?.trim()) {
+      setError('Recipe language is required')
+      return
+    }
+
     if (!user) {
       setError('You must be logged in to save recipes')
       return
@@ -687,7 +722,12 @@ function RecipeFormPage() {
         sourceUrl: formData.sourceUrl?.trim() || '',
         tags: formData.tags,
         isPublic: formData.isPublic,
-        householdId: household?.id
+        householdId: household?.id,
+        // Pass original input data
+        originalScrapedData: formData.originalScrapedData,
+        originalTextInput: formData.originalTextInput,
+        importAdditionalContext: formData.importAdditionalContext,
+        language: formData.language.trim()
       }
 
       let savedRecipe: Recipe
@@ -788,8 +828,18 @@ function RecipeFormPage() {
     )
   }
 
+  const isFormValid = Boolean(
+    formData.name.trim() &&
+      formData.description.trim() &&
+      formData.ingredients.trim() &&
+      formData.instructions.trim() &&
+      formData.language?.trim()
+  )
+
+  const canShowFloatingActions = Boolean(user && isFormValid && !loading)
+
   return (
-    <div className="px-4 py-6 max-w-3xl mx-auto space-y-6">
+    <div className="px-4 py-6 max-w-3xl mx-auto pb-20">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button
@@ -943,77 +993,51 @@ function RecipeFormPage() {
               <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
                 Paste a recipe URL to automatically fill in the form with recipe data from supported websites.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <input
-                  type="text"
-                  value={importUrl}
-                  onChange={(e) => setImportUrl(e.target.value)}
-                  placeholder="https://example.com/recipe"
-                  className="flex-1 px-3 py-2 border border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-blue-900/30 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  disabled={isImporting}
-                  pattern="https?://.*"
-                  title="Please enter a valid URL starting with http:// or https://"
-                  inputMode="url"
-                  autoComplete="off"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck="false"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsUrlGeminiContextOpen(prev => {
-                      const next = !prev
-                      if (!next) {
-                        setUrlGeminiContext('')
-                      }
-                      return next
-                    })
-                  }}
-                  className={`sm:self-center inline-flex items-center justify-center w-8 h-8 rounded-md border transition-colors focus:outline-none focus:ring-2 focus:ring-green-500/60 dark:focus:ring-green-400/60 ${
-                    isUrlGeminiContextOpen
-                      ? 'border-green-500 bg-green-50 text-green-700 dark:border-green-400 dark:bg-green-900/40 dark:text-green-100'
-                      : 'border-green-200 text-green-700 hover:bg-green-50 dark:border-green-600 dark:text-green-200 dark:hover:bg-green-900/30'
-                  } ${isImporting ? 'opacity-80 cursor-not-allowed' : ''}`}
-                  aria-expanded={isUrlGeminiContextOpen}
-                  aria-controls="url-gemini-extra-context"
-                  aria-label={isUrlGeminiContextOpen ? 'Hide extra Gemini note' : 'Add note for Gemini'}
-                  disabled={isImporting}
-                >
-                  {isUrlGeminiContextOpen ? (
-                    <MinusIcon className="w-4 h-4" />
-                  ) : (
-                    <PlusIcon className="w-4 h-4" />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (isImporting) return
-                    handleImport()
-                  }}
-                  aria-disabled={!canImportFromUrl}
-                  disabled={isImporting}
-                  className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors duration-200 ${
-                    canImportFromUrl ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-400 cursor-not-allowed'
-                  } ${isImporting ? 'opacity-80 cursor-not-allowed' : ''}`}
-                >
-                  {isImporting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Importing...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                      </svg>
-                      Import
-                    </>
-                  )}
-                </button>
-              </div>
-              <div className="mt-3 space-y-3">
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={importUrl}
+                    onChange={(e) => setImportUrl(e.target.value)}
+                    placeholder="https://example.com/recipe"
+                    className="flex-1 px-3 py-2 border border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-blue-900/30 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    disabled={isImporting}
+                    pattern="https?://.*"
+                    title="Please enter a valid URL starting with http:// or https://"
+                    inputMode="url"
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck="false"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsUrlGeminiContextOpen(prev => {
+                        const next = !prev
+                        if (!next) {
+                          setUrlGeminiContext('')
+                        }
+                        return next
+                      })
+                    }}
+                    className={`inline-flex items-center justify-center px-3 py-2 rounded-md border transition-colors focus:outline-none focus:ring-2 focus:ring-green-500/60 dark:focus:ring-green-400/60 ${
+                      isUrlGeminiContextOpen
+                        ? 'border-green-500 bg-green-50 text-green-700 dark:border-green-400 dark:bg-green-900/40 dark:text-green-100'
+                        : 'border-green-200 text-green-700 hover:bg-green-50 dark:border-green-600 dark:text-green-200 dark:hover:bg-green-900/30'
+                    } ${isImporting ? 'opacity-80 cursor-not-allowed' : ''}`}
+                    aria-expanded={isUrlGeminiContextOpen}
+                    aria-controls="url-gemini-extra-context"
+                    aria-label={isUrlGeminiContextOpen ? 'Hide extra Gemini note' : 'Add note for Gemini'}
+                    disabled={isImporting}
+                  >
+                    {isUrlGeminiContextOpen ? (
+                      <MinusIcon className="w-4 h-4" />
+                    ) : (
+                      <PlusIcon className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
                 {isUrlGeminiContextOpen && (
                   <div
                     className="w-full rounded-lg border border-green-200 bg-green-50/50 p-3 dark:border-green-700 dark:bg-green-900/30"
@@ -1031,12 +1055,38 @@ function RecipeFormPage() {
                       onChange={(e) => setUrlGeminiContext(e.target.value)}
                       rows={3}
                       className="w-full rounded-md border border-green-200 bg-white/90 px-3 py-2 text-sm text-green-900 placeholder-green-700/60 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-400 dark:border-green-600 dark:bg-green-950/40 dark:text-green-100 dark:placeholder-green-300"
-                      placeholder="Add special instructions, ingredient preferences, or notes for the recipe import."
+                      placeholder="The URL scraper doesn't always capture the full recipe description. Add the complete description here along with any special instructions, tips, or notes for a more comprehensive import."
                       disabled={isImporting}
                     />
                   
                   </div>
                 )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isImporting) return
+                    handleImport()
+                  }}
+                  aria-disabled={!canImportFromUrl}
+                  disabled={isImporting}
+                  className={`inline-flex items-center justify-center gap-2 px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors duration-200 w-full sm:w-auto ${
+                    canImportFromUrl ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-400 cursor-not-allowed'
+                  } ${isImporting ? 'opacity-80 cursor-not-allowed' : ''}`}
+                >
+                  {isImporting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                      </svg>
+                      Import
+                    </>
+                  )}
+                </button>
               </div>
             </>
           ) : importType === 'text' ? (
@@ -1228,7 +1278,7 @@ Serves: 24 cookies`}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+  <form id="recipe-form" onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
@@ -1279,12 +1329,33 @@ Serves: 24 cookies`}
                 id="description"
                 name="description"
                 required
-                rows={3}
+                rows={5}
                 value={formData.description}
                 onChange={handleInputChange}
                 placeholder="Brief description of your recipe"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none"
               />
+            </div>
+
+            <div>
+              <label htmlFor="language" className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                Recipe Language *
+              </label>
+              <select
+                id="language"
+                name="language"
+                required
+                value={formData.language}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border border-gray-200/50 bg-white/80 px-3 py-2 text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none dark:border-white/10 dark:bg-white/5 dark:text-gray-100 dark:focus:border-blue-400"
+              >
+                {SUPPORTED_LANGUAGES.map(language => (
+                  <option key={language.code} value={language.code}>
+                    {language.name} ({language.nativeName})
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1"></p>
             </div>
           </div>
         </div>
@@ -1591,7 +1662,10 @@ Bake for 25-30 minutes`}
         </div>
 
         {/* Actions */}
-        <div className="flex justify-center gap-3 pt-4">
+        <div
+          className={`flex justify-center gap-3 pt-4 pb-24 ${canShowFloatingActions ? 'hidden' : ''}`}
+          aria-hidden={canShowFloatingActions}
+        >
           <button
             type="submit"
             disabled={loading}
@@ -1620,6 +1694,36 @@ Bake for 25-30 minutes`}
           </button>
         </div>
       </form>
+
+      {/* Bottom Action Bar - Always visible like recipe detail page */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-40 safe-area-inset-bottom shadow-lg">
+        <div className="flex items-center py-1">
+          <button
+            type="submit"
+            form="recipe-form"
+            disabled={loading || !isFormValid}
+            className="flex-1 flex flex-col items-center gap-0 px-2 py-1 text-gray-600 dark:text-gray-400 hover:bg-green-500 hover:text-white dark:hover:bg-green-600 dark:hover:text-white transition-colors disabled:opacity-50 rounded-l-md"
+          >
+            {loading ? (
+              <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <CheckIcon className="w-4 h-4" />
+            )}
+            <span className="text-[10px] font-medium">
+              {loading ? (isEdit ? 'Updating...' : 'Creating...') : (isEdit ? 'Update' : 'Save')}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={loading}
+            className="flex-1 flex flex-col items-center gap-0 px-2 py-1 text-gray-600 dark:text-gray-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-colors disabled:opacity-50 rounded-r-md"
+          >
+            <XMarkIcon className="w-4 h-4" />
+            <span className="text-[10px] font-medium">Cancel</span>
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

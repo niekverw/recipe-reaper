@@ -109,6 +109,66 @@ const patternHeuristicCases: TestCase[] = [
 	}
 ]
 
+// Preservation keyword handling (canned/frozen/dried fruits and produce)
+const preservationKeywordCases: TestCase[] = [
+	{
+		input: 'canned mango',
+		expectedDisplayName: 'Mango',
+		expectedCategory: INGREDIENT_CATEGORIES.CANNED_JARRED,
+		exactConfidence: 0.8,
+		description: 'canned mango skips PRODUCE and falls back to CANNED_JARRED'
+	},
+	{
+		input: 'canned sweetened mango pulp, preferably Alphonso (see Tips)',
+		expectedDisplayName: 'Mango',
+		expectedCategory: INGREDIENT_CATEGORIES.CANNED_JARRED,
+		exactConfidence: 0.8,
+		description: 'canned mango pulp with descriptors routes to CANNED_JARRED with Mango displayName'
+	},
+	{
+		input: 'frozen mango',
+		expectedDisplayName: 'Frozen Fruit',
+		expectedCategory: INGREDIENT_CATEGORIES.FROZEN,
+		minConfidence: 0.8,
+		description: 'frozen mango matches specific frozen fruit entry'
+	},
+	{
+		input: 'dried mango',
+		expectedDisplayName: 'Mango',
+		expectedCategory: INGREDIENT_CATEGORIES.PANTRY,
+		exactConfidence: 0.7,
+		description: 'dried mango skips PRODUCE and falls back to PANTRY'
+	},
+	{
+		input: 'fresh mango',
+		expectedDisplayName: 'Mango',
+		expectedCategory: INGREDIENT_CATEGORIES.PRODUCE,
+		minConfidence: 0.8,
+		description: 'fresh mango correctly categorizes as PRODUCE'
+	},
+	{
+		input: 'fresh or canned mango',
+		expectedDisplayName: 'Mango',
+		expectedCategory: INGREDIENT_CATEGORIES.PRODUCE,
+		minConfidence: 0.8,
+		description: 'fresh keyword takes precedence over canned'
+	},
+	{
+		input: 'canned peaches',
+		expectedDisplayName: 'Peaches',
+		expectedCategory: INGREDIENT_CATEGORIES.CANNED_JARRED,
+		exactConfidence: 0.8,
+		description: 'canned peaches routes to CANNED_JARRED'
+	},
+	{
+		input: 'frozen pineapple',
+		expectedDisplayName: 'Frozen Fruit',
+		expectedCategory: INGREDIENT_CATEGORIES.FROZEN,
+		minConfidence: 0.8,
+		description: 'frozen pineapple matches frozen fruit entry'
+	}
+]
+
 // Edge cases and typos (for future fuzzy matching implementation)
 const edgeCasesAndTypos: TestCase[] = [
 	{
@@ -192,6 +252,24 @@ describe('ingredientCategorizer', () => {
 	describe('Pattern Heuristics', () => {
 		// Tests for frozen, canned, dried, ground, fresh patterns
 		it.each(patternHeuristicCases)(
+			'$description: "$input" → $expectedDisplayName',
+			({ input, expectedDisplayName, expectedCategory, exactConfidence, minConfidence }) => {
+				const result = ingredientCategorizer.categorizeIngredient(input)
+				expect(result.displayName).toBe(expectedDisplayName)
+				expect(result.category).toEqual(expectedCategory)
+
+				if (exactConfidence !== undefined) {
+					expect(result.confidence).toBeCloseTo(exactConfidence)
+				} else if (minConfidence !== undefined) {
+					expect(result.confidence).toBeGreaterThanOrEqual(minConfidence)
+				}
+			}
+		)
+	})
+
+	describe('Preservation Keyword Handling', () => {
+		// Tests for canned/frozen/dried overriding fresh ingredient categories
+		it.each(preservationKeywordCases)(
 			'$description: "$input" → $expectedDisplayName',
 			({ input, expectedDisplayName, expectedCategory, exactConfidence, minConfidence }) => {
 				const result = ingredientCategorizer.categorizeIngredient(input)

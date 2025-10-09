@@ -16,9 +16,9 @@ class IngredientCategorizer {
   private normalizedMappings: NormalizedMapping[] = []
   // Basic term patterns for quick matching
   private basicPatterns = [
-    { keywords: ['can', 'canned', 'tinned'], category: 'CANNED_JARRED', confidence: 0.8 },
+    { keywords: ['can', 'canned', 'tinned','cans'], category: 'CANNED_JARRED', confidence: 0.8 },
     { keywords: ['frozen', 'freeze'], category: 'FROZEN', confidence: 0.9 },
-    { keywords: ['ground', 'dried'], category: 'PANTRY', confidence: 0.7 },
+    { keywords: ['ground', 'dried','powder'], category: 'PANTRY', confidence: 0.7 },
     { keywords: ['fresh'], category: 'PRODUCE', confidence: 0.6 },
     { keywords: ['jar', 'jarred'], category: 'CANNED_JARRED', confidence: 0.8 }
   ]
@@ -98,10 +98,20 @@ class IngredientCategorizer {
       score: number
     } | null = null
 
+    let skippedFreshMatch: {
+      mapping: NormalizedMapping
+      variant: VariantInfo
+      matchType: MatchType
+      score: number
+    } | null = null
+
     for (const mapping of this.normalizedMappings) {
       if (this.matchesExcludeKeyword(mapping, lowerText)) {
         continue
       }
+
+      // Check if this fresh ingredient should be skipped due to preservation keywords
+      const shouldSkip = this.shouldSkipFreshIngredient(mapping, patternMatches)
 
       for (const variant of mapping.variants) {
         const match = this.getVariantMatch(lowerText, variant)
@@ -121,8 +131,18 @@ class IngredientCategorizer {
           score += boost
         }
 
-        if (!bestMatch || score > bestMatch.score) {
-          bestMatch = { mapping, variant, matchType: match.matchType, score }
+        const currentMatch = { mapping, variant, matchType: match.matchType, score }
+
+        // If this should be skipped, track it separately for potential use
+        if (shouldSkip) {
+          if (!skippedFreshMatch || score > skippedFreshMatch.score) {
+            skippedFreshMatch = currentMatch
+          }
+        } else {
+          // Normal matching - use for bestMatch
+          if (!bestMatch || score > bestMatch.score) {
+            bestMatch = currentMatch
+          }
         }
       }
     }
@@ -134,6 +154,20 @@ class IngredientCategorizer {
         displayName: bestMatch.mapping.displayName,
         category,
         confidence: this.getConfidence(bestMatch.matchType)
+      }
+    }
+
+    // If we skipped a fresh ingredient due to preservation keywords, use its display name
+    // but categorize it according to the pattern (canned/frozen/dried)
+    if (skippedFreshMatch && patternMatches.length > 0) {
+      const strongestPattern = patternMatches.reduce((currentBest: PatternMatch, candidate: PatternMatch) =>
+        candidate.boost > currentBest.boost ? candidate : currentBest
+      )
+      return {
+        originalText,
+        displayName: skippedFreshMatch.mapping.displayName,  // Use the fresh ingredient's name
+        category: INGREDIENT_CATEGORIES[strongestPattern.category],  // But use pattern's category
+        confidence: strongestPattern.confidence
       }
     }
 
@@ -279,6 +313,23 @@ class IngredientCategorizer {
   private matchesExcludeKeyword(mapping: NormalizedMapping, lowerText: string): boolean {
     if (!mapping.excludeRegexes.length) return false
     return mapping.excludeRegexes.some(regex => regex.test(lowerText))
+  }
+
+  private shouldSkipFreshIngredient(mapping: NormalizedMapping, patternMatches: PatternMatch[]): boolean {
+    // Only applies to fresh categories (PRODUCE and MEAT_SEAFOOD)
+    if (mapping.category !== 'PRODUCE' && mapping.category !== 'MEAT_SEAFOOD') {
+      return false
+    }
+
+    // Check if "fresh" pattern is present - if so, fresh takes precedence
+    const hasFreshPattern = patternMatches.some(pm => pm.category === 'PRODUCE')
+    if (hasFreshPattern) {
+      return false  // Don't skip - "fresh" keyword takes precedence
+    }
+
+    // Check if any preservation patterns were detected (canned, frozen, dried)
+    const preservationCategories = ['CANNED_JARRED', 'FROZEN', 'PANTRY']
+    return patternMatches.some(pm => preservationCategories.includes(pm.category))
   }
 
   private createWordBoundaryRegex(term: string): RegExp {

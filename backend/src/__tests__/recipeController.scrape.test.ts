@@ -132,7 +132,8 @@ describe('Recipe Scraper API', () => {
         description: 'Recipe imported from web',
         ingredients: ['1 ingredient'],
         instructions: ['1 instruction'],
-        sourceUrl: validUrl
+        sourceUrl: validUrl,
+        originalScrapedData: JSON.stringify(minimalData)
       })
     })
 

@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { RECIPE_ENHANCEMENT_PROMPT } from '../config/prompts'
+import { getRecipeEnhancementPrompt } from '../config/prompts'
 
 interface RecipeEnhancementData {
   cookingTips: string[]
@@ -18,6 +18,7 @@ interface RecipeData {
   prepTimeMinutes?: number
   cookTimeMinutes?: number
   servings?: number
+  language?: string
 }
 
 class RecipeEnhancementService {
@@ -36,6 +37,9 @@ class RecipeEnhancementService {
       throw new Error('Recipe must have name, ingredients, and instructions to enhance')
     }
 
+    console.log(`Enhancement service called for recipe: ${recipeData.name}`)
+    console.log(`Recipe data language: ${recipeData.language}`)
+
     // Format recipe data for the AI prompt
     const recipeText = this.formatRecipeForPrompt(recipeData)
 
@@ -43,7 +47,10 @@ class RecipeEnhancementService {
       console.log('Making Gemini API call for recipe enhancement with model: gemini-2.5-flash-lite')
       const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' })
 
-      const result = await model.generateContent(`${RECIPE_ENHANCEMENT_PROMPT}\n\nRecipe to enhance:\n${recipeText}`)
+      const prompt = getRecipeEnhancementPrompt(recipeData.language)
+      console.log('Generated enhancement prompt:', prompt)
+
+      const result = await model.generateContent(`${prompt}\n\nRecipe to enhance:\n${recipeText}`)
       const response = await result.response
       const content = response.text()
 

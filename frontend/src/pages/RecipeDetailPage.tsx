@@ -15,7 +15,8 @@ import {
   SparklesIcon,
   PlusIcon,
   XMarkIcon,
-  ShoppingBagIcon
+  ShoppingBagIcon,
+  ChevronUpIcon
 } from '@heroicons/react/24/outline'
 import { apiService, Recipe, IngredientCategory } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
@@ -197,6 +198,66 @@ function InstructionStep({ instruction, stepNumber, isCompleted, onToggle }: Ins
   )
 }
 
+interface TruncatedDescriptionProps {
+  text: string
+  maxLength?: number
+  parentHasImage?: boolean
+}
+
+function TruncatedDescription({ text, maxLength = 1000, parentHasImage = false }: TruncatedDescriptionProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const needsTruncation = text.length > maxLength
+
+  if (!needsTruncation) {
+    return (
+      <TextWithHeaders
+        text={text}
+        className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed max-w-3xl"
+      />
+    )
+  }
+
+  const truncatedText = text.slice(0, maxLength)
+
+  return (
+    <div className="mb-4 relative">
+      <div className="relative">
+        <TextWithHeaders
+          text={isExpanded ? text : truncatedText}
+          className="text-gray-600 dark:text-gray-400 leading-relaxed max-w-3xl"
+        />
+        {!isExpanded && !parentHasImage && (
+          <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-gray-100 dark:from-gray-900 to-transparent pointer-events-none" />
+        )}
+        {!isExpanded && parentHasImage && (
+          <>
+            {/* Mobile gradient - only over text */}
+            <div className="md:hidden absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-gray-100 dark:from-gray-900 to-transparent pointer-events-none" />
+            {/* Desktop gradient - extends to cover image area, positioned relative to parent container */}
+            <div className="hidden md:block absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-gray-100 dark:from-gray-900 via-gray-100/80 dark:via-gray-900/80 to-transparent pointer-events-none" style={{ width: 'calc(100vw - 3rem)', maxWidth: 'calc(100% + 20rem + 1.5rem)' }} />
+          </>
+        )}
+      </div>
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="relative z-20 mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-sm font-medium rounded-lg transition-colors border border-blue-200 dark:border-blue-800"
+      >
+        {isExpanded ? (
+          <>
+            Show less
+            <ChevronUpIcon className="w-4 h-4" />
+          </>
+        ) : (
+          <>
+            Read more
+            <ChevronDownIcon className="w-4 h-4" />
+          </>
+        )}
+      </button>
+    </div>
+  )
+}
+
 function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -220,6 +281,12 @@ function RecipeDetailPage() {
   const [highlightedTagIndex, setHighlightedTagIndex] = useState(0)
   const shoppingListButton = useShoppingListButtonState()
   const scaleMenuRef = useRef<HTMLDivElement | null>(null)
+
+  // Section refs for mobile navigation
+  const descriptionRef = useRef<HTMLDivElement | null>(null)
+  const ingredientsRef = useRef<HTMLDivElement | null>(null)
+  const instructionsRef = useRef<HTMLDivElement | null>(null)
+  const notesRef = useRef<HTMLDivElement | null>(null)
 
   const openImageModal = useCallback(() => {
     setShowImageModal(true)
@@ -541,8 +608,19 @@ function RecipeDetailPage() {
   const nonHeaderInstructions = recipe?.instructions.filter(instruction => !TextHeaderParser.isPureHeader(instruction)) ?? []
   const shouldStripInstructionNumbers = nonHeaderInstructions.length > 0 && nonHeaderInstructions.every(instruction => numberedStepPattern.test(instruction))
 
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
+    if (ref.current) {
+      const offset = 80 // Offset for top bar
+      const elementPosition = ref.current.getBoundingClientRect().top + window.pageYOffset
+      window.scrollTo({
+        top: elementPosition - offset,
+        behavior: 'smooth'
+      })
+    }
+  }
+
   return (
-    <div className="px-4 py-6 max-w-6xl mx-auto">
+    <div className="px-4 py-6 max-w-6xl mx-auto pb-20 md:pb-6">
       {/* Navigation */}
       <div className="flex items-center justify-between mb-6">
         <button
@@ -619,14 +697,81 @@ function RecipeDetailPage() {
 
       {/* Hero Section */}
       <div className="mb-8">
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 mb-6">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 mb-6 relative" ref={descriptionRef}>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-gray-900 dark:text-white">{recipe.name}</h1>
+
+          {/* Image on mobile, right after title */}
+          {recipe.image && (
+            <div className="md:hidden mb-4 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 relative">
+              <ResponsiveImage
+                src={apiService.constructImageUrl(recipe.imageSizes?.small.url || recipe.image)}
+                alt={`${recipe.name} image`}
+                imageSizes={recipe.imageSizes ? {
+                  small: {
+                    url: apiService.constructImageUrl(recipe.imageSizes.small.url),
+                    width: recipe.imageSizes.small.width,
+                    height: recipe.imageSizes.small.height ?? Math.round(recipe.imageSizes.small.width * 0.75),
+                    webp: recipe.imageSizes.small.webp ? apiService.constructImageUrl(recipe.imageSizes.small.webp) : undefined
+                  },
+                  medium: {
+                    url: apiService.constructImageUrl(recipe.imageSizes.medium.url),
+                    width: recipe.imageSizes.medium.width,
+                    height: recipe.imageSizes.medium.height ?? Math.round(recipe.imageSizes.medium.width * 0.75),
+                    webp: recipe.imageSizes.medium.webp ? apiService.constructImageUrl(recipe.imageSizes.medium.webp) : undefined
+                  },
+                  large: {
+                    url: apiService.constructImageUrl(recipe.imageSizes.large.url),
+                    width: recipe.imageSizes.large.width,
+                    height: recipe.imageSizes.large.height ?? Math.round(recipe.imageSizes.large.width * 0.75),
+                    webp: recipe.imageSizes.large.webp ? apiService.constructImageUrl(recipe.imageSizes.large.webp) : undefined
+                  }
+                } : undefined}
+                blurDataUrl={recipe.blurDataUrl}
+                context="detail"
+                className="w-full h-48 cursor-pointer"
+                fetchPriority="high"
+                onClick={openImageModal}
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
+
+              {/* Overlay badges */}
+              <div className="absolute left-3 bottom-3 flex flex-col gap-2">
+                <div className="flex items-center gap-2 px-2 py-1 bg-black/60 text-white rounded-lg backdrop-blur-sm text-sm">
+                  <ClockIcon className="w-4 h-4 text-white opacity-90" />
+                  <span className="font-medium">
+                    <span aria-hidden="true">Prep: </span>
+                    {recipe.prepTimeMinutes} min
+                  </span>
+                </div>
+                {recipe.cookTimeMinutes && (
+                  <div className="flex items-center gap-2 px-2 py-1 bg-black/60 text-white rounded-lg backdrop-blur-sm text-sm">
+                    <ClockIcon className="w-4 h-4 text-white opacity-90" />
+                    <span className="font-medium">
+                      <span aria-hidden="true">Cook: </span>
+                      {recipe.cookTimeMinutes} min
+                    </span>
+                  </div>
+                )}
+                {recipe.totalTimeMinutes && (
+                  <div className="flex items-center gap-2 px-2 py-1 bg-black/60 text-white rounded-lg backdrop-blur-sm text-sm">
+                    <ClockIcon className="w-4 h-4 text-white opacity-90" />
+                    <span className="font-medium">
+                      <span aria-hidden="true">Total: </span>
+                      {recipe.totalTimeMinutes} min
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 px-2 py-1 bg-black/60 text-white rounded-lg backdrop-blur-sm text-sm">
+                  <UsersIcon className="w-4 h-4 text-white opacity-90" />
+                  <span className="font-medium">{Math.round(recipe.servings * scale)} servings</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col md:flex-row md:items-center md:gap-6">
             <div className="flex-1">
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-gray-900 dark:text-white">{recipe.name}</h1>
-              <TextWithHeaders
-                text={recipe.description}
-                className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed max-w-3xl"
-              />
+              <TruncatedDescription text={recipe.description} parentHasImage={!!recipe.image} />
 
               {/* Source URL Attribution */}
               {recipe.sourceUrl && (
@@ -788,10 +933,10 @@ function RecipeDetailPage() {
               )}
             </div>
 
-            {/* Optional compact hero image to the side on md+ screens */}
+            {/* Image on desktop, to the side */}
             {recipe.image && (
               <>
-                <div className="mt-4 md:mt-0 md:shrink-0 md:w-56 lg:w-72 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 relative">
+                <div className="hidden md:block md:shrink-0 md:w-56 lg:w-72 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 relative">
                   <ResponsiveImage
                     src={apiService.constructImageUrl(recipe.imageSizes?.small.url || recipe.image)}
                     alt={`${recipe.name} image`}
@@ -817,7 +962,7 @@ function RecipeDetailPage() {
                     } : undefined}
                     blurDataUrl={recipe.blurDataUrl}
                     context="detail"
-                    className="w-full h-36 md:h-44 lg:h-56 cursor-pointer"
+                    className="w-full h-44 lg:h-56 cursor-pointer"
                     fetchPriority="high"
                     onClick={openImageModal}
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
@@ -916,7 +1061,7 @@ function RecipeDetailPage() {
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Instructions */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2" ref={instructionsRef}>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Instructions</h2>
             <button
@@ -967,7 +1112,7 @@ function RecipeDetailPage() {
         </div>
 
         {/* Ingredients Sidebar */}
-        <div className="lg:sticky lg:top-6 lg:h-fit">
+        <div className="lg:sticky lg:top-6 lg:h-fit" ref={ingredientsRef}>
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -1088,7 +1233,7 @@ function RecipeDetailPage() {
       </div>
 
       {/* Chef's Notes Section */}
-      <div className="mt-12">
+      <div className="mt-12" ref={notesRef}>
         <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -1207,6 +1352,40 @@ function RecipeDetailPage() {
               </p>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-40 safe-area-inset-bottom">
+        <div className="flex items-center justify-around py-1">
+          <button
+            onClick={() => scrollToSection(descriptionRef)}
+            className="flex flex-col items-center gap-0 px-2 py-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors min-w-0"
+          >
+            <DocumentDuplicateIcon className="w-4 h-4" />
+            <span className="text-[10px] font-medium">Info</span>
+          </button>
+          <button
+            onClick={() => scrollToSection(instructionsRef)}
+            className="flex flex-col items-center gap-0 px-2 py-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors min-w-0"
+          >
+            <ClockIcon className="w-4 h-4" />
+            <span className="text-[10px] font-medium">Steps</span>
+          </button>
+          <button
+            onClick={() => scrollToSection(ingredientsRef)}
+            className="flex flex-col items-center gap-0 px-2 py-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors min-w-0"
+          >
+            <ShoppingBagIcon className="w-4 h-4" />
+            <span className="text-[10px] font-medium">Ingr.</span>
+          </button>
+          <button
+            onClick={() => scrollToSection(notesRef)}
+            className="flex flex-col items-center gap-0 px-2 py-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors min-w-0"
+          >
+            <SparklesIcon className="w-4 h-4" />
+            <span className="text-[10px] font-medium">Notes</span>
+          </button>
         </div>
       </div>
     </div>

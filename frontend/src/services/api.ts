@@ -51,6 +51,7 @@ export interface Recipe {
   isPublic: boolean
   userId?: string
   householdId?: string
+  language?: string
   createdAt: string
   updatedAt: string
   canEdit?: boolean
@@ -76,6 +77,11 @@ export interface CreateRecipeData {
   tags?: string[]
   isPublic?: boolean
   householdId?: string
+  // Original input tracking
+  originalScrapedData?: string
+  originalTextInput?: string
+  importAdditionalContext?: string
+  language?: string
 }
 
 export interface UpdateRecipeData extends Partial<CreateRecipeData> {}
@@ -300,6 +306,9 @@ class ApiService {
         cookTimeMinutes?: number
         totalTimeMinutes?: number
         servings?: number
+        originalScrapedData?: string
+        importAdditionalContext?: string
+        language?: string
       }
     }>('/recipes/scrape', {
       method: 'POST',
@@ -321,6 +330,8 @@ class ApiService {
         cookTimeMinutes?: number
         totalTimeMinutes?: number
         servings?: number
+        originalTextInput?: string
+        language?: string
       }
     }>('/recipes/parse-text', {
       method: 'POST',
@@ -352,6 +363,9 @@ class ApiService {
         cookTimeMinutes?: number
         totalTimeMinutes?: number
         servings?: number
+        originalTextInput?: string
+        importAdditionalContext?: string
+        language?: string
       }
     }>('/recipes/parse-text-gemini', {
       method: 'POST',
@@ -379,6 +393,7 @@ class ApiService {
         cookTimeMinutes?: number
         totalTimeMinutes?: number
         servings?: number
+        language?: string
       }
       extractedText: string
     }>('/recipes/parse-image', {

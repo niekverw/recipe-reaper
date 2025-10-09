@@ -836,7 +836,7 @@ export default RecipesPage
 const CONTENT = {
   searchPlaceholder: 'Search recipes...',
   recipesLabel: 'recipes',
-  noResultsTitle: 'No recipes found',
+  noResultsTitle: "Even the Recipe Reaper can't find anything in this barren kitchen graveyard.",
   noResultsMessage: 'Try adjusting your search or add a new recipe to get started.'
 }
 

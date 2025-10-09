@@ -51,6 +51,31 @@
     "keywords": [  "lettuce","romaine","iceberg lettuce","butter lettuce","mixed greens","romaine lettuce"]
   },
   {
+    "displayName": "Bibb Lettuce",
+    "category": "PRODUCE",
+    "keywords": [  "bibb lettuce","bibb","buttercrunch","fresh bibb"]
+  },
+  {
+    "displayName": "Oak Leaf Lettuce",
+    "category": "PRODUCE",
+    "keywords": [  "oak leaf lettuce","oak leaf","fresh oak leaf"]
+  },
+  {
+    "displayName": "Red Leaf Lettuce",
+    "category": "PRODUCE",
+    "keywords": [  "red leaf lettuce","red leaf","fresh red leaf"]
+  },
+  {
+    "displayName": "Green Leaf Lettuce",
+    "category": "PRODUCE",
+    "keywords": [  "green leaf lettuce","green leaf","fresh green leaf"]
+  },
+  {
+    "displayName": "Mesclun",
+    "category": "PRODUCE",
+    "keywords": [  "mesclun","spring mix","mixed baby greens","fresh mesclun"]
+  },
+  {
     "displayName": "Spinach",
     "category": "PRODUCE",
     "keywords": [  "spinach","baby spinach","fresh spinach"],
@@ -168,6 +193,26 @@
     "displayName": "Arugula",
     "category": "PRODUCE",
     "keywords": [  "arugula","rocket","rocket salad","fresh arugula"]
+  },
+  {
+    "displayName": "Endive",
+    "category": "PRODUCE",
+    "keywords": [  "endive","belgian endive","chicory","fresh endive"]
+  },
+  {
+    "displayName": "Frisee",
+    "category": "PRODUCE",
+    "keywords": [  "frisee","curly endive","frisee lettuce","fresh frisee"]
+  },
+  {
+    "displayName": "Watercress",
+    "category": "PRODUCE",
+    "keywords": [  "watercress","fresh watercress"]
+  },
+  {
+    "displayName": "Escarole",
+    "category": "PRODUCE",
+    "keywords": [  "escarole","broad leaf endive","fresh escarole"]
   },
   {
     "displayName": "Cucumber",
@@ -576,12 +621,12 @@
   {
     "displayName": "Beef",
     "category": "MEAT_SEAFOOD",
-    "keywords": [  "beef","beef steak","sirloin","ribeye","filet mignon","ribeye steak","sirloin steak"]
+    "keywords": [  "beef","beef steak","sirloin","ribeye","filet mignon","ribeye steak","sirloin steak","brisket","flank steak","skirt steak","tenderloin","beef roast","chuck roast","top round","bottom round","eye of round","beef stew meat","corned beef","short ribs","beef ribs","prime rib","tri-tip","tomahawk","hanger steak","flat iron steak"]
   },
   {
     "displayName": "Chicken",
     "category": "MEAT_SEAFOOD",
-    "keywords": [  "chicken","whole chicken","roasting chicken"]
+    "keywords": [  "chicken","whole chicken","roasting chicken","chicken legs","drumsticks","chicken wings","bone-in chicken breast","skin-on chicken breast","bone-in skin-on chicken breast","chicken quarters","fryer chicken"]
   },
   {
     "displayName": "Fish",
@@ -840,6 +885,11 @@
     "keywords": [  "yogurt","plain yogurt","vanilla yogurt","strawberry yogurt","whole milk yogurt","low fat yogurt"]
   },
   {
+    "displayName": "Kefir",
+    "category": "DAIRY_EGGS",
+    "keywords": [  "kefir","plain kefir","fruit kefir","water kefir"]
+  },
+  {
     "displayName": "Olive Oil",
     "category": "PANTRY",
     "keywords": [  "olive oil","extra virgin olive oil","evoo"]
@@ -962,6 +1012,16 @@
     "keywords": [  "vinegar","white vinegar","apple cider vinegar","balsamic vinegar","red wine vinegar","white wine vinegar","distilled vinegar"]
   },
   {
+    "displayName": "Kimchi",
+    "category": "PANTRY",
+    "keywords": [  "kimchi","fermented cabbage"]
+  },
+  {
+    "displayName": "Sauerkraut",
+    "category": "PANTRY",
+    "keywords": [  "sauerkraut","fermented cabbage"]
+  },
+  {
     "displayName": "Sugar",
     "category": "PANTRY",
     "keywords": [  "sugar","white sugar","granulated sugar","cane sugar"]
@@ -1035,6 +1095,11 @@
     "displayName": "Ketchup",
     "category": "PANTRY",
     "keywords": [  "ketchup","catsup","tomato ketchup"]
+  },
+  {
+    "displayName": "Sambal",
+    "category": "PANTRY",
+    "keywords": [  "sambal","sambal oelek","chinese chili paste","chili paste","sambal badjak","sambal ulek"]
   },
   {
     "displayName": "BBQ Sauce",
@@ -1410,7 +1475,7 @@
   {
     "displayName": "Bread",
     "category": "BAKERY",
-    "keywords": [  "bread","white bread","wheat bread","whole grain bread","sourdough","sourdough bread"]
+    "keywords": [  "bread","white bread","wheat bread","whole grain bread","sourdough","sourdough bread","baguette","baguettes","ciabatta","ciabatta bread","rye bread","multigrain bread"]
   },
   {
     "displayName": "Bagels",
@@ -1557,6 +1622,26 @@
     "keywords": [  "chickpeas","garbanzo beans","chick peas"]
   },
   {
+    "displayName": "Tofu",
+    "category": "GRAINS_PASTA",
+    "keywords": [  "tofu","firm tofu","silken tofu","extra firm tofu","soft tofu","medium tofu"]
+  },
+  {
+    "displayName": "Tempeh",
+    "category": "GRAINS_PASTA",
+    "keywords": [  "tempeh","fermented tempeh"]
+  },
+  {
+    "displayName": "Seitan",
+    "category": "GRAINS_PASTA",
+    "keywords": [  "seitan","wheat gluten"]
+  },
+  {
+    "displayName": "Natto",
+    "category": "GRAINS_PASTA",
+    "keywords": [  "natto","fermented soybeans"]
+  },
+  {
     "displayName": "Coffee",
     "category": "SNACKS_BEVERAGES",
     "keywords": [  "coffee","ground coffee","coffee beans","instant coffee"]
@@ -1564,7 +1649,8 @@
   {
     "displayName": "Tea",
     "category": "SNACKS_BEVERAGES",
-    "keywords": [  "tea","black tea","green tea","herbal tea","tea bags"]
+    "keywords": [  "tea","black tea","green tea","herbal tea","tea bags"],
+    "excludeKeywords": [  "teaspoon","tablespoon"]
   },
   {
     "displayName": "Almonds",
@@ -1597,7 +1683,7 @@
     "keywords": [  "pecans","pecan","halves pecans"]
   },
   {
-    "displayName": "Mixed Nuts",
+    "displayName": "Nuts",
     "category": "SNACKS_BEVERAGES",
     "keywords": [  "mixed nuts","nuts","trail mix nuts"]
   },
@@ -1625,6 +1711,11 @@
     "displayName": "Flax Seeds",
     "category": "SNACKS_BEVERAGES",
     "keywords": [  "flax seeds","flaxseed","ground flaxseed"]
+  },
+  {
+    "displayName": "Hemp Seeds",
+    "category": "SNACKS_BEVERAGES",
+    "keywords": [  "hemp seeds","shelled hemp seeds","hemp seed"]
   },
   {
     "displayName": "Brazil Nuts",
@@ -1764,7 +1855,7 @@
   {
     "displayName": "Liquor",
     "category": "SNACKS_BEVERAGES",
-    "keywords": [  "liquor","whiskey","vodka","rum","gin","tequila","bourbon","scotch","brandy","cognac","scotch whisky"]
+    "keywords": [  "liquor","whiskey","vodka","rum","gin","tequila","bourbon","scotch","brandy","cognac","scotch whisky","mezcal","irish whiskey","rye whiskey","spiced rum","dark rum","white rum","triple sec","amaretto","vermouth","campari","aperol","baileys","kahlua","grand marnier","cointreau","schnapps","sambuca","frangelico","chartreuse","absinthe","pisco","aquavit","soju","shochu","ouzo","arak","grappa","armagnac","calvados","moonshine","tequila blanco","tequila reposado","tequila anejo","mezcal joven","mezcal reposado","mezcal anejo","irish cream","coffee liqueur","herbal liqueur","fruit liqueur","nut liqueur","liqueur","cordial","bitters"]
   },
   {
     "displayName": "Red Wine",
@@ -1784,7 +1875,7 @@
   {
     "displayName": "Beer",
     "category": "SNACKS_BEVERAGES",
-    "keywords": [  "beer","ale","lager","stout","porter","ipa","pilsner","wheat beer","craft beer","light beer"]
+    "keywords": [  "beer","ale","lager","stout","porter","ipa","pilsner","wheat beer","craft beer","light beer","ale"]
   },
   {
     "displayName": "Seltzer",

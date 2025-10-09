@@ -18,6 +18,7 @@ import { householdRoutes } from './routes/households'
 import { shoppingListRoutes } from './routes/shoppingList'
 import { errorHandler } from './middleware/errorHandler'
 import { ipBlocker } from './middleware/ipBlocker'
+import { User } from './types/user'
 import passport from './config/passport'
 
 // Import connect-pg-simple and create session store
@@ -215,11 +216,10 @@ const apiRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {
-    const user = req.user as { id?: string | number; userId?: string | number } | undefined
-    const identifier = user?.id ?? user?.userId
-    if (identifier !== undefined) {
-      const key = `user:${String(identifier)}`
-      console.log(`Rate limit key for ${req.method} ${req.path}: ${key}`)
+    const user = req.user as User | undefined
+    if (user) {
+      const key = `user:${user.id}`
+      console.log(`Rate limit key for ${req.method} ${req.path}: ${key} (${user.displayName})`)
       return key
     }
     // For non-authenticated requests, use IP as fallback
@@ -231,9 +231,10 @@ const apiRateLimiter = rateLimit({
   skip: (req) => req.path === '/health' || req.path.startsWith('/auth'),
   message: 'Too many requests. Please slow down and try again later.',
   handler: (req, res) => {
-    const user = req.user as { id?: string | number; userId?: string | number } | undefined
-    const identifier = user?.id ?? user?.userId
-    console.log(`RATE LIMIT HIT for ${identifier ? `user:${identifier}` : req.ip} on ${req.method} ${req.path}`)
+    const user = req.user as User | undefined
+    const identifier = user?.id
+    const displayName = user?.displayName
+    console.log(`RATE LIMIT HIT for ${identifier ? `user:${identifier}${displayName ? ` (${displayName})` : ''}` : req.ip} on ${req.method} ${req.path}`)
     res.status(429).json({
       error: {
         message: 'Too many requests. Please slow down and try again later.'

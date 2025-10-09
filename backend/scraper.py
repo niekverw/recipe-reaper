@@ -6,7 +6,8 @@ This script scrapes recipe data from URLs and returns JSON data.
 
 import sys
 import json
-from recipe_scrapers import scrape_me
+import cloudscraper
+from recipe_scrapers import scrape_html
 
 def scrape_recipe(url):
     """
@@ -19,8 +20,21 @@ def scrape_recipe(url):
         dict: Recipe data in a standardized format
     """
     try:
-        # Scrape the recipe using scrape_me
-        scraper = scrape_me(url)
+        # Use cloudscraper to bypass bot protection
+        scraper_session = cloudscraper.create_scraper(
+            browser={
+                'browser': 'chrome',
+                'platform': 'windows',
+                'desktop': True
+            }
+        )
+
+        # Fetch the page with cloudscraper
+        response = scraper_session.get(url, timeout=15)
+        response.raise_for_status()
+
+        # Pass the HTML to scrape_html
+        scraper = scrape_html(response.text, url, supported_only=False)
 
         # Extract basic data
         data = {

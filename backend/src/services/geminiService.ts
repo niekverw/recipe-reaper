@@ -12,6 +12,7 @@ interface ParsedRecipeData {
   totalTimeMinutes?: number
   servings?: number
   image?: string
+  language?: string
 }
 
 class GeminiService {
@@ -33,9 +34,9 @@ class GeminiService {
     // Build prompt with language instruction at the TOP for maximum attention
     let systemPrompt: string
     if (targetLanguage) {
-      systemPrompt = `CRITICAL INSTRUCTION: You MUST translate the entire output to ${targetLanguage.toUpperCase()}. Every single text field (name, description, all ingredients, all instructions) MUST be translated to ${targetLanguage}. Do NOT leave any text in the original language.\n\n${RECIPE_PARSER_PROMPT}`
+      systemPrompt = `CRITICAL INSTRUCTION: You MUST translate the entire output to ${targetLanguage.toUpperCase()}. Every single text field (headers, name, description, all ingredients, all instructions) MUST be translated to ${targetLanguage}. Do NOT leave any text in the original language.\n\n${RECIPE_PARSER_PROMPT.replace('{translation_instruction}', `, translate to ${targetLanguage}`)}`
     } else {
-      systemPrompt = `CRITICAL INSTRUCTION: DO NOT TRANSLATE ANYTHING. You must preserve the exact original language of the recipe. Keep all text fields (name, description, ingredients, instructions) in their original language.\n\n${RECIPE_PARSER_PROMPT}`
+      systemPrompt = `CRITICAL INSTRUCTION: DO NOT TRANSLATE ANYTHING. You must preserve the exact original language of the recipe. Keep all text fields (headers, name, description, ingredients, instructions) in their original language.\n\n${RECIPE_PARSER_PROMPT.replace('{translation_instruction}', '')}`
     }
 
     try {
@@ -123,9 +124,9 @@ class GeminiService {
     // Build prompt with language instruction at the TOP for maximum attention
     let systemPrompt: string
     if (targetLanguage) {
-      systemPrompt = `CRITICAL INSTRUCTION: You MUST translate the entire output to ${targetLanguage.toUpperCase()}. Every single text field (name, description, all ingredients, all instructions) MUST be translated to ${targetLanguage}. Do NOT leave any text in the original language.\n\n${RECIPE_PARSER_PROMPT}`
+      systemPrompt = `CRITICAL INSTRUCTION: You MUST translate the entire output to ${targetLanguage.toUpperCase()}. Every single text field (name, description, all ingredients, all instructions) MUST be translated to ${targetLanguage}. Do NOT leave any text in the original language.\n\n${RECIPE_PARSER_PROMPT.replace('{name_translation_instruction}', `, translate to ${targetLanguage}`)}`
     } else {
-      systemPrompt = `CRITICAL INSTRUCTION: DO NOT TRANSLATE ANYTHING. You must preserve the exact original language of the recipe. Keep all text fields (name, description, ingredients, instructions) in their original language.\n\n${RECIPE_PARSER_PROMPT}`
+      systemPrompt = `CRITICAL INSTRUCTION: DO NOT TRANSLATE ANYTHING. You must preserve the exact original language of the recipe. Keep all text fields (name, description, ingredients, instructions) in their original language.\n\n${RECIPE_PARSER_PROMPT.replace('{name_translation_instruction}', '')}`
     }
 
     try {
