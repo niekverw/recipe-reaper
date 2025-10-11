@@ -376,18 +376,15 @@ export default function ShoppingListPage() {
   }
 
   return (
-    <div className="px-3 py-4 max-w-4xl mx-auto">
+    <div className="px-3 py-4 max-w-4xl mx-auto pb-20">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Shopping List</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {totalCount === 0
-              ? 'No items in your shopping list'
-              : `${completedCount} of ${totalCount} items completed`
-            }
-          </p>
-        </div>
+        <p className="text-gray-600 dark:text-gray-400">
+          {totalCount === 0
+            ? 'No items in your shopping list'
+            : `${completedCount} of ${totalCount} shopping list items completed`
+          }
+        </p>
 
         <div className="flex gap-3">
           {totalCount > 0 && (
@@ -536,6 +533,22 @@ export default function ShoppingListPage() {
               </div>
             </div>
           )}
+
+        </div>
+      )}
+
+      {/* Clear All Button at Bottom */}
+      {totalCount > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-40 safe-area-inset-bottom shadow-lg">
+          <div className="flex items-center py-1">
+            <button
+              onClick={handleClearAll}
+              className="flex-1 flex flex-col items-center gap-0 px-2 py-1 text-gray-600 dark:text-gray-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-colors"
+            >
+              <TrashIcon className="w-4 h-4" />
+              <span className="text-[10px] font-medium">Clear All</span>
+            </button>
+          </div>
         </div>
       )}
     </div>
