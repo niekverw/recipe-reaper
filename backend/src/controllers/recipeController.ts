@@ -3,7 +3,6 @@ import { recipeModel } from '../models/recipeModel'
 import { userModel } from '../models/userModel'
 import { CreateRecipeRequest, UpdateRecipeRequest, RecipeFilters, IngredientCategory } from '../types/recipe'
 import { createError } from '../middleware/errorHandler'
-import { openaiService } from '../services/openaiService'
 import { geminiService } from '../services/geminiService'
 import { recipeEnhancementService } from '../services/recipeEnhancementService'
 import { imageService } from '../services/imageService'
@@ -542,51 +541,6 @@ export const recipeController = {
           if (match) {
             throw createError(`Scraper error: ${match[1]}`, 400)
           }
-        }
-      }
-      next(error)
-    }
-  },
-
-  async parseTextRecipe(req: Request, res: Response, next: NextFunction) {
-    try {
-  const { text, targetLanguage }: ParseTextRecipeRequest & { targetLanguage?: string } = req.body
-
-      if (!text?.trim()) {
-        throw createError('Recipe text is required', 400)
-      }
-
-      // Parse the text using OpenAI
-      const parsedData = await openaiService.parseRecipeText(text, targetLanguage)
-
-      // Transform to match scraper response format
-      const transformedData = {
-        name: parsedData.name,
-        description: parsedData.description,
-        ingredients: parsedData.ingredients,
-        instructions: parsedData.instructions,
-        prepTimeMinutes: parsedData.prepTimeMinutes,
-        cookTimeMinutes: parsedData.cookTimeMinutes,
-        totalTimeMinutes: parsedData.totalTimeMinutes,
-        servings: parsedData.servings,
-        image: parsedData.image,
-        sourceUrl: undefined, // No source URL for text input
-        language: parsedData.language,
-        originalTextInput: text
-      }
-
-      res.json({ recipeData: transformedData })
-    } catch (error) {
-      // Handle OpenAI specific errors
-      if (error instanceof Error) {
-        if (error.message.includes('API key')) {
-          throw createError('OpenAI API configuration error', 500)
-        }
-        if (error.message.includes('rate limit') || error.message.includes('quota')) {
-          throw createError('OpenAI service temporarily unavailable. Please try again later.', 429)
-        }
-        if (error.message.includes('Missing required recipe fields')) {
-          throw createError('Unable to extract recipe data from the provided text. Please ensure the text contains recipe information.', 400)
         }
       }
       next(error)
