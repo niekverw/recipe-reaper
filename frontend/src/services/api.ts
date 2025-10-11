@@ -316,29 +316,6 @@ class ApiService {
     })
   }
 
-  // Recipe text parsing operation using OpenAI
-  async parseRecipeFromText(text: string, targetLanguage?: string) {
-    return this.request<{
-      recipeData: {
-        name: string
-        description: string
-        ingredients: string[]
-        instructions: string[]
-        image?: string
-        sourceUrl?: string
-        prepTimeMinutes?: number
-        cookTimeMinutes?: number
-        totalTimeMinutes?: number
-        servings?: number
-        originalTextInput?: string
-        language?: string
-      }
-    }>('/recipes/parse-text', {
-      method: 'POST',
-      body: JSON.stringify({ text, targetLanguage }),
-    })
-  }
-
   // Recipe text parsing operation using Google Gemini
   async parseRecipeFromTextGemini(text: string, targetLanguage?: string, additionalContext?: string) {
     const payload: Record<string, unknown> = { text }

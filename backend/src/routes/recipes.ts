@@ -64,9 +64,6 @@ recipeRoutes.post('/', conditionalAuth(requireAuth), recipeController.createReci
 // POST /api/recipes/scrape - Scrape recipe data from URL (requires authentication in production)
 recipeRoutes.post('/scrape', conditionalAuth(requireAuth), recipeController.scrapeRecipe)
 
-// POST /api/recipes/parse-text - Parse recipe data from text using OpenAI (requires authentication in production)
-recipeRoutes.post('/parse-text', conditionalAuth(requireAuth), recipeController.parseTextRecipe)
-
 // POST /api/recipes/parse-text-gemini - Parse recipe data from text using Gemini (requires authentication in production)
 recipeRoutes.post('/parse-text-gemini', conditionalAuth(requireAuth), recipeController.parseTextRecipeGemini)
 
