@@ -11,7 +11,6 @@ const {
   mockGetRecipe,
   mockCheckRecipeName,
   mockScrapeRecipeFromUrl,
-  mockParseRecipeFromText,
   mockParseRecipeFromTextGemini,
   mockParseRecipeFromImage,
   mockGetAllTags,
@@ -22,7 +21,6 @@ const {
   const updateRecipe = vi.fn()
   const getRecipe = vi.fn()
   const checkRecipeName = vi.fn().mockResolvedValue({ exists: false })
-  const parseRecipeFromText = vi.fn()
   const parseRecipeFromTextGemini = vi.fn()
   const parseRecipeFromImage = vi.fn()
   const getAllTags = vi.fn().mockResolvedValue([])
@@ -61,7 +59,6 @@ const {
     mockGetRecipe: getRecipe,
     mockCheckRecipeName: checkRecipeName,
     mockScrapeRecipeFromUrl: scrapeRecipeFromUrl,
-    mockParseRecipeFromText: parseRecipeFromText,
     mockParseRecipeFromTextGemini: parseRecipeFromTextGemini,
     mockParseRecipeFromImage: parseRecipeFromImage,
     mockGetAllTags: getAllTags,
@@ -114,7 +111,6 @@ vi.mock('../services/api', () => ({
     constructImageUrl: (url: string) => url,
     getAllTags: mockGetAllTags,
     scrapeRecipeFromUrl: mockScrapeRecipeFromUrl,
-    parseRecipeFromText: mockParseRecipeFromText,
     parseRecipeFromTextGemini: mockParseRecipeFromTextGemini,
     parseRecipeFromImage: mockParseRecipeFromImage,
     uploadImage: mockUploadImage,
@@ -169,7 +165,6 @@ describe('RecipeFormPage - URL Import Feature', () => {
     mockUpdateRecipe.mockReset()
     mockGetRecipe.mockReset()
     mockScrapeRecipeFromUrl.mockClear()
-    mockParseRecipeFromText.mockReset()
     mockParseRecipeFromTextGemini.mockReset()
     mockParseRecipeFromImage.mockReset()
     mockGetAllTags.mockClear()

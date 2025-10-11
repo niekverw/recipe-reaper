@@ -5,10 +5,6 @@ import { recipeRoutes } from '../routes/recipes'
 import { PostgreSQLDatabase } from '../models/database-pg'
 
 // Mock services to avoid requiring API keys
-jest.mock('../services/openaiService', () => ({
-  openaiService: {}
-}))
-
 jest.mock('../services/geminiService', () => ({
   geminiService: {
     parseRecipeText: jest.fn()
