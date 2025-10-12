@@ -58,7 +58,6 @@ python scraper.py "https://cooking.nytimes.com/recipes/1027165-eggplant-chickpea
 - `POST /api/recipes/scrape` - Scrape recipe from URL
 - `GET /api/recipes/tags` - Get all unique tags
 - `GET /api/recipes/check-name` - Check if recipe name exists
-- `POST /api/recipes/parse-text` - Parse recipe from text (OpenAI)
 - `POST /api/recipes/parse-text-gemini` - Parse recipe from text (Gemini)
 - `POST /api/recipes/parse-image` - Parse recipe from image
 - `POST /api/recipes/upload-image` - Upload recipe image
@@ -115,36 +114,21 @@ python scraper.py "https://cooking.nytimes.com/recipes/1027165-eggplant-chickpea
 - Support for 377+ ingredient types across categories (produce, dairy, meats, pantry items, etc.)
 
 ### AI-Powered Features
-- **Recipe parsing** from text and images using OpenAI GPT-3.5-turbo and Google Gemini 2.5-flash-lite
+- **Recipe parsing** from text and images using Google Gemini 2.5-flash-lite
 - **Recipe enhancement** with AI-generated improvements and suggestions
 - **Translation and language detection** 
 - **Intelligent ingredient extraction** from natural language descriptions
-- **Fallback AI services** for reliable recipe processing
 
 ### AI Services Integration
 
-The backend integrates multiple AI services for intelligent recipe processing:
-
-#### OpenAI GPT-3.5-turbo (`openaiService.ts`)
-- **Primary use**: Recipe parsing from text descriptions
-- **Fallback service**: Used when Gemini is unavailable
-- **Configuration**: Requires `OPENAI_API_KEY` environment variable
+The backend uses Google Gemini for intelligent recipe processing:
 
 #### Google Gemini 2.5-flash-lite (`geminiService.ts`, `recipeEnhancementService.ts`)
 - **Primary use**: Recipe parsing from text and images, recipe enhancement
 - **Advanced features**: Can process both text and image inputs for recipes
 - **Configuration**: Requires `GEMINI_API_KEY` environment variable
 
-#### Service Architecture
-```
-Recipe Input → Primary AI Service → Structured Recipe Data
-                    ↓ (if fails)
-              Fallback AI Service → Structured Recipe Data
-```
-
 #### Error Handling
-- Automatic fallback between AI services
-- Graceful degradation if all AI services fail
 - Comprehensive error logging and user feedback
 - Rate limiting and retry logic for API calls
 
@@ -505,8 +489,7 @@ The backend integrates with several external APIs for enhanced functionality:
 
 #### Required Environment Variables
 ```bash
-# AI Services (at least one required for recipe parsing)
-OPENAI_API_KEY=your_openai_api_key_here          # Optional - GPT-3.5-turbo
+# AI Services (required for recipe parsing)
 GEMINI_API_KEY=your_gemini_api_key_here          # Required - gemini-2.5-flash-lite
 
 # Google OAuth (required for user authentication)
