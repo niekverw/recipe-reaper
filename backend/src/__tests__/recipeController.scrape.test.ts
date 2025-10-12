@@ -19,16 +19,14 @@ jest.mock('../services/imageService', () => ({
   imageService: {}
 }))
 
-// Mock the scrapeWithPython function
-jest.mock('../controllers/recipeController', () => {
-  const originalModule = jest.requireActual('../controllers/recipeController') as Record<string, unknown>
-  return {
-    ...originalModule,
-    scrapeWithPython: jest.fn()
+// Mock the scraperService
+jest.mock('../services/scraperService', () => ({
+  scraperService: {
+    scrapeRecipe: jest.fn()
   }
-})
+}))
 
-const { scrapeWithPython } = require('../controllers/recipeController')
+const { scraperService } = require('../services/scraperService')
 const { geminiService } = require('../services/geminiService')
 
 const parseRecipeTextMock = geminiService.parseRecipeText as jest.Mock
@@ -77,7 +75,7 @@ describe('Recipe Scraper API', () => {
     }
 
     it('should successfully scrape and return recipe data', async () => {
-      ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockResolvedValue(mockScrapedData)
+      ;(scraperService.scrapeRecipe as jest.MockedFunction<typeof scraperService.scrapeRecipe>).mockResolvedValue(mockScrapedData)
       parseRecipeTextMock.mockResolvedValue({
         name: 'AI Recipe',
         description: 'AI enhanced description',
@@ -105,7 +103,7 @@ describe('Recipe Scraper API', () => {
         servings: 5
       })
 
-      expect(scrapeWithPython).toHaveBeenCalledWith(validUrl)
+      expect(scraperService.scrapeRecipe).toHaveBeenCalledWith(validUrl)
       expect(parseRecipeTextMock).toHaveBeenCalledTimes(1)
     })
 
@@ -115,7 +113,7 @@ describe('Recipe Scraper API', () => {
         ingredients: ['1 ingredient'],
         instructions: '1 instruction'
       }
-      ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockResolvedValue(minimalData)
+      ;(scraperService.scrapeRecipe as jest.MockedFunction<typeof scraperService.scrapeRecipe>).mockResolvedValue(minimalData)
       parseRecipeTextMock.mockResolvedValue({})
 
       const response = await request(app)
@@ -141,7 +139,7 @@ describe('Recipe Scraper API', () => {
       ]
 
       for (const testCase of testCases) {
-        ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockResolvedValue({
+        ;(scraperService.scrapeRecipe as jest.MockedFunction<typeof scraperService.scrapeRecipe>).mockResolvedValue({
           ...mockScrapedData,
           ...testCase
         })
@@ -167,7 +165,7 @@ describe('Recipe Scraper API', () => {
       ]
 
       for (const testCase of testCases) {
-        ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockResolvedValue({
+        ;(scraperService.scrapeRecipe as jest.MockedFunction<typeof scraperService.scrapeRecipe>).mockResolvedValue({
           ...mockScrapedData,
           yields: testCase.yields
         })
@@ -194,7 +192,7 @@ describe('Recipe Scraper API', () => {
       ]
 
       for (const testCase of testCases) {
-        ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockResolvedValue({
+        ;(scraperService.scrapeRecipe as jest.MockedFunction<typeof scraperService.scrapeRecipe>).mockResolvedValue({
           ...mockScrapedData,
           image: testCase.image
         })
@@ -240,7 +238,7 @@ describe('Recipe Scraper API', () => {
     })
 
     it('should handle scraper returning null/empty data', async () => {
-      ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockResolvedValue(null)
+      ;(scraperService.scrapeRecipe as jest.MockedFunction<typeof scraperService.scrapeRecipe>).mockResolvedValue(null)
       parseRecipeTextMock.mockResolvedValue({})
 
       const response = await request(app)
@@ -252,7 +250,7 @@ describe('Recipe Scraper API', () => {
     })
 
     it('should handle 404 errors from scraper', async () => {
-      ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockRejectedValue(new Error('404 not found'))
+      ;(scraperService.scrapeRecipe as jest.MockedFunction<typeof scraperService.scrapeRecipe>).mockRejectedValue(new Error('404 not found'))
       parseRecipeTextMock.mockResolvedValue({})
 
       const response = await request(app)
@@ -264,7 +262,7 @@ describe('Recipe Scraper API', () => {
     })
 
     it('should handle network timeout errors', async () => {
-      ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockRejectedValue(new Error('network timeout'))
+      ;(scraperService.scrapeRecipe as jest.MockedFunction<typeof scraperService.scrapeRecipe>).mockRejectedValue(new Error('network timeout'))
       parseRecipeTextMock.mockResolvedValue({})
 
       const response = await request(app)
@@ -276,7 +274,7 @@ describe('Recipe Scraper API', () => {
     })
 
     it('should handle general scraper errors', async () => {
-      ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockRejectedValue(new Error('Scraper failed'))
+      ;(scraperService.scrapeRecipe as jest.MockedFunction<typeof scraperService.scrapeRecipe>).mockRejectedValue(new Error('Scraper failed'))
       parseRecipeTextMock.mockResolvedValue({})
 
       const response = await request(app)
@@ -288,7 +286,7 @@ describe('Recipe Scraper API', () => {
     })
 
     it('should use default values when scraper returns minimal data', async () => {
-      ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockResolvedValue({})
+      ;(scraperService.scrapeRecipe as jest.MockedFunction<typeof scraperService.scrapeRecipe>).mockResolvedValue({})
       parseRecipeTextMock.mockResolvedValue({})
 
       const response = await request(app)
@@ -306,7 +304,7 @@ describe('Recipe Scraper API', () => {
     })
 
     it('should fall back to scraped data when Gemini parsing fails', async () => {
-      ;(scrapeWithPython as jest.MockedFunction<typeof scrapeWithPython>).mockResolvedValue(mockScrapedData)
+      ;(scraperService.scrapeRecipe as jest.MockedFunction<typeof scraperService.scrapeRecipe>).mockResolvedValue(mockScrapedData)
       parseRecipeTextMock.mockRejectedValue(new Error('API unavailable'))
 
       const response = await request(app)

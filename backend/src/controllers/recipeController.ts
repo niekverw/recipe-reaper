@@ -1,15 +1,20 @@
 import { Request, Response, NextFunction } from 'express'
 import { recipeModel } from '../models/recipeModel'
-import { userModel } from '../models/userModel'
 import { CreateRecipeRequest, UpdateRecipeRequest, RecipeFilters, IngredientCategory } from '../types/recipe'
 import { createError } from '../middleware/errorHandler'
 import { geminiService } from '../services/geminiService'
 import { recipeEnhancementService } from '../services/recipeEnhancementService'
 import { imageService } from '../services/imageService'
+import { scraperService } from '../services/scraperService'
+import { authorizationService } from '../services/authorizationService'
 import { User } from '../types/user'
-import { spawn } from 'child_process'
-import { join } from 'path'
 import { isSupportedLanguage, SUPPORTED_LANGUAGE_CODES } from '../utils/languageHelper'
+import {
+  parseServings,
+  normalizeArray,
+  buildRecipeTextFromScrape,
+  parseImageUrl
+} from '../utils/recipeHelpers'
 
 interface ScrapeRecipeRequest {
   url: string
@@ -20,174 +25,6 @@ interface ScrapeRecipeRequest {
 interface ParseTextRecipeRequest {
   text: string
   additionalContext?: string
-}
-
-function parseServings(servings?: string): number | undefined {
-  if (!servings) return undefined
-
-  // Extract number from various formats
-  const match = servings.match(/(\d+)/)
-  return match ? parseInt(match[1]) : undefined
-}
-
-function normalizeArray(value: unknown): string[] {
-  if (!value) return []
-
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => (typeof item === 'string' ? item.trim() : String(item)))
-      .filter((item) => item.length > 0)
-  }
-
-  if (typeof value === 'string') {
-    return value
-      .split('\n')
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0)
-  }
-
-  return [String(value)].filter((item) => item.length > 0)
-}
-
-function buildRecipeTextFromScrape(data: any, ingredients: string[], instructions: string[]): string {
-  const lines: string[] = []
-
-  if (data?.name) {
-    lines.push(`Recipe Name: ${data.name}`)
-  }
-
-  if (data?.description) {
-    lines.push(`Description: ${data.description}`)
-  }
-
-  if (ingredients.length) {
-    lines.push('Ingredients:')
-    for (const ingredient of ingredients) {
-      lines.push(`- ${ingredient}`)
-    }
-  }
-
-  if (instructions.length) {
-    lines.push('Instructions:')
-    instructions.forEach((step, index) => {
-      lines.push(`${index + 1}. ${step}`)
-    })
-  }
-
-  if (data?.prepTimeMinutes) {
-    lines.push(`Prep Time: ${data.prepTimeMinutes} minutes`)
-  }
-
-  if (data?.cookTimeMinutes) {
-    lines.push(`Cook Time: ${data.cookTimeMinutes} minutes`)
-  }
-
-  if (data?.totalTimeMinutes) {
-    lines.push(`Total Time: ${data.totalTimeMinutes} minutes`)
-  }
-
-  if (data?.yields) {
-    lines.push(`Servings: ${data.yields}`)
-  }
-
-  if (data?.category) {
-    lines.push(`Category: ${data.category}`)
-  }
-
-  if (data?.cuisine) {
-    lines.push(`Cuisine: ${data.cuisine}`)
-  }
-
-  return lines.join('\n')
-}
-
-async function scrapeWithPython(url: string): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const pythonExecutable = join(__dirname, '../../../.venv/bin/python')
-    const scraperScript = join(__dirname, '../../scraper.py')
-
-    const pythonProcess = spawn(pythonExecutable, [scraperScript, url], {
-      cwd: join(__dirname, '../..')
-    })
-
-    let stdout = ''
-    let stderr = ''
-
-    pythonProcess.stdout.on('data', (data) => {
-      stdout += data.toString()
-    })
-
-    pythonProcess.stderr.on('data', (data) => {
-      stderr += data.toString()
-    })
-
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        reject(new Error(`Python scraper failed: ${stderr}`))
-        return
-      }
-
-      try {
-        const result = JSON.parse(stdout.trim())
-        if (result.error) {
-          reject(new Error(result.error))
-          return
-        }
-        resolve(result)
-      } catch (error) {
-        reject(new Error(`Failed to parse Python output: ${error}`))
-      }
-    })
-
-    pythonProcess.on('error', (error) => {
-      reject(new Error(`Failed to start Python process: ${error.message}`))
-    })
-  })
-}
-
-function parseImageUrl(image?: any): string | undefined {
-  if (!image) return undefined
-
-  // If it's already a string, return it
-  if (typeof image === 'string') {
-    return image
-  }
-
-  // If it's an object with a url property, return that
-  if (typeof image === 'object' && image.url) {
-    return image.url
-  }
-
-  // If it's an object with a contentUrl property, return that
-  if (typeof image === 'object' && image.contentUrl) {
-    return image.contentUrl
-  }
-
-  // If it's an object with an @id that looks like a URL, return that
-  if (typeof image === 'object' && image['@id'] && image['@id'].startsWith('http')) {
-    return image['@id']
-  }
-
-  return undefined
-}
-
-async function userHasHouseholdAccess(user: User, recipeOwnerId?: string, recipeHouseholdId?: string): Promise<boolean> {
-  if (!user.householdId) {
-    return false
-  }
-
-  if (recipeHouseholdId && recipeHouseholdId === user.householdId) {
-    return true
-  }
-
-  if (recipeOwnerId && recipeOwnerId !== user.id) {
-    const owner = await userModel.findById(recipeOwnerId)
-    if (owner && owner.household_id === user.householdId) {
-      return true
-    }
-  }
-
-  return false
 }
 
 export const recipeController = {
@@ -300,11 +137,13 @@ export const recipeController = {
 
       // Check authorization: user must own the recipe or it must be in their household
       if (user) {
-        const typedUser = user as User
-        const isOwner = existingRecipe.userId === typedUser.id
-        const hasHouseholdAccess = await userHasHouseholdAccess(typedUser, existingRecipe.userId, existingRecipe.householdId)
+        const canEdit = await authorizationService.canEditRecipe(
+          user,
+          existingRecipe.userId,
+          existingRecipe.householdId
+        )
 
-        if (!isOwner && !hasHouseholdAccess) {
+        if (!canEdit) {
           throw createError('You do not have permission to update this recipe', 403)
         }
       }
@@ -374,10 +213,13 @@ export const recipeController = {
       }
 
       // Check authorization: user must own the recipe or it must be in their household
-      const isOwner = existingRecipe.userId === user.id
-      const hasHouseholdAccess = await userHasHouseholdAccess(user, existingRecipe.userId, existingRecipe.householdId)
+      const canEdit = await authorizationService.canEditRecipe(
+        user,
+        existingRecipe.userId,
+        existingRecipe.householdId
+      )
 
-      if (!isOwner && !hasHouseholdAccess) {
+      if (!canEdit) {
         throw createError('You do not have permission to delete this recipe', 403)
       }
 
@@ -419,7 +261,7 @@ export const recipeController = {
       }
 
       // Scrape recipe data using Python scraper
-      const scrapedData = await scrapeWithPython(url)
+      const scrapedData = await scraperService.scrapeRecipe(url)
 
       console.log('Scraper raw data:', JSON.stringify(scrapedData, null, 2))
 
@@ -824,5 +666,3 @@ export const recipeController = {
     }
   }
 }
-
-export { scrapeWithPython }

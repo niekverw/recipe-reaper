@@ -4,6 +4,7 @@ import passport from 'passport'
 import { userModel, mapUserRowToUser } from '../models/userModel'
 import { SUPPORTED_LANGUAGE_CODES } from '../config/languages'
 import { CreateUserRequest, LoginRequest } from '../types/user'
+import { authService } from '../services/authService'
 
 // Extend Express session to include OAuth state and PKCE
 declare module 'express-session' {
@@ -19,29 +20,16 @@ export const authController = {
     try {
       const { email, password, displayName }: CreateUserRequest = req.body
 
-      // Validation
-      if (!email || !password || !displayName) {
+      // Validate registration data using auth service
+      const validation = authService.validateRegistration(email, password, displayName)
+      if (!validation.valid) {
         return res.status(400).json({
-          error: { message: 'Email, password, and display name are required' }
+          error: { message: validation.error }
         })
       }
 
-      if (password.length < 6) {
-        return res.status(400).json({
-          error: { message: 'Password must be at least 6 characters long' }
-        })
-      }
-
-      // Check if user already exists
-      const existingUser = await userModel.findByEmail(email)
-      if (existingUser) {
-        return res.status(400).json({
-          error: { message: 'An account with this email already exists' }
-        })
-      }
-
-      // Create user
-      const user = await userModel.create({ email, password, displayName })
+      // Register user using auth service
+      const user = await authService.registerUser({ email, password, displayName })
 
       // Log the user in automatically
       req.login(user, (err) => {
@@ -60,8 +48,9 @@ export const authController = {
       })
     } catch (error) {
       console.error('Registration error:', error)
-      res.status(500).json({
-        error: { message: 'Failed to create user' }
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create user'
+      res.status(400).json({
+        error: { message: errorMessage }
       })
     }
   },
