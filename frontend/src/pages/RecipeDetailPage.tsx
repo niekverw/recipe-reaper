@@ -28,19 +28,8 @@ import AlertBanner from '../components/AlertBanner'
 import { TextHeaderParser } from '../utils/textHeaderParser'
 import ResponsiveImage from '../components/ResponsiveImage'
 import { scaleIngredient } from '../utils/scaleIngredient'
-
-function getSourceHostname(sourceUrl?: string | null): string {
-  if (!sourceUrl) {
-    return ''
-  }
-
-  try {
-    return new URL(sourceUrl).host
-  } catch {
-    const sanitized = sourceUrl.replace(/^https?:\/\//, '').split('/')[0]
-    return sanitized || sourceUrl
-  }
-}
+import { SourceAttribution } from '../components/SourceAttribution'
+import { CONTENT } from '../constants/content'
 
 interface ShoppingListButtonState {
   isLoading: boolean
@@ -774,32 +763,20 @@ function RecipeDetailPage() {
               <TruncatedDescription text={recipe.description} parentHasImage={!!recipe.image} />
 
               {/* Source URL Attribution */}
-              {recipe.sourceUrl && (
-                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-                  <span>Recipe adapted from </span>
-                  <a
-                    href={recipe.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline transition-colors"
-                  >
-                    {getSourceHostname(recipe.sourceUrl)}
-                  </a>
-                </p>
-              )}
+              <SourceAttribution sourceUrl={recipe.sourceUrl} className="mb-4" />
 
               {/* Tags */}
               <div className="mb-4">
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Folder:{' '}
+                    {CONTENT.recipeDetail.folderLabel}{' '}
                     {recipe.tags && recipe.tags.length > 0 ? (
                       recipe.tags.map((tag, index) => (
                         <span key={tag} className="inline-flex items-center">
                           <button
                             onClick={() => navigate(`/?tag=${encodeURIComponent(tag)}`)}
                             className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
-                            title="View all recipes with this tag"
+                            title={CONTENT.recipeDetail.viewRecipesWithTagTitle}
                           >
                             {tag}
                           </button>
@@ -808,7 +785,7 @@ function RecipeDetailPage() {
                               onClick={() => handleRemoveTag(tag)}
                               disabled={isUpdatingTags}
                               className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
-                              title="Remove tag"
+                              title={CONTENT.recipeDetail.removeTagTitle}
                             >
                               <XMarkIcon className="w-3 h-3" />
                             </button>
@@ -817,7 +794,7 @@ function RecipeDetailPage() {
                         </span>
                       ))
                     ) : (
-                      <span className="text-gray-400 dark:text-gray-500 italic">None</span>
+                      <span className="text-gray-400 dark:text-gray-500 italic">{CONTENT.recipeDetail.noTags}</span>
                     )}
                   </p>
 
@@ -843,7 +820,7 @@ function RecipeDetailPage() {
                             setShowTagSuggestions(true)
                           }
                         }}
-                        placeholder="Add tag..."
+                        placeholder={CONTENT.recipeDetail.addTagPlaceholder}
                         disabled={isUpdatingTags}
                         className="w-20 px-2 py-0.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
                         autoFocus
@@ -889,7 +866,7 @@ function RecipeDetailPage() {
                       onClick={() => setShowTagInput(true)}
                       disabled={isUpdatingTags}
                       className="p-0.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors disabled:opacity-50"
-                      title="Add tag"
+                      title={CONTENT.recipeDetail.addTagTitle}
                     >
                       <PlusIcon className="w-3 h-3" />
                     </button>
