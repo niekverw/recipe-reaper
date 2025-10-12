@@ -41,9 +41,8 @@ describe('TagList Component', () => {
     expect(handleClick).toHaveBeenCalledWith('Italian')
   })
 
-  it('should not call onTagClick when it is not provided', async () => {
+  it('should not call onTagClick when it is not provided', () => {
     const tags = ['Italian', 'Pasta']
-    const user = userEvent.setup()
     
     render(<TagList tags={tags} />)
     
