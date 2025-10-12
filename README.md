@@ -91,7 +91,6 @@ Features:
    cp .env.example .env
    # Edit .env and add your API keys and database settings:
    # GEMINI_API_KEY=your_gemini_api_key_here (required)
-   # OPENAI_API_KEY=your_openai_api_key_here (optional)
    # SESSION_SECRET=your-secret-key-change-this-in-production (important!)
    # Database settings are already configured for local PostgreSQL
    ```
@@ -102,7 +101,6 @@ Features:
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `GEMINI_API_KEY` | ✅ | - | Google Gemini API key for AI recipe parsing and image processing |
-| `OPENAI_API_KEY` | ❌ | - | OpenAI API key for additional AI features |
 | `DB_HOST` | ❌ | localhost | PostgreSQL database host |
 | `DB_PORT` | ❌ | 5432 | PostgreSQL database port |
 | `DB_NAME` | ❌ | recipeapp | PostgreSQL database name |
