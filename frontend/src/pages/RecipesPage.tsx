@@ -651,7 +651,7 @@ function RecipesPage() {
             to="/about"
             className="font-medium text-violet-600 hover:text-violet-800 dark:text-violet-300 dark:hover:text-violet-100 not-italic"
           >
-            About & Browser Extensions
+            About Recipe Reaper & Bookmarklet
           </Link>
         </p>
       </footer>

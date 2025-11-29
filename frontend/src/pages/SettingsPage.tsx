@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { apiService } from '../services/api'
 import { Household } from '../types/user'
@@ -664,7 +665,7 @@ function SettingsPage() {
           </h2>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           {/* Change Google Account - Only show if user has Google ID */}
           {user.googleId && (
             <button
@@ -703,6 +704,18 @@ function SettingsPage() {
           </button>
         </div>
       </div>
+
+      {/* Footer Link */}
+      <p className="text-sm text-gray-500 dark:text-gray-400 italic flex flex-wrap items-center justify-center gap-2 pb-4">
+        <span aria-hidden="true">•</span>
+        <Link
+          to="/about"
+          className="font-medium text-violet-600 hover:text-violet-800 dark:text-violet-300 dark:hover:text-violet-100 not-italic"
+        >
+          About Recipe Reaper & Bookmarklet
+        </Link>
+        <span aria-hidden="true">•</span>
+      </p>
     </div>
   )
 }
