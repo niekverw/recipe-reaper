@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 
 const steps = [
@@ -7,7 +8,17 @@ const steps = [
   'Pin the “Reap this recipe” extension and click it whenever you want to send the current page into Recipe Reaper.'
 ]
 
+const bookmarkletHref = "javascript:(function(){const target='https://recipereaper.app/add-recipe?url='+encodeURIComponent(window.location.href);window.open(target,'_blank');})();"
+
 function AboutPage() {
+  const bookmarkletLinkRef = useRef<HTMLAnchorElement | null>(null)
+
+  useEffect(() => {
+    if (bookmarkletLinkRef.current) {
+      bookmarkletLinkRef.current.setAttribute('href', bookmarkletHref)
+    }
+  }, [])
+
   return (
     <div className="px-4 py-8 max-w-3xl mx-auto space-y-6">
       <div className="text-center space-y-2">
@@ -17,10 +28,30 @@ function AboutPage() {
         </p>
       </div>
 
+      <section className="rounded-2xl border border-blue-200 bg-white/80 p-6 shadow-sm dark:border-blue-900/40 dark:bg-gray-900/40 backdrop-blur">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Bookmarklet (Works in Any Browser)</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+          The quickest way to “reap” a recipe is this bookmarklet. Drag the button below to your bookmarks bar (or create a bookmark and paste the code). Whenever you hit a tasty page, click the bookmark and Recipe Reaper opens the Add Recipe screen with the URL already filled in.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <a
+            ref={bookmarkletLinkRef}
+            href="#"
+            className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-500"
+          >
+            Reap this recipe (bookmarklet)
+          </a>
+          <code className="text-xs bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-1 text-gray-700 dark:text-gray-200 overflow-x-auto">
+            {bookmarkletHref}
+          </code>
+        </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">Tip: Right-click the button → “Bookmark Link”, or drag it to your bookmarks bar.</p>
+      </section>
+
       <section className="rounded-2xl border border-violet-200 bg-white/80 p-6 shadow-sm dark:border-violet-900/40 dark:bg-gray-900/40 backdrop-blur">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Install the Chrome Extension</h2>
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-          The “Reap this recipe” button opens your Add Recipe screen and auto-imports the current tab. Follow these quick steps:
+          Prefer a Chrome toolbar button? The extension adds a “Reap this recipe” button that launches the Add Recipe screen and auto-imports the current tab. Install it in a minute:
         </p>
         <ol className="space-y-3 text-sm text-gray-700 dark:text-gray-200 list-decimal list-inside">
           {steps.map((step, idx) => (
