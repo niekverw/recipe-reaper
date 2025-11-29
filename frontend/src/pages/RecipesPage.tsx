@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
+import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom'
 import {
   MagnifyingGlassIcon,
   PencilIcon,
@@ -644,8 +644,15 @@ function RecipesPage() {
       </div>
 
       <footer className="text-center mt-8">
-        <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-          {getRandomGeneralHumor()}
+        <p className="text-sm text-gray-500 dark:text-gray-400 italic flex flex-wrap items-center justify-center gap-2">
+          <span>{getRandomGeneralHumor()}</span>
+          <span aria-hidden="true">•</span>
+          <Link
+            to="/about"
+            className="font-medium text-violet-600 hover:text-violet-800 dark:text-violet-300 dark:hover:text-violet-100 not-italic"
+          >
+            About & Browser Extensions
+          </Link>
         </p>
       </footer>
     </div>

@@ -23,6 +23,7 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'))
 const ShareTargetPage = lazy(() => import('./pages/ShareTargetPage'))
 const ShoppingListPage = lazy(() => import('./pages/ShoppingListPage'))
+const AboutPage = lazy(() => import('./pages/AboutPage'))
 
 function App() {
   useEffect(() => {
@@ -86,6 +87,7 @@ function App() {
                     <Route path="/recipe/:id/edit" element={<RecipeFormPage />} />
                     <Route path="/shopping-list" element={<ShoppingListPage />} />
                     <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/about" element={<AboutPage />} />
                   </Routes>
                 </Suspense>
               </main>

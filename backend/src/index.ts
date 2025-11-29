@@ -304,7 +304,12 @@ if (true) { // Always apply whitelist - was: process.env.NODE_ENV === 'productio
 
       // Netlify config files
       '/_headers',
-      '/_redirects'
+      '/_redirects',
+
+      // Extension downloads and other static bundles
+      '/extensions/',
+      '/about',
+      '/dashboard'
     ]
 
     // Check if path matches any allowed pattern
