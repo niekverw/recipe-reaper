@@ -77,6 +77,10 @@ const notFoundRateLimitMax = parsePositiveInt(
   isProduction ? 10 : 50
 )
 
+const sessionMaxAgeDays = parsePositiveInt(process.env.SESSION_MAX_AGE_DAYS, 30)
+const sessionMaxAgeMs = sessionMaxAgeDays * 24 * 60 * 60 * 1000
+const sessionMaxAgeSeconds = Math.floor(sessionMaxAgeMs / 1000)
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps, curl requests, Postman)
@@ -173,15 +177,17 @@ app.use(session({
   store: new PgStore({
     conString: `postgresql://${process.env.DB_USER || 'recipeapp_user'}:${process.env.DB_PASSWORD || 'recipeapp123'}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || '5432'}/${process.env.DB_NAME || 'recipeapp'}`,
     tableName: 'session',
-    createTableIfMissing: true
+    createTableIfMissing: true,
+    ttl: sessionMaxAgeSeconds
   }),
   secret: process.env.SESSION_SECRET || 'your-secret-key-change-this-in-production',
   resave: false,
   saveUninitialized: false,
+  rolling: true,
   cookie: {
     secure: process.env.NODE_ENV === 'production', // Secure cookies in production (assumes HTTPS)
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: sessionMaxAgeMs,
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Allow cross-site cookies for OAuth in production
   }
 }))

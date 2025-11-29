@@ -514,6 +514,7 @@ PORT=3001                                      # Server port
 NODE_ENV=development                           # Environment mode
 FRONTEND_URL=http://localhost:5173             # CORS allowed origins
 ALLOW_PUBLIC_API=false                         # Public API access control
+SESSION_MAX_AGE_DAYS=30                        # Days before auth session expires
 ```
 
 ### Version Control
