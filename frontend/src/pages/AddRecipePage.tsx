@@ -1,4 +1,15 @@
+import { useEffect, useRef } from 'react';
+
 function AddRecipePage() {
+  // Auto-fill sourceUrl from ?url= param if present
+  const sourceUrlRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const url = params.get('url');
+    if (url && sourceUrlRef.current) {
+      sourceUrlRef.current.value = url;
+    }
+  }, []);
 
   return (
     <div className="px-4 py-6 max-w-3xl mx-auto space-y-6">
@@ -294,6 +305,7 @@ function AddRecipePage() {
                 autoCorrect="off"
                 spellCheck="false"
                 inputMode="url"
+                ref={sourceUrlRef}
               />
               <div className="text-xs mt-0.5 opacity-70" style={{ color: 'var(--color-text-secondary)' }}>
                 URL of the original recipe or inspiration source

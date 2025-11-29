@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reap this recipe</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --accent: #7c3aed;
+      --accent-dark: #5b21b6;
+      --surface: rgba(255, 255, 255, 0.85);
+      --text: #0f172a;
+    }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      min-width: 240px;
+      margin: 0;
+      padding: 18px;
+      background: radial-gradient(circle at top, #ede9fe, #f5f3ff);
+      color: var(--text);
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+      backdrop-filter: blur(6px);
+    }
+
+    h1 {
+      font-size: 1rem;
+      margin: 0 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h1 svg {
+      width: 18px;
+      height: 18px;
+      color: var(--accent);
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 999px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      box-shadow: 0 12px 20px rgba(92, 67, 196, 0.35);
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    button:active {
+      transform: translateY(1px) scale(0.99);
+      box-shadow: 0 8px 14px rgba(92, 67, 196, 0.35);
+    }
+
+    #status {
+      margin-top: 12px;
+      font-size: 0.9rem;
+      color: #4c1d95;
+      min-height: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 6h18" />
+        <path d="M19 6v8a7 7 0 11-14 0V6" />
+        <path d="M12 11v5" />
+      </svg>
+      Reap this recipe
+    </h1>
+    <button id="reap-btn">Send to Recipe Reaper</button>
+    <div id="status"></div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

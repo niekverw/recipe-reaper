@@ -108,6 +108,7 @@ function RecipeFormPage() {
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [originalImageUrl, setOriginalImageUrl] = useState<string>('')
   const importSettingsRef = useRef<HTMLDivElement | null>(null)
+  const hasAppliedQueryUrl = useRef(false)
 
   useEffect(() => {
     // Load available tags
@@ -149,6 +150,31 @@ function RecipeFormPage() {
       handleImportText(location.state.importText)
     }
   }, [isEdit, id, copiedRecipe, location.state])
+
+  useEffect(() => {
+    if (isEdit || hasAppliedQueryUrl.current) return
+
+    const params = new URLSearchParams(location.search)
+    const urlParam = params.get('url')?.trim()
+
+    if (!urlParam) return
+
+    hasAppliedQueryUrl.current = true
+    setImportType('url')
+    setImportUrl(urlParam)
+    setFormData(prev => {
+      if (prev.sourceUrl?.trim()) {
+        return prev
+      }
+      return {
+        ...prev,
+        sourceUrl: urlParam
+      }
+    })
+
+    // Automatically import the recipe so the form is populated
+    handleImportUrl(urlParam)
+  }, [isEdit, location.search])
 
   // Track image URL changes - don't delete images during editing
   useEffect(() => {
